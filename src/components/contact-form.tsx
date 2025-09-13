@@ -20,36 +20,51 @@ import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Le nom doit comporter au moins 2 caractères.",
-  }),
-  firstname: z.string().min(2, {
-    message: "Le prénom doit comporter au moins 2 caractères.",
-  }),
-  email: z.string().email({
-    message: "Veuillez saisir une adresse e-mail valide.",
-  }),
-  phone: z.string().min(8, { message: "Le numéro de téléphone est trop court."}),
-  reason: z.string().min(2, { message: "Veuillez sélectionner un motif."}),
-  message: z.string().optional(),
-})
-
-const partnerFormSchema = formSchema.omit({ message: true });
-const regularFormSchema = formSchema.pick({ name: true, email: true, message: true }).extend({
-    message: z.string().min(10, { message: "Le message doit comporter au moins 10 caractères." })
-});
-
-
 interface ContactFormProps {
   partnerForm?: boolean;
 }
 
+const createContactFormSchema = (isPartnerForm: boolean) => {
+  let schema = z.object({
+      name: z.string().min(2, {
+        message: "Le nom doit comporter au moins 2 caractères.",
+      }),
+      firstname: z.string(),
+      email: z.string().email({
+        message: "Veuillez saisir une adresse e-mail valide.",
+      }),
+      phone: z.string(),
+      reason: z.string(),
+      message: z.string(),
+  });
+
+  if (isPartnerForm) {
+      schema = schema.extend({
+          firstname: z.string().min(2, { message: "Le prénom doit comporter au moins 2 caractères." }),
+          phone: z.string().min(8, { message: "Le numéro de téléphone est trop court."}),
+          reason: z.string().min(2, { message: "Veuillez sélectionner un motif."}),
+          message: z.string().optional(),
+      });
+  } else {
+      schema = schema.extend({
+          message: z.string().min(10, { message: "Le message doit comporter au moins 10 caractères." }),
+          firstname: z.string().optional(),
+          phone: z.string().optional(),
+          reason: z.string().optional(),
+      });
+  }
+  
+  return schema;
+};
+
+
 export function ContactForm({ partnerForm = false }: ContactFormProps) {
   const { toast } = useToast()
   
+  const formSchema = createContactFormSchema(partnerForm);
+
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(partnerForm ? partnerFormSchema : regularFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       firstname: "",
@@ -194,7 +209,7 @@ export function ContactForm({ partnerForm = false }: ContactFormProps) {
           )}
         </div>
        
-        {!partnerForm && form.getValues('message') !== undefined && (
+        {!partnerForm && (
           <FormField
             control={form.control}
             name="message"
