@@ -297,7 +297,7 @@ export default function VideoDetailPage() {
                             <ThumbsDown className="h-5 w-5"/>
                         </Button>
                     </div>
-                    <Button variant="muted" className="rounded-full flex items-center gap-2" onClick={handleShare}>
+                    <Button variant="secondary" className="rounded-full flex items-center gap-2" onClick={handleShare}>
                         <Share2 className="h-5 w-5"/>
                         Partager
                     </Button>
@@ -312,3 +312,5 @@ export default function VideoDetailPage() {
     </div>
   );
 }
+
+    
