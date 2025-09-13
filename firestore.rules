@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // Allow public read access to all collections by default
+    // Restrict write access to authenticated users only.
+    match /{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Specific collections can have more granular rules if needed.
+    // For example, to make a specific collection completely private:
+    // match /private_collection/{docId} {
+    //   allow read, write: if request.auth != null;
+    // }
+  }
+}
