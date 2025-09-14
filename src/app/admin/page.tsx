@@ -254,7 +254,7 @@ function FileUpload({ value, onChange, label, acceptedFileTypes, mediaType = 'im
                     mediaType === 'image' ? (
                        value && <Image src={value} alt="Aperçu" fill={true} className="object-contain rounded-lg" />
                     ) : (
-                         value.startsWith('/uploads/') && <video src={value} controls className="object-contain rounded-lg max-h-full max-w-full" />
+                         value && <video src={value} controls playsInline className="object-contain rounded-lg max-h-full max-w-full" />
                     )
                 ) : (
                     !isUploading && <span className="text-sm text-muted-foreground">Aucun fichier</span>
@@ -1683,3 +1683,4 @@ export default function AdminPageWrapper() {
     
 
     
+
