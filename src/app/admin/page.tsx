@@ -450,22 +450,30 @@ function AdminContent() {
         setHasChanges(true);
     };
     
-     const updateVideo = (id: string, field: keyof Video, value: any) => {
+     const updateVideo = (id: string, field: string, value: any) => {
         setVideos(produce(draft => {
             const video = draft.find(v => v.id === id);
             if (video) {
-                if (field.startsWith('creator.')) {
-                    const creatorField = field.split('.')[1] as keyof Video['creator'];
-                    if (creatorField === 'subscribers') {
-                         (video.creator as any)[creatorField] = parseInt(value, 10) || 0;
-                    } else {
-                        (video.creator as any)[creatorField] = value;
+                // Handle nested properties like 'creator.subscribers'
+                const fieldParts = field.split('.');
+                if (fieldParts.length > 1) {
+                    let current: any = video;
+                    for (let i = 0; i < fieldParts.length - 1; i++) {
+                        current = current[fieldParts[i]];
                     }
-                } else if (['views', 'likes', 'duration'].includes(field)) {
-                    (video as any)[field] = parseInt(value, 10) || 0;
-                }
-                else {
-                    (video as any)[field] = value;
+                    const finalField = fieldParts[fieldParts.length - 1];
+                    if (finalField === 'subscribers') {
+                         current[finalField] = parseInt(value, 10) || 0;
+                    } else {
+                        current[finalField] = value;
+                    }
+                } else {
+                    if (['views', 'likes', 'duration'].includes(field)) {
+                        (video as any)[field] = parseInt(value, 10) || 0;
+                    }
+                    else {
+                        (video as any)[field] = value;
+                    }
                 }
             }
         }));
@@ -1675,3 +1683,5 @@ function AdminContent() {
 export default function AdminPageWrapper() {
     return <AdminContent />;
 }
+
+    
