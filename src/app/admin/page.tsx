@@ -339,7 +339,12 @@ function AdminContent() {
     }, []);
 
     const updateProduct = (id: string, field: keyof Product, value: any) => {
-        setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
+        setProducts(produce(draft => {
+            const product = draft.find(p => p.id === id);
+            if (product) {
+                (product as any)[field] = value;
+            }
+        }));
         setHasChanges(true);
     };
 
@@ -403,7 +408,17 @@ function AdminContent() {
     };
     
      const updateVideo = (id: string, field: keyof Video, value: any) => {
-        setVideos(prev => prev.map(v => v.id === id ? { ...v, [field]: value } : v));
+        setVideos(produce(draft => {
+            const video = draft.find(v => v.id === id);
+            if (video) {
+                if (field.startsWith('creator.')) {
+                    const creatorField = field.split('.')[1] as keyof Video['creator'];
+                    (video.creator as any)[creatorField] = value;
+                } else {
+                    (video as any)[field] = value;
+                }
+            }
+        }));
         setHasChanges(true);
     };
 
@@ -480,11 +495,12 @@ function AdminContent() {
         setHasChanges(true);
     };
 
-    const handlePlanPriceChange = (planId: SubscriptionPlanId, price: number) => {
+    const handlePlanPriceChange = (planId: SubscriptionPlanId, price: string) => {
+        const numericPrice = parseInt(price, 10);
         if (subscriptionPlans) {
             setSubscriptionPlans(produce(draft => {
                 if(draft) {
-                    draft[planId].price = price;
+                    draft[planId].price = isNaN(numericPrice) ? 0 : numericPrice;
                 }
             }));
             setHasChanges(true);
@@ -548,13 +564,18 @@ function AdminContent() {
             if (subscription.plan === '1m') expiryDate.setMonth(expiryDate.getMonth() + 1);
             
             const expiryTimestamp = Timestamp.fromDate(expiryDate);
+            const startTimestamp = Timestamp.now();
 
             await writeBatch(db)
                 .update(userRef, { subscriptionExpiry: expiryTimestamp })
-                .update(subscriptionRef, { status: 'active', expiryDate: expiryTimestamp, startDate: serverTimestamp() })
+                .update(subscriptionRef, { status: 'active', expiryDate: expiryTimestamp, startDate: startTimestamp })
                 .commit();
-
-            const updatedSub: Partial<Subscription> = { status: 'active', expiryDate: expiryTimestamp, startDate: Timestamp.now() };
+            
+            const updatedSub: Partial<Subscription> = { 
+                status: 'active', 
+                expiryDate: { seconds: expiryTimestamp.seconds, nanoseconds: expiryTimestamp.nanoseconds } as any,
+                startDate: { seconds: startTimestamp.seconds, nanoseconds: startTimestamp.nanoseconds } as any,
+            };
 
             setSubscriptions(prev => prev.map(s => s.id === subscription.id ? { ...s, ...updatedSub } : s));
             toast({ title: 'Abonnement confirmé!', description: `L'accès de ${subscription.userEmail} est actif jusqu'au ${format(expiryDate, 'd MMM yyyy, HH:mm', { locale: fr })}.` });
@@ -836,7 +857,7 @@ function AdminContent() {
                                                 </div>
                                                  <div>
                                                     <Label htmlFor={`price-${product.id}`}>Prix (FCFA)</Label>
-                                                    <Input id={`price-${product.id}`} type="number" value={product.price} onChange={(e) => updateProduct(product.id, 'price', parseFloat(e.target.value) || 0)} />
+                                                    <Input id={`price-${product.id}`} type="text" value={product.price} onChange={(e) => updateProduct(product.id, 'price', parseFloat(e.target.value) || 0)} />
                                                 </div>
                                                 <div>
                                                     <Label>Collection</Label>
@@ -901,7 +922,7 @@ function AdminContent() {
                                                 </div>
                                                  <div>
                                                     <Label htmlFor={`price-${product.id}`}>Prix (FCFA)</Label>
-                                                    <Input id={`price-${product.id}`} type="number" value={product.price} onChange={(e) => updateProduct(product.id, 'price', parseFloat(e.target.value) || 0)} />
+                                                    <Input id={`price-${product.id}`} type="text" value={product.price} onChange={(e) => updateProduct(product.id, 'price', parseFloat(e.target.value) || 0)} />
                                                 </div>
                                                 <div>
                                                     <Label>Classe Internet</Label>
@@ -961,15 +982,15 @@ function AdminContent() {
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                                                     <div>
                                                         <Label htmlFor={`video-views-${video.id}`}>Vues</Label>
-                                                        <Input id={`video-views-${video.id}`} type="number" value={video.views} onChange={(e) => updateVideo(video.id, 'views', parseInt(e.target.value, 10) || 0)} />
+                                                        <Input id={`video-views-${video.id}`} type="text" value={video.views} onChange={(e) => updateVideo(video.id, 'views', parseInt(e.target.value, 10) || 0)} />
                                                     </div>
                                                     <div>
                                                         <Label htmlFor={`video-likes-${video.id}`}>J'aime</Label>
-                                                        <Input id={`video-likes-${video.id}`} type="number" value={video.likes} onChange={(e) => updateVideo(video.id, 'likes', parseInt(e.target.value, 10) || 0)} />
+                                                        <Input id={`video-likes-${video.id}`} type="text" value={video.likes} onChange={(e) => updateVideo(video.id, 'likes', parseInt(e.target.value, 10) || 0)} />
                                                     </div>
                                                     <div>
                                                         <Label htmlFor={`video-subs-${video.id}`}>Abonnés</Label>
-                                                        <Input id={`video-subs-${video.id}`} type="number" value={video.creator.subscribers} onChange={(e) => updateVideo(video.id, 'creator', { ...video.creator, subscribers: parseInt(e.target.value, 10) || 0 })} />
+                                                        <Input id={`video-subs-${video.id}`} type="text" value={video.creator.subscribers} onChange={(e) => updateVideo(video.id, 'creator.subscribers', parseInt(e.target.value, 10) || 0)} />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1001,7 +1022,7 @@ function AdminContent() {
                                                 </div>
                                                 <div>
                                                     <Label htmlFor={`video-duration-${video.id}`}>Durée (minutes)</Label>
-                                                    <Input id={`video-duration-${video.id}`} type="number" value={video.duration} onChange={(e) => updateVideo(video.id, 'duration', parseInt(e.target.value, 10) || 0)} />
+                                                    <Input id={`video-duration-${video.id}`} type="text" value={video.duration} onChange={(e) => updateVideo(video.id, 'duration', parseInt(e.target.value, 10) || 0)} />
                                                 </div>
                                                 <div className="flex items-center space-x-2 pt-6">
                                                     <Switch id={`video-paid-${video.id}`} checked={video.isPaid} onCheckedChange={(checked) => updateVideo(video.id, 'isPaid', checked)} />
@@ -1281,8 +1302,8 @@ function AdminContent() {
                                         <CollapsibleContent className="mt-4 space-y-2 text-sm">
                                             <p><strong>ID Transaction:</strong> {sub.transactionId}</p>
                                             <p><strong>Montant:</strong> {new Intl.NumberFormat('fr-FR').format(sub.amount)} FCFA</p>
-                                            {sub.startDate && (<p><strong>Début:</strong> {format(new Date((sub.startDate as any).seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}</p>)}
-                                            {sub.expiryDate && (<p><strong>Expire le:</strong> {format(new Date((sub.expiryDate as any).seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}</p>)}
+                                            {sub.startDate?.seconds && (<p><strong>Début:</strong> {format(new Date(sub.startDate.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}</p>)}
+                                            {sub.expiryDate?.seconds && (<p><strong>Expire le:</strong> {format(new Date(sub.expiryDate.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}</p>)}
                                         </CollapsibleContent>
                                     </Collapsible>
                                 )) : (
@@ -1320,9 +1341,9 @@ function AdminContent() {
                                                 <Label htmlFor={`price-${plan.id}`}>Prix (FCFA)</Label>
                                                 <Input
                                                     id={`price-${plan.id}`}
-                                                    type="number"
+                                                    type="text"
                                                     value={plan.price}
-                                                    onChange={(e) => handlePlanPriceChange(plan.id, parseInt(e.target.value, 10) || 0)}
+                                                    onChange={(e) => handlePlanPriceChange(plan.id, e.target.value)}
                                                 />
                                             </CardContent>
                                          </Card>
@@ -1449,5 +1470,7 @@ function AdminContent() {
 export default function AdminPageWrapper() {
     return <AdminContent />;
 }
+
+    
 
     
