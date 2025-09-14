@@ -76,7 +76,7 @@ function TVCard({ video }: { video: Video }) {
                                 />
                             ) : (
                                 <div className="w-full h-full bg-muted flex items-center justify-center">
-                                    <Play className="h-10 w-10 text-muted-foreground" />
+                                    {/* No fallback icon to keep it clean */}
                                 </div>
                             )
                         )}
