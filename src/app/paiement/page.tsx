@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -253,8 +254,8 @@ export default function PaiementPage() {
                         <div key={item.cartId} className="flex justify-between items-center">
                             <div className="flex items-center gap-3">
                                 <div className="relative h-12 w-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                                    {item.imageUrls && item.imageUrls.length > 0 && (
-                                    <Image src={item.imageUrls[0]} alt={item.title} fill className="object-cover" />
+                                    {item.mediaUrls && item.mediaUrls.length > 0 && (
+                                    <Image src={item.mediaUrls[0]} alt={item.title} fill className="object-cover" />
                                     )}
                                 </div>
                                 <div>

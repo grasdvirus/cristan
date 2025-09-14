@@ -1,23 +1,34 @@
 
+
 'use client'
 
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useProducts } from '@/hooks/use-products';
 import { useMemo } from 'react';
+import { useViewStore } from '@/hooks/use-view-store';
+import { useEffect } from 'react';
 
 export default function ArticleDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const { products, loading: loadingProducts, error } = useProducts();
+  const { addViewedArticle } = useViewStore();
 
   const article = useMemo(() => {
     return products.find(p => p.id === id);
   }, [products, id]);
+
+  useEffect(() => {
+    if (article) {
+      addViewedArticle(article.id);
+    }
+  }, [article, addViewedArticle]);
   
   const loading = loadingProducts;
 
@@ -52,15 +63,40 @@ export default function ArticleDetailPage() {
       <Card className="overflow-hidden shadow-lg">
         <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="relative min-h-[300px] md:min-h-[500px]">
-                {article.imageUrls && article.imageUrls.length > 0 && (
-                    <Image
-                        src={article.imageUrls[0]}
-                        alt={article.title}
-                        fill
-                        className="object-cover"
-                        data-ai-hint={article.dataAiHint}
-                    />
-                )}
+                 {article.mediaUrls && article.mediaUrls.length > 0 && (
+                    <Carousel className="w-full h-full">
+                        <CarouselContent>
+                            {article.mediaUrls.map((mediaUrl, index) => (
+                                <CarouselItem key={index}>
+                                    <div className="relative w-full h-[300px] md:h-[500px]">
+                                        {mediaUrl.includes('.mp4') || mediaUrl.includes('.mov') ? (
+                                            <video
+                                                src={mediaUrl}
+                                                controls
+                                                playsInline
+                                                className="w-full h-full object-contain"
+                                            />
+                                        ) : (
+                                            <Image
+                                                src={mediaUrl}
+                                                alt={`${article.title} - Média ${index + 1}`}
+                                                fill
+                                                className="object-contain"
+                                                data-ai-hint={article.dataAiHint}
+                                            />
+                                        )}
+                                    </div>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        {article.mediaUrls.length > 1 && (
+                            <>
+                                <CarouselPrevious className="left-4" />
+                                <CarouselNext className="right-4" />
+                            </>
+                        )}
+                    </Carousel>
+                 )}
             </div>
             <div className="flex flex-col">
                 <CardHeader>
@@ -77,3 +113,4 @@ export default function ArticleDetailPage() {
 }
 
     
+

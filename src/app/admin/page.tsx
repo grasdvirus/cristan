@@ -386,14 +386,15 @@ function AdminContent() {
         setHasChanges(true);
     };
 
-     const updateProductImage = (id: string, index: number, url: string) => {
-        setProducts(prev => prev.map(p => {
-            if (p.id === id) {
-                const newImageUrls = [...(p.imageUrls || [])];
-                newImageUrls[index] = url;
-                return { ...p, imageUrls: newImageUrls };
+     const updateProductMedia = (id: string, index: number, url: string) => {
+        setProducts(produce(draft => {
+            const product = draft.find(p => p.id === id);
+            if (product) {
+                if (!product.mediaUrls) {
+                    product.mediaUrls = [];
+                }
+                product.mediaUrls[index] = url;
             }
-            return p;
         }));
         setHasChanges(true);
     };
@@ -403,7 +404,7 @@ function AdminContent() {
             id: uuidv4(),
             title: 'Nouveau Produit',
             description: '',
-            imageUrls: [],
+            mediaUrls: [],
             dataAiHint: '',
             price: 0,
             isRecommended: false,
@@ -921,9 +922,9 @@ function AdminContent() {
                                                 <Textarea id={`desc-${product.id}`} value={product.description} onChange={(e) => updateProduct(product.id, 'description', e.target.value)} />
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <FileUpload label="Image 1" value={product.imageUrls?.[0] || ''} onChange={(url) => updateProductImage(product.id, 0, url)} acceptedFileTypes="image/*" />
-                                                <FileUpload label="Image 2" value={product.imageUrls?.[1] || ''} onChange={(url) => updateProductImage(product.id, 1, url)} acceptedFileTypes="image/*" />
-                                                <FileUpload label="Image 3" value={product.imageUrls?.[2] || ''} onChange={(url) => updateProductImage(product.id, 2, url)} acceptedFileTypes="image/*" />
+                                                <FileUpload label="Média 1 (Image/Vidéo)" value={product.mediaUrls?.[0] || ''} onChange={(url) => updateProductMedia(product.id, 0, url)} acceptedFileTypes="image/*,video/mp4,video/quicktime" mediaType={product.mediaUrls?.[0]?.includes('mp4') ? 'video' : 'image'} />
+                                                <FileUpload label="Média 2 (Image/Vidéo)" value={product.mediaUrls?.[1] || ''} onChange={(url) => updateProductMedia(product.id, 1, url)} acceptedFileTypes="image/*,video/mp4,video/quicktime" mediaType={product.mediaUrls?.[1]?.includes('mp4') ? 'video' : 'image'}/>
+                                                <FileUpload label="Média 3 (Image/Vidéo)" value={product.mediaUrls?.[2] || ''} onChange={(url) => updateProductMedia(product.id, 2, url)} acceptedFileTypes="image/*,video/mp4,video/quicktime" mediaType={product.mediaUrls?.[2]?.includes('mp4') ? 'video' : 'image'}/>
                                             </div>
                                             <div>
                                                 <Label htmlFor={`ai-hint-${product.id}`}>Indice IA pour l'image</Label>
@@ -1001,9 +1002,9 @@ function AdminContent() {
                                                 <Textarea id={`desc-${product.id}`} value={product.description} onChange={(e) => updateProduct(product.id, 'description', e.target.value)} />
                                             </div>
                                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <FileUpload label="Image 1" value={product.imageUrls?.[0] || ''} onChange={(url) => updateProductImage(product.id, 0, url)} acceptedFileTypes="image/*" />
-                                                <FileUpload label="Image 2" value={product.imageUrls?.[1] || ''} onChange={(url) => updateProductImage(product.id, 1, url)} acceptedFileTypes="image/*" />
-                                                <FileUpload label="Image 3" value={product.imageUrls?.[2] || ''} onChange={(url) => updateProductImage(product.id, 2, url)} acceptedFileTypes="image/*" />
+                                                <FileUpload label="Média 1 (Image)" value={product.mediaUrls?.[0] || ''} onChange={(url) => updateProductMedia(product.id, 0, url)} acceptedFileTypes="image/*" mediaType='image' />
+                                                <FileUpload label="Média 2 (Image)" value={product.mediaUrls?.[1] || ''} onChange={(url) => updateProductMedia(product.id, 1, url)} acceptedFileTypes="image/*" mediaType='image' />
+                                                <FileUpload label="Média 3 (Image)" value={product.mediaUrls?.[2] || ''} onChange={(url) => updateProductMedia(product.id, 2, url)} acceptedFileTypes="image/*" mediaType='image' />
                                             </div>
                                             <div>
                                                 <Label htmlFor={`ai-hint-${product.id}`}>Indice IA pour l'image</Label>
@@ -1077,9 +1078,9 @@ function AdminContent() {
                                                 <Textarea id={`desc-${product.id}`} value={product.description} onChange={(e) => updateProduct(product.id, 'description', e.target.value)} />
                                             </div>
                                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <FileUpload label="Image 1" value={product.imageUrls?.[0] || ''} onChange={(url) => updateProductImage(product.id, 0, url)} acceptedFileTypes="image/*" />
-                                                <FileUpload label="Image 2" value={product.imageUrls?.[1] || ''} onChange={(url) => updateProductImage(product.id, 1, url)} acceptedFileTypes="image/*" />
-                                                <FileUpload label="Image 3" value={product.imageUrls?.[2] || ''} onChange={(url) => updateProductImage(product.id, 2, url)} acceptedFileTypes="image/*" />
+                                                <FileUpload label="Média 1 (Image)" value={product.mediaUrls?.[0] || ''} onChange={(url) => updateProductMedia(product.id, 0, url)} acceptedFileTypes="image/*" mediaType='image' />
+                                                <FileUpload label="Média 2 (Image)" value={product.mediaUrls?.[1] || ''} onChange={(url) => updateProductMedia(product.id, 1, url)} acceptedFileTypes="image/*" mediaType='image' />
+                                                <FileUpload label="Média 3 (Image)" value={product.mediaUrls?.[2] || ''} onChange={(url) => updateProductMedia(product.id, 2, url)} acceptedFileTypes="image/*" mediaType='image' />
                                             </div>
                                             <div>
                                                 <Label htmlFor={`ai-hint-${product.id}`}>Indice IA pour l'image</Label>
@@ -1685,3 +1686,4 @@ export default function AdminPageWrapper() {
     
 
     
+

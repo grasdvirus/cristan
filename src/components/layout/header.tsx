@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -9,9 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useArticleCategories } from '@/lib/data';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useFilterStore } from '@/hooks/use-filter-store';
 import { useCartStore } from '@/hooks/use-cart-store';
+import { useProducts } from '@/hooks/use-products';
+import { useViewStore } from '@/hooks/use-view-store';
+import { Badge } from '@/components/ui/badge';
 
 const navLinks = [
   { href: '/', label: 'Accueil', icon: Home },
@@ -29,6 +33,26 @@ const Header = () => {
 
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  const { products } = useProducts();
+  const { viewedArticleIds } = useViewStore();
+
+  const articleProducts = useMemo(() => products.filter(p => p.articleCategory), [products]);
+
+  const newArticlesCount = useMemo(() => {
+    return articleProducts.filter(p => !viewedArticleIds.includes(p.id)).length;
+  }, [articleProducts, viewedArticleIds]);
+
+  const newArticlesPerCategory = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    articleProducts.forEach(p => {
+        if (!viewedArticleIds.includes(p.id) && p.articleCategory) {
+            counts[p.articleCategory] = (counts[p.articleCategory] || 0) + 1;
+        }
+    });
+    return counts;
+  }, [articleProducts, viewedArticleIds]);
+
 
   const handleFilterChange = (category: string) => {
     setArticleCategory(category);
@@ -50,9 +74,12 @@ const Header = () => {
             key={category.id}
             variant={activeArticleCategory === category.id ? 'secondary' : 'ghost'}
             onClick={() => handleFilterChange(category.id)}
-            className="justify-start px-2"
+            className="justify-between px-2 w-full"
         >
-            {category.label}
+            <span>{category.label}</span>
+            {newArticlesPerCategory[category.id] > 0 && (
+                <Badge variant="destructive" className="h-5">{newArticlesPerCategory[category.id]}</Badge>
+            )}
         </Button>
       ))}
     </div>
@@ -84,25 +111,53 @@ const Header = () => {
     </Button>
   );
 
+  const FilterButton = ({ isPopover = false }) => {
+     const Trigger = (
+         <Button variant="outline" className="relative">
+            <Filter className="mr-2 h-4 w-4" />
+            Filtre
+            {newArticlesCount > 0 && (
+                <Badge variant="destructive" className="absolute -top-2 -right-2">{newArticlesCount}</Badge>
+            )}
+        </Button>
+     );
+
+     if (isPopover) {
+        return (
+            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                <PopoverTrigger asChild>{Trigger}</PopoverTrigger>
+                <PopoverContent className="w-56 p-0"><FilterContent /></PopoverContent>
+            </Popover>
+        )
+     }
+
+     return (
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                    <Filter className="h-5 w-5" />
+                    {newArticlesCount > 0 && (
+                         <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 justify-center p-0">{newArticlesCount}</Badge>
+                    )}
+                </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-lg">
+                <SheetHeader className="text-left">
+                    <SheetTitle>Filtrer les actualités</SheetTitle>
+                </SheetHeader>
+                <div className="py-4"><FilterContent /></div>
+            </SheetContent>
+        </Sheet>
+     );
+  };
+
   return (
     <>
       {/* Desktop Header */}
       <header className="sticky top-0 z-50 hidden w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:block">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex-1">
-            {isHomePage && (
-              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                <PopoverTrigger asChild>
-                    <Button variant="outline">
-                        <Filter className="mr-2 h-4 w-4" />
-                        Filtre
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 p-0">
-                  <FilterContent />
-                </PopoverContent>
-              </Popover>
-            )}
+            {isHomePage && <FilterButton isPopover={true} />}
           </div>
           <Link href="/" className="flex flex-1 justify-center items-center gap-2">
             <span className="font-headline text-xl font-bold text-foreground">Cristan</span>
@@ -126,23 +181,7 @@ const Header = () => {
       {/* Mobile Header */}
       <header className="sticky top-0 z-40 flex w-full justify-between items-center md:hidden border-b border-border/40 bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex flex-1 items-center justify-start gap-2">
-           {isHomePage && (
-              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <Filter className="h-5 w-5" />
-                    </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="rounded-t-lg">
-                    <SheetHeader className="text-left">
-                        <SheetTitle>Filtrer les actualités</SheetTitle>
-                    </SheetHeader>
-                    <div className="py-4">
-                        <FilterContent />
-                    </div>
-                </SheetContent>
-              </Sheet>
-            )}
+           {isHomePage && <FilterButton isPopover={false} />}
         </div>
         <Link href="/" className="flex-1 flex justify-center items-center gap-2">
           <span className="font-headline text-xl font-bold text-foreground">Cristan</span>
@@ -163,3 +202,4 @@ const Header = () => {
 };
 
 export default Header;
+

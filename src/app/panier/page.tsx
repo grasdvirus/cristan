@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import Image from 'next/image';
@@ -43,8 +44,8 @@ export default function PanierPage() {
               {items.map((item) => (
                  <div key={item.cartId} className="flex items-center gap-4">
                     <Link href={`/artwork/${item.id}`} className="relative h-20 w-20 rounded-md overflow-hidden bg-muted flex-shrink-0 group">
-                        {item.imageUrls && item.imageUrls.length > 0 && (
-                        <Image src={item.imageUrls[0]} alt={item.title} fill className="object-cover transition-transform group-hover:scale-105" />
+                        {item.mediaUrls && item.mediaUrls.length > 0 && (
+                        <Image src={item.mediaUrls[0]} alt={item.title} fill className="object-cover transition-transform group-hover:scale-105" />
                         )}
                     </Link>
                     <div className="flex-grow">
@@ -89,3 +90,4 @@ export default function PanierPage() {
     </div>
   );
 }
+

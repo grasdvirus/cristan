@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Image from 'next/image';
@@ -11,6 +12,8 @@ import React, { useMemo, useRef } from 'react';
 import { useFilterStore } from '@/hooks/use-filter-store';
 import { useProducts } from '@/hooks/use-products';
 import { useSlides } from '@/hooks/use-slides';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 
 export default function Home() {
@@ -128,10 +131,10 @@ export default function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredArticles.map((product) => (
             <Card key={product.id} className="overflow-hidden group transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-primary/20 shadow-lg flex flex-col">
-              <CardContent className="p-0">
-                 {product.imageUrls && product.imageUrls.length > 0 && (
+              <CardContent className="p-0 relative">
+                 {product.mediaUrls && product.mediaUrls.length > 0 && (
                     <Image
-                      src={product.imageUrls[0]}
+                      src={product.mediaUrls[0]}
                       alt={product.title}
                       width={600}
                       height={400}
@@ -139,6 +142,11 @@ export default function Home() {
                       data-ai-hint={product.dataAiHint}
                     />
                  )}
+                 {product.createdAt && (
+                    <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                         {format(new Date(product.createdAt.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}
+                    </div>
+                )}
               </CardContent>
               <CardHeader>
                 <CardTitle className="font-headline text-2xl text-foreground">{product.title}</CardTitle>
@@ -158,3 +166,4 @@ export default function Home() {
     </div>
   );
 }
+

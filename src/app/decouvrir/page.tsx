@@ -1,11 +1,12 @@
 
 
+
 'use client'
 
 import { useState, useEffect, useMemo, Suspense, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useProductCollections, useInternetClasses, useTvChannels } from '@/lib/data';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,6 @@ import { useVideos } from '@/hooks/use-videos';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { useRouter } from 'next/navigation';
 
 type Category = 'all' | 'internet' | 'tv' | 'contrat';
 type SubFilter = 'all' | 'recommended' | string;
@@ -43,9 +43,8 @@ function TVCard({ video }: { video: Video }) {
     const [isActive, setIsActive] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
-    
-    // Détecte si c'est un appareil tactile une seule fois
     const [isTouchDevice, setIsTouchDevice] = useState(false);
+
     useEffect(() => {
         setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
     }, []);
@@ -54,12 +53,11 @@ function TVCard({ video }: { video: Video }) {
         const videoElement = videoRef.current;
         if (!videoElement) return;
 
-        if (isActive) {
+        if (isActive && video.shortPreviewUrl) {
             videoElement.currentTime = 0;
             const playPromise = videoElement.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                    // L'erreur d'interruption est normale si l'utilisateur quitte l'aperçu rapidement
                     if (error.name !== 'AbortError') {
                         console.error("Autoplay error:", error);
                     }
@@ -68,9 +66,8 @@ function TVCard({ video }: { video: Video }) {
         } else {
             videoElement.pause();
         }
-    }, [isActive]);
+    }, [isActive, video.shortPreviewUrl]);
 
-    // Gère les clics en dehors pour désactiver
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
@@ -78,43 +75,27 @@ function TVCard({ video }: { video: Video }) {
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [cardRef]);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
     
-    const handleInteractionStart = () => {
-        if (!isActive && video.shortPreviewUrl) {
-            setIsActive(true);
-        }
-    };
-    
-    const handleInteractionEnd = () => {
-        if (isActive) {
-            setIsActive(false);
-        }
-    }
-    
+    const handleInteractionStart = () => !isActive && setIsActive(true);
+    const handleInteractionEnd = () => isActive && setIsActive(false);
+
     const handleClick = (e: React.MouseEvent) => {
-        // S'il n'y a pas d'aperçu, on navigue directement
-        if (!video.shortPreviewUrl) {
+        // If there's no preview, or if on desktop, navigate immediately.
+        if (!video.shortPreviewUrl || !isTouchDevice) {
             router.push(`/video/${video.id}`);
             return;
         }
 
-        if (isTouchDevice) {
-            // Sur appareil tactile:
-            // 1er appui: active la prévisualisation, mais ne navigue pas
-            if (!isActive) {
-                e.preventDefault(); // Empêche le Link de naviguer
-                setIsActive(true);
-            }
-            // 2ème appui (ou plus): le Link suivra son cours normal et naviguera
-        } else {
-            // Sur ordinateur, un clic navigue toujours
-            router.push(`/video/${video.id}`);
+        // On touch device:
+        if (!isActive) {
+            // 1st tap: prevent navigation, activate preview.
+            e.preventDefault();
+            setIsActive(true);
         }
-    }
+        // 2nd tap: will proceed with navigation as isActive is true.
+    };
 
     return (
         <div ref={cardRef}>
@@ -129,14 +110,15 @@ function TVCard({ video }: { video: Video }) {
                 <Card className="overflow-hidden h-full flex flex-col transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20">
                     <CardContent className="p-0 relative">
                         <div className="aspect-video overflow-hidden">
-                            {isActive && video.shortPreviewUrl ? (
+                             {isActive && video.shortPreviewUrl ? (
                                 <video
                                     ref={videoRef}
                                     src={video.shortPreviewUrl}
                                     muted
                                     loop
-                                    playsInline // Important for iOS
+                                    playsInline
                                     className="object-cover w-full h-full transition-all duration-300"
+                                    preload="metadata"
                                 />
                             ) : (
                                 video.imageUrl ? (
@@ -149,9 +131,7 @@ function TVCard({ video }: { video: Video }) {
                                         data-ai-hint={video.dataAiHint}
                                     />
                                 ) : (
-                                    <div className="w-full h-full bg-muted flex items-center justify-center">
-                                        {/* Pas de contenu de secours pour garder une interface épurée */}
-                                    </div>
+                                    <div className="w-full h-full bg-muted flex items-center justify-center" />
                                 )
                             )}
                             {video.duration && (
@@ -314,8 +294,8 @@ function DecouvrirContent() {
                              <Link href={`/artwork/${product.id}`} className="group block">
                                 <Card className="overflow-hidden group-hover:shadow-primary/20 transition-all duration-300 flex flex-col h-full">
                                     <CardContent className="p-0 relative">
-                                        {product.imageUrls && product.imageUrls.length > 0 ? (
-                                            <Image src={product.imageUrls[0]} alt={product.title} width={600} height={400} className="object-cover w-full h-auto transition-transform duration-300 ease-in-out group-hover:scale-105" data-ai-hint={product.dataAiHint} />
+                                        {product.mediaUrls && product.mediaUrls.length > 0 ? (
+                                            <Image src={product.mediaUrls[0]} alt={product.title} width={600} height={400} className="object-cover w-full h-auto transition-transform duration-300 ease-in-out group-hover:scale-105" data-ai-hint={product.dataAiHint} />
                                         ) : (
                                             <div className="flex aspect-[4/3] items-center justify-center bg-muted">
                                                 <span className="text-sm text-muted-foreground">Pas d'image</span>

@@ -3,7 +3,7 @@ export type Product = {
   id: string;
   title: string;
   description: string;
-  imageUrls: string[]; // Changed from imageUrl: string
+  mediaUrls: string[]; // Changed from imageUrls to mediaUrls to support video
   dataAiHint: string;
   price: number;
   collection?: string;
@@ -17,3 +17,4 @@ export type Product = {
 };
 
     
+
