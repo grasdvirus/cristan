@@ -47,7 +47,7 @@ export default function PaiementPage() {
 
   // Check if cart contains any physical product
   const hasPhysicalProduct = items.some(item => !!item.collection);
-  const deliveryFee = hasPhysicalProduct ? 5000 : 0;
+  const deliveryFee = hasPhysicalProduct ? 3000 : 0;
   const finalTotal = total + deliveryFee;
 
   const form = useForm<z.infer<typeof paymentFormSchema>>({
@@ -300,3 +300,5 @@ export default function PaiementPage() {
     </div>
   );
 }
+
+    
