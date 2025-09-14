@@ -263,6 +263,8 @@ export default function VideoDetailPage() {
                     src={video.src}
                     controls
                     autoPlay
+                    playsInline
+                    loop
                     className="w-full h-full"
                 />
             ) : null}
@@ -330,5 +332,7 @@ export default function VideoDetailPage() {
     </div>
   );
 }
+
+    
 
     

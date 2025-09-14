@@ -56,11 +56,15 @@ function TVCard({ video }: { video: Video }) {
 
         if (isActive) {
             videoElement.currentTime = 0;
-            videoElement.play().catch(e => {
-                 if (e.name !== 'AbortError') {
-                    console.error("Autoplay a échoué", e);
-                }
-            });
+            const playPromise = videoElement.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    // L'erreur d'interruption est normale si l'utilisateur quitte l'aperçu rapidement
+                    if (error.name !== 'AbortError') {
+                        console.error("Autoplay error:", error);
+                    }
+                });
+            }
         } else {
             videoElement.pause();
         }
@@ -376,3 +380,5 @@ export default function DecouvrirPage() {
         </Suspense>
     )
 }
+
+    
