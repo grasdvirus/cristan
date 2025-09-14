@@ -21,6 +21,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   
   const isLoginPage = pathname === '/login';
   const isAdminPage = pathname.startsWith('/admin');
+  const isVideoPage = pathname.startsWith('/video');
 
   useEffect(() => {
     if (loading) return; 
@@ -83,7 +84,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className={cn(
-          "flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8",
+          "flex-grow w-full py-8",
+          isVideoPage ? "px-0" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
         )}>
           {children}
         </main>

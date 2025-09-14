@@ -213,7 +213,7 @@ export default function VideoDetailPage() {
           )
       }
       return (
-        <div className="overflow-hidden rounded-lg bg-black aspect-video relative">
+        <div className="overflow-hidden bg-black aspect-video relative">
             {!showVideo && youtubeEmbedUrl ? (
                 <div className="w-full h-full cursor-pointer relative group" onClick={() => setShowVideo(true)}>
                     {video.imageUrl ? (
@@ -253,7 +253,7 @@ export default function VideoDetailPage() {
 
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-screen-2xl mx-auto">
         <div className="p-4 md:p-6 space-y-4">
             <Button variant="ghost" size="icon" onClick={() => router.back()} className="mb-4">
                 <ArrowLeft className="h-6 w-6" />
