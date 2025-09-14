@@ -7,9 +7,9 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ShoppingCart, Loader2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Loader2, ExternalLink, Check } from 'lucide-react';
 import { useProducts } from '@/hooks/use-products';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useCartStore } from '@/hooks/use-cart-store';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -27,10 +27,20 @@ export default function ArtworkDetailPage() {
   }, [products, id]);
   
   const [selectedImage, setSelectedImage] = useState(artwork?.imageUrls?.[0]);
+  const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
+  const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
 
-  useMemo(() => {
-    if (artwork && artwork.imageUrls.length > 0) {
+
+  useEffect(() => {
+    if (artwork && artwork.imageUrls && artwork.imageUrls.length > 0) {
       setSelectedImage(artwork.imageUrls[0]);
+    }
+     // Pre-select first option if available
+    if (artwork?.colors && artwork.colors.length > 0) {
+      setSelectedColor(artwork.colors[0]);
+    }
+    if (artwork?.sizes && artwork.sizes.length > 0) {
+      setSelectedSize(artwork.sizes[0]);
     }
   }, [artwork]);
   
@@ -38,7 +48,7 @@ export default function ArtworkDetailPage() {
 
   const handleAddToCart = () => {
     if (artwork) {
-        addToCart(artwork);
+        addToCart({ ...artwork, selectedColor, selectedSize });
         toast({
             title: "Ajouté au panier !",
             description: `"${artwork.title}" a été ajouté à votre panier.`,
@@ -57,7 +67,7 @@ export default function ArtworkDetailPage() {
   if (error) {
     return (
         <div className="flex h-96 w-full items-center justify-center text-red-500">
-            Erreur de chargement de l'oeuvre : {error}
+            Erreur de chargement du produit : {error}
         </div>
     );
   }
@@ -67,6 +77,7 @@ export default function ArtworkDetailPage() {
   }
   
   const isInternetProduct = !!artwork.internetClass;
+  const hasOptions = (artwork.colors && artwork.colors.length > 0) || (artwork.sizes && artwork.sizes.length > 0);
 
   return (
     <div className="space-y-8">
@@ -121,16 +132,25 @@ export default function ArtworkDetailPage() {
                 <CardHeader>
                     <CardTitle className="font-headline text-4xl text-primary">{artwork.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 flex-grow">
+                <CardContent className="space-y-6 flex-grow">
                     <p className="text-base text-foreground/90">{artwork.description}</p>
-                     {(artwork.colors && artwork.colors.length > 0) || (artwork.sizes && artwork.sizes.length > 0) ? (
+                     {hasOptions ? (
                         <div className="space-y-4">
                             {artwork.colors && artwork.colors.length > 0 && (
                                 <div>
                                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Couleurs</h3>
                                     <div className="flex flex-wrap gap-2">
                                         {artwork.colors.map(color => (
-                                            <Badge key={color} variant="outline">{color}</Badge>
+                                            <Button
+                                                key={color}
+                                                variant={selectedColor === color ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={() => setSelectedColor(color)}
+                                                className="transition-all"
+                                            >
+                                                 {selectedColor === color && <Check className="mr-2 h-4 w-4" />}
+                                                {color}
+                                            </Button>
                                         ))}
                                     </div>
                                 </div>
@@ -140,7 +160,16 @@ export default function ArtworkDetailPage() {
                                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Tailles</h3>
                                     <div className="flex flex-wrap gap-2">
                                         {artwork.sizes.map(size => (
-                                            <Badge key={size} variant="outline">{size}</Badge>
+                                            <Button
+                                                key={size}
+                                                variant={selectedSize === size ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={() => setSelectedSize(size)}
+                                                 className="transition-all"
+                                            >
+                                                {selectedSize === size && <Check className="mr-2 h-4 w-4" />}
+                                                {size}
+                                            </Button>
                                         ))}
                                     </div>
                                 </div>

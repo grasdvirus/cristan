@@ -102,12 +102,14 @@ export default function PaiementPage() {
     setIsSubmitting(true);
     
     // Sanitize items before saving
-    const sanitizedItems = items.map(({ id, title, price, collection, internetClass }) => ({
+    const sanitizedItems = items.map(({ id, title, price, collection, internetClass, selectedColor, selectedSize }) => ({
         id,
         title,
         price,
         ...(collection && { collection }),
         ...(internetClass && { internetClass }),
+        ...(selectedColor && { selectedColor }),
+        ...(selectedSize && { selectedSize }),
     }));
     
     const orderData = {
@@ -248,7 +250,7 @@ export default function PaiementPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {items.map(item => (
-                        <div key={item.id} className="flex justify-between items-center">
+                        <div key={item.cartId} className="flex justify-between items-center">
                             <div className="flex items-center gap-3">
                                 <div className="relative h-12 w-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
                                     {item.imageUrls && item.imageUrls.length > 0 && (
@@ -257,7 +259,12 @@ export default function PaiementPage() {
                                 </div>
                                 <div>
                                     <span className="font-semibold">{item.title}</span>
-                                    <p className="text-sm text-muted-foreground">Qté: 1</p>
+                                     <div className="text-sm text-muted-foreground">
+                                        {item.selectedColor && <span>{item.selectedColor}</span>}
+                                        {item.selectedColor && item.selectedSize && <span>, </span>}
+                                        {item.selectedSize && <span>{item.selectedSize}</span>}
+                                        <p>Qté: 1</p>
+                                    </div>
                                 </div>
                             </div>
                             <span className="font-medium">{new Intl.NumberFormat('fr-FR').format(item.price)} FCFA</span>

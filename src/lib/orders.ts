@@ -1,4 +1,5 @@
 
+
 import type { Product } from './products';
 
 // A simplified version of Product for storing in an order
@@ -8,6 +9,8 @@ type OrderItem = {
   price: number;
   collection?: string;
   internetClass?: string;
+  selectedColor?: string;
+  selectedSize?: string;
 }
 
 export type Order = {

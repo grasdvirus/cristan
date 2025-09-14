@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, ChangeEvent, useRef } from 'react';
@@ -512,23 +513,24 @@ function AdminContent() {
     };
 
     const handleCategoryChange = (list: keyof AllCategories, index: number, value: string) => {
-        const updatedList = [...localCategories[list]];
-        updatedList[index] = { ...updatedList[index], label: value };
-        setLocalCategories(prev => ({ ...prev, [list]: updatedList }));
+        setLocalCategories(produce(draft => {
+            draft[list][index].label = value;
+        }));
         setHasChanges(true);
     }
 
     const addCategory = (list: keyof AllCategories) => {
         const newId = uuidv4().slice(0, 8); // simple unique id
-        const newItem = { id: newId, label: 'Nouvelle catégorie' };
-        setLocalCategories(prev => ({ ...prev, [list]: [...prev[list], newItem] }));
+        setLocalCategories(produce(draft => {
+            draft[list].push({ id: newId, label: 'Nouvelle catégorie' });
+        }));
         setHasChanges(true);
     }
 
     const deleteCategory = (list: keyof AllCategories, index: number) => {
-        const updatedList = [...localCategories[list]];
-        updatedList.splice(index, 1);
-        setLocalCategories(prev => ({ ...prev, [list]: updatedList }));
+        setLocalCategories(produce(draft => {
+            draft[list].splice(index, 1);
+        }));
         setHasChanges(true);
     }
 
@@ -1377,7 +1379,16 @@ function AdminContent() {
                                             {order.customerNotes && <p><strong>Notes:</strong> {order.customerNotes}</p>}
                                             <h4 className="font-semibold mt-2">Articles :</h4>
                                             <ul className="list-disc pl-5">
-                                                {order.items.map(item => <li key={item.id}>{item.title} ({new Intl.NumberFormat('fr-FR').format(item.price)} FCFA)</li>)}
+                                                {order.items.map(item => (
+                                                    <li key={item.id}>
+                                                        {item.title} ({new Intl.NumberFormat('fr-FR').format(item.price)} FCFA)
+                                                        {(item.selectedColor || item.selectedSize) && (
+                                                            <span className="text-xs text-muted-foreground ml-2">
+                                                                ({item.selectedColor}{item.selectedColor && item.selectedSize ? ', ' : ''}{item.selectedSize})
+                                                            </span>
+                                                        )}
+                                                    </li>
+                                                ))}
                                             </ul>
                                         </CollapsibleContent>
                                     </Collapsible>

@@ -4,12 +4,20 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Product } from '@/lib/products';
+import { v4 as uuidv4 } from 'uuid';
+
+// An item in the cart can have selected options
+export type CartItem = Product & {
+  cartId?: string; // Unique ID for this specific item instance in the cart
+  selectedColor?: string;
+  selectedSize?: string;
+};
 
 interface CartState {
-  items: Product[];
+  items: CartItem[];
   total: number;
-  addToCart: (item: Product) => void;
-  removeFromCart: (itemId: string) => void;
+  addToCart: (item: CartItem) => void;
+  removeFromCart: (cartId: string) => void;
   clearCart: () => void;
 }
 
@@ -19,22 +27,17 @@ export const useCartStore = create(
       items: [],
       total: 0,
       
-      addToCart: (item: Product) => {
-        const { items } = get();
-        // Prevent duplicates
-        if (items.find(i => i.id === item.id)) {
-            return;
-        }
+      addToCart: (itemToAdd: CartItem) => {
         set(state => {
-            const newItems = [...state.items, item];
+            const newItems = [...state.items, { ...itemToAdd, cartId: uuidv4() }];
             const newTotal = newItems.reduce((acc, curr) => acc + curr.price, 0);
             return { items: newItems, total: newTotal };
         });
       },
 
-      removeFromCart: (itemId: string) => {
+      removeFromCart: (cartId: string) => {
         set(state => {
-            const newItems = state.items.filter(i => i.id !== itemId);
+            const newItems = state.items.filter(i => i.cartId !== cartId);
             const newTotal = newItems.reduce((acc, curr) => acc + curr.price, 0);
             return { items: newItems, total: newTotal };
         });

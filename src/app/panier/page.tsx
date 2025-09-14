@@ -41,7 +41,7 @@ export default function PanierPage() {
           ) : (
             <div className="space-y-4">
               {items.map((item) => (
-                 <div key={item.id} className="flex items-center gap-4">
+                 <div key={item.cartId} className="flex items-center gap-4">
                     <Link href={`/artwork/${item.id}`} className="relative h-20 w-20 rounded-md overflow-hidden bg-muted flex-shrink-0 group">
                         {item.imageUrls && item.imageUrls.length > 0 && (
                         <Image src={item.imageUrls[0]} alt={item.title} fill className="object-cover transition-transform group-hover:scale-105" />
@@ -51,9 +51,13 @@ export default function PanierPage() {
                         <Link href={`/artwork/${item.id}`}>
                             <h3 className="font-semibold hover:text-primary transition-colors">{item.title}</h3>
                         </Link>
+                        <div className="text-sm text-muted-foreground">
+                            {item.selectedColor && <p>Couleur: {item.selectedColor}</p>}
+                            {item.selectedSize && <p>Taille: {item.selectedSize}</p>}
+                        </div>
                         <p className="text-sm text-muted-foreground">{new Intl.NumberFormat('fr-FR').format(item.price)} FCFA</p>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.cartId!)}>
                         <Trash2 className="h-5 w-5 text-destructive" />
                     </Button>
                  </div>
