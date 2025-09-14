@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Mail, Loader2, PartyPopper, Wallet, Crown, Check, Star } from 'lucide-react';
+import { Mail, Loader2, PartyPopper, Wallet, Crown, Check, ShieldCheck } from 'lucide-react';
 import type { PaymentDetails } from '@/lib/payment';
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import type { SubscriptionPlanId, SubscriptionPlans } from '@/lib/subscriptions';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const subscriptionFormSchema = z.object({
   plan: z.enum(['24h', '1w', '1m'], { required_error: "Vous devez sélectionner un forfait." }),
@@ -160,6 +161,23 @@ export default function SubscribePage() {
     <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
         {/* Left Section - Plan selection and payment details */}
         <div className="space-y-6">
+             <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="item-1" className='border-b-0'>
+                    <Card>
+                        <AccordionTrigger className='p-4 hover:no-underline'>
+                            <CardTitle className="flex items-center gap-3 text-xl">
+                                <ShieldCheck className="h-6 w-6 text-primary" />
+                                Confiance & Sécurité
+                            </CardTitle>
+                        </AccordionTrigger>
+                         <AccordionContent className='p-4 pt-0'>
+                            <div className="text-sm text-muted-foreground">
+                                Avant de terminer le paiement veuillez lire nos informations sur la confidentialité pour votre sécurité. En savoir plus <Link href="/a-propos" className="underline hover:text-primary">à propos de nous</Link>.
+                            </div>
+                        </AccordionContent>
+                    </Card>
+                </AccordionItem>
+            </Accordion>
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3 text-2xl">

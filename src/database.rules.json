@@ -47,6 +47,10 @@
        "subscriptionPlans": {
          ".read": "true",
          ".write": "auth.token.email == 'grasdvirus@gmail.com'"
+       },
+       "about": {
+         ".read": "true",
+         ".write": "auth.token.email == 'grasdvirus@gmail.com'"
        }
     }
   }
@@ -54,3 +58,4 @@
     
 
     
+

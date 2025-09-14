@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, ChangeEvent, useRef } from 'react';
@@ -12,6 +13,7 @@ import type { Video } from '@/lib/videos';
 import type { Order } from '@/lib/orders';
 import type { Subscription, SubscriptionPlans, SubscriptionPlanId } from '@/lib/subscriptions';
 import type { PaymentDetails, PaymentMethod } from '@/lib/payment';
+import type { AboutContent, FAQItem } from '@/lib/about';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, writeBatch, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
@@ -27,7 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarTrigger } from '@/components/ui/sidebar';
-import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag, Lock, Youtube } from "lucide-react";
+import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag, Lock, Youtube, Info } from "lucide-react";
 import { useProducts } from '@/hooks/use-products';
 import { useSlides } from '@/hooks/use-slides';
 import { useContracts } from '@/hooks/use-contracts';
@@ -61,7 +63,7 @@ type AllCategories = {
 }
 
 type SaveStatus = 'idle' | 'saving' | 'success' | 'error';
-type ActiveView = 'articles' | 'products' | 'internet' | 'tv' | 'slides' | 'contracts' | 'orders' | 'subscriptions' | 'subscriptionPrices' | 'categories' | 'payment';
+type ActiveView = 'articles' | 'products' | 'internet' | 'tv' | 'slides' | 'contracts' | 'orders' | 'subscriptions' | 'subscriptionPrices' | 'categories' | 'payment' | 'about';
 
 
 async function updateProductsClient(products: Product[]): Promise<void> {
@@ -176,6 +178,25 @@ async function updateSubscriptionPlansClient(plans: SubscriptionPlans): Promise<
     await setDoc(plansDocRef, plans, { merge: true });
 }
 
+async function fetchAboutContentClient(): Promise<AboutContent> {
+    const aboutDocRef = doc(db, 'config', 'about');
+    const docSnap = await getDoc(aboutDocRef);
+    if (docSnap.exists()) {
+        return docSnap.data() as AboutContent;
+    }
+    // Return default structure
+    return {
+        history: 'Histoire du site à écrire...',
+        howItWorks: 'Fonctionnement du site à décrire...',
+        faqs: [{ id: uuidv4(), question: 'Question exemple ?', answer: 'Réponse exemple.' }]
+    };
+}
+
+async function updateAboutContentClient(content: AboutContent): Promise<void> {
+    const aboutDocRef = doc(db, 'config', 'about');
+    await setDoc(aboutDocRef, content, { merge: true });
+}
+
 
 function FileUpload({ value, onChange, label, acceptedFileTypes, mediaType = 'image' }: { value: string, onChange: (url: string) => void, label: string, acceptedFileTypes: string, mediaType?: 'image' | 'video' }) {
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -286,8 +307,10 @@ function AdminContent() {
     const [localCategories, setLocalCategories] = useState<AllCategories>({ articleCategories: [], productCollections: [], internetClasses: [], tvChannels: [] });
     const [paymentDetails, setPaymentDetails] = useState<PaymentDetails>({ methods: [] });
     const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlans | null>(null);
+    const [aboutContent, setAboutContent] = useState<AboutContent | null>(null);
     const [loadingPayment, setLoadingPayment] = useState(true);
     const [loadingPlans, setLoadingPlans] = useState(true);
+    const [loadingAbout, setLoadingAbout] = useState(true);
         
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const [hasChanges, setHasChanges] = useState(false);
@@ -295,7 +318,7 @@ function AdminContent() {
     const [isPaymentUnlocked, setIsPaymentUnlocked] = useState(false);
     const [isSubsPriceUnlocked, setIsSubsPriceUnlocked] = useState(false);
     
-    const loadingData = authLoading || loadingProducts || loadingSlides || loadingContracts || loadingVideos || loadingCategories || loadingOrders || loadingSubscriptions || loadingPayment || loadingPlans;
+    const loadingData = authLoading || loadingProducts || loadingSlides || loadingContracts || loadingVideos || loadingCategories || loadingOrders || loadingSubscriptions || loadingPayment || loadingPlans || loadingAbout;
 
     useEffect(() => {
         if (user && user.email !== 'grasdvirus@gmail.com') {
@@ -316,7 +339,7 @@ function AdminContent() {
     }, [loadingCategories, articleCategories, productCollections, internetClasses, tvChannels]);
 
 
-    // Fetch payment details and subscription plans
+    // Fetch payment details, subscription plans, and about content
     useEffect(() => {
         setLoadingPayment(true);
         fetchPaymentDetailsClient().then(details => {
@@ -334,6 +357,15 @@ function AdminContent() {
         }).catch(() => {
             setSubscriptionPlans(null);
             setLoadingPlans(false);
+        });
+
+        setLoadingAbout(true);
+        fetchAboutContentClient().then(content => {
+            setAboutContent(content);
+            setLoadingAbout(false);
+        }).catch(() => {
+            setAboutContent(null);
+            setLoadingAbout(false);
         });
     }, []);
 
@@ -516,6 +548,51 @@ function AdminContent() {
             setHasChanges(true);
         }
     };
+    
+    const handleAboutChange = (field: keyof AboutContent, value: string) => {
+        if (aboutContent) {
+            setAboutContent(produce(draft => {
+                if (draft) {
+                    (draft as any)[field] = value;
+                }
+            }));
+            setHasChanges(true);
+        }
+    };
+
+    const handleFaqChange = (index: number, field: keyof FAQItem, value: string) => {
+        if (aboutContent) {
+            setAboutContent(produce(draft => {
+                if (draft) {
+                    draft.faqs[index][field] = value;
+                }
+            }));
+            setHasChanges(true);
+        }
+    };
+
+    const addFaq = () => {
+        if (aboutContent) {
+            setAboutContent(produce(draft => {
+                if (draft) {
+                    draft.faqs.push({ id: uuidv4(), question: 'Nouvelle question', answer: 'Nouvelle réponse' });
+                }
+            }));
+            setHasChanges(true);
+        }
+    };
+
+    const deleteFaq = (index: number) => {
+        if (aboutContent) {
+            setAboutContent(produce(draft => {
+                if (draft) {
+                    draft.faqs.splice(index, 1);
+                }
+            }));
+            setHasChanges(true);
+        }
+    };
+
 
     const handleUpdateOrderStatus = async (orderId: string, status: Order['status']) => {
         try {
@@ -626,6 +703,7 @@ function AdminContent() {
                 updateCategoriesClient(localCategories),
                 updatePaymentDetailsClient(paymentDetails),
                 subscriptionPlans ? updateSubscriptionPlansClient(subscriptionPlans) : Promise.resolve(),
+                aboutContent ? updateAboutContentClient(aboutContent) : Promise.resolve(),
             ]);
             
             // Re-fetch categories to update the app state globally
@@ -658,6 +736,7 @@ function AdminContent() {
         { id: 'subscriptionPrices', label: 'Prix des Abonnements', icon: Tag },
         { id: 'categories', label: 'Catégories & Filtres', icon: Grip },
         { id: 'payment', label: 'Moyens de Paiement', icon: CreditCard },
+        { id: 'about', label: 'Page À Propos', icon: Info },
     ];
 
     if (loadingData) {
@@ -1448,6 +1527,71 @@ function AdminContent() {
                                     </Card>
                                 )}
                                 </div>
+                            )}
+                        </div>
+                    )}
+                    
+                    {activeView === 'about' && (
+                        <div>
+                             <div className="flex justify-between items-center mb-6">
+                                <div>
+                                     <h1 className="text-3xl font-bold">Gérer la Page "À Propos"</h1>
+                                     <p className="text-muted-foreground">Modifiez le contenu de la page d'information.</p>
+                                </div>
+                            </div>
+                             {loadingAbout ? (
+                                <div className="flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                            ) : aboutContent ? (
+                                <div className="space-y-6">
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>Contenu Principal</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <div>
+                                                <Label htmlFor="about-history">Histoire du site</Label>
+                                                <Textarea id="about-history" value={aboutContent.history} onChange={(e) => handleAboutChange('history', e.target.value)} rows={5} />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="about-howitworks">Comment ça marche</Label>
+                                                <Textarea id="about-howitworks" value={aboutContent.howItWorks} onChange={(e) => handleAboutChange('howItWorks', e.target.value)} rows={5} />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardHeader className="flex-row items-center justify-between">
+                                            <CardTitle>FAQ</CardTitle>
+                                            <Button size="sm" variant="outline" onClick={addFaq}><PlusCircle className='mr-2 h-4 w-4' />Ajouter une FAQ</Button>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            {aboutContent.faqs.map((faq, index) => (
+                                                <Collapsible key={faq.id} className="border rounded-lg p-4">
+                                                    <div className="flex justify-between items-center">
+                                                        <h3 className="font-semibold truncate pr-4">{faq.question}</h3>
+                                                        <div className="flex items-center gap-2">
+                                                            <Button variant="destructive" size="icon" onClick={() => deleteFaq(index)}><Trash2 className="h-4 w-4" /></Button>
+                                                            <CollapsibleTrigger asChild>
+                                                                <Button variant="ghost" size="icon"><ChevronDown className="h-4 w-4" /></Button>
+                                                            </CollapsibleTrigger>
+                                                        </div>
+                                                    </div>
+                                                    <CollapsibleContent className="mt-4 space-y-4">
+                                                        <div>
+                                                            <Label htmlFor={`faq-q-${index}`}>Question</Label>
+                                                            <Input id={`faq-q-${index}`} value={faq.question} onChange={(e) => handleFaqChange(index, 'question', e.target.value)} />
+                                                        </div>
+                                                         <div>
+                                                            <Label htmlFor={`faq-a-${index}`}>Réponse</Label>
+                                                            <Textarea id={`faq-a-${index}`} value={faq.answer} onChange={(e) => handleFaqChange(index, 'answer', e.target.value)} rows={3} />
+                                                        </div>
+                                                    </CollapsibleContent>
+                                                </Collapsible>
+                                            ))}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            ) : (
+                                <Card><CardContent className="py-12 text-center text-muted-foreground">Impossible de charger le contenu.</CardContent></Card>
                             )}
                         </div>
                     )}
