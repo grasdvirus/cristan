@@ -9,7 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import { useProductCollections, useInternetClasses, useTvChannels } from '@/lib/data';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Eye, Filter, Loader2, ArrowRight, Clock, Star as StarIcon } from 'lucide-react';
+import { Eye, Filter, Loader2, ArrowRight, Clock, Star as StarIcon } from 'lucide-react';
 import { ContactForm } from '@/components/contact-form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -43,7 +43,12 @@ function TVCard({ video }: { video: Video }) {
 
     useEffect(() => {
         if (isHovering && videoRef.current) {
-            videoRef.current.play().catch(e => console.error("Autoplay failed", e));
+            videoRef.current.play().catch(e => {
+                // Ignore AbortError which is expected on rapid mouse-out
+                if (e.name !== 'AbortError') {
+                    console.error("Autoplay failed", e);
+                }
+            });
         }
     }, [isHovering]);
 
