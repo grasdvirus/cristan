@@ -2,12 +2,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Loader2, Info, HelpCircle } from 'lucide-react';
+import { Loader2, Info, HelpCircle, ArrowLeft } from 'lucide-react';
 import type { AboutContent } from '@/lib/about';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
 
 async function fetchAboutContentClient(): Promise<AboutContent> {
     const aboutDocRef = doc(db, 'config', 'about');
@@ -53,7 +55,13 @@ export default function AboutPage() {
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-12">
+        <div className="max-w-4xl mx-auto space-y-8">
+            <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+                <Button variant="outline" size="sm">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Retour
+                </Button>
+            </Link>
             <div className="text-center">
                 <h1 className="text-4xl font-headline text-primary">À Propos de Cristan</h1>
                 <p className="mt-2 text-lg text-muted-foreground">Tout ce que vous devez savoir sur notre plateforme.</p>

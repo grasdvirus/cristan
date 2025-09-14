@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { useProductCollections, useInternetClasses, useTvChannels } from '@/lib/data';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Eye, Filter, Loader2, ArrowRight, Clock, Star } from 'lucide-react';
+import { Play, Eye, Filter, Loader2, ArrowRight, Clock, Star as StarIcon } from 'lucide-react';
 import { ContactForm } from '@/components/contact-form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -21,6 +21,7 @@ import { fr } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 
 type Category = 'all' | 'internet' | 'tv' | 'contrat';
+type SubFilter = 'all' | 'recommended' | string;
 
 const categories: { id: Category, label: string }[] = [
     { id: 'all', label: 'Produit' },
@@ -40,7 +41,7 @@ function DecouvrirContent() {
     const initialCategory = searchParams.get('category') as Category;
 
     const [activeCategory, setActiveCategory] = useState<Category>(initialCategory && categories.some(c => c.id === initialCategory) ? initialCategory : 'all');
-    const [activeSubFilter, setActiveSubFilter] = useState<string>('all');
+    const [activeSubFilter, setActiveSubFilter] = useState<SubFilter>('all');
     const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
     
     const { products, loading: loadingProducts, error: productsError } = useProducts();
@@ -72,22 +73,36 @@ function DecouvrirContent() {
         }
     }, [activeCategory, productCollections, internetClasses, tvChannels]);
 
+    const sortedProducts = useMemo(() => {
+        return [...products].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    }, [products]);
+
+    const sortedVideos = useMemo(() => {
+        return [...videos].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    }, [videos]);
+
     const filteredProducts = useMemo(() => {
-        return products.filter(product => {
+        return sortedProducts.filter(product => {
+            if (activeSubFilter === 'recommended') {
+                 if (activeCategory === 'all' && product.collection) return product.isRecommended;
+                 if (activeCategory === 'internet' && product.internetClass) return product.isRecommended;
+                 return false;
+            }
             if (activeCategory === 'all') return product.collection && (activeSubFilter === 'all' || product.collection === activeSubFilter);
             if (activeCategory === 'internet') return product.internetClass && (activeSubFilter === 'all' || product.internetClass === activeSubFilter);
             return false;
         });
-    }, [products, activeCategory, activeSubFilter]);
+    }, [sortedProducts, activeCategory, activeSubFilter]);
 
     const filteredVideos = useMemo(() => {
-        return videos.filter(video => {
-            if (activeCategory === 'tv') return activeSubFilter === 'all' || video.channel === activeSubFilter;
-            return false;
+        return sortedVideos.filter(video => {
+            if (activeCategory !== 'tv') return false;
+            if (activeSubFilter === 'recommended') return video.isRecommended;
+            return activeSubFilter === 'all' || video.channel === activeSubFilter;
         });
-    }, [videos, activeCategory, activeSubFilter]);
+    }, [sortedVideos, activeCategory, activeSubFilter]);
 
-    const handleSubFilterChange = (filterId: string) => {
+    const handleSubFilterChange = (filterId: SubFilter) => {
         setActiveSubFilter(filterId);
         setFilterPopoverOpen(false);
     };
@@ -95,22 +110,28 @@ function DecouvrirContent() {
     const FilterButton = () => {
         if (!['all', 'internet', 'tv'].includes(activeCategory)) return null;
         
-        const activeFilterLabel = activeSubFilter === 'all' 
-            ? "Filtre" 
-            : currentFilters.find(f => f.id === activeSubFilter)?.label;
+        const getActiveFilterLabel = () => {
+            if (activeSubFilter === 'all') return 'Filtre';
+            if (activeSubFilter === 'recommended') return 'Les Plus Recommandés';
+            return currentFilters.find(f => f.id === activeSubFilter)?.label || 'Filtre';
+        }
 
         return (
             <Popover open={filterPopoverOpen} onOpenChange={setFilterPopoverOpen}>
                 <PopoverTrigger asChild>
                     <Button variant="outline" className="rounded-full">
                         <Filter className="mr-2 h-4 w-4" />
-                        {activeFilterLabel}
+                        {getActiveFilterLabel()}
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-56 p-2">
                     <div className="flex flex-col space-y-1">
                         <Button variant={activeSubFilter === 'all' ? 'secondary' : 'ghost'} onClick={() => handleSubFilterChange('all')} className="justify-start px-2">
                             Toutes les catégories
+                        </Button>
+                        <Button variant={activeSubFilter === 'recommended' ? 'secondary' : 'ghost'} onClick={() => handleSubFilterChange('recommended')} className="justify-start px-2">
+                            <StarIcon className="mr-2 h-4 w-4 text-yellow-500" />
+                            Les Plus Recommandés
                         </Button>
                         {currentFilters.map((filter) => (
                             <Button key={filter.id} variant={activeSubFilter === filter.id ? 'secondary' : 'ghost'} onClick={() => handleSubFilterChange(filter.id)} className="justify-start px-2">
@@ -151,6 +172,7 @@ function DecouvrirContent() {
                                                 <span className="text-sm text-muted-foreground">Pas d'image</span>
                                             </div>
                                         )}
+                                         {product.isRecommended && <Badge className="absolute top-2 left-2" variant="destructive"><StarIcon className="h-3 w-3 mr-1" /> Recommandé</Badge>}
                                     </CardContent>
                                     <CardHeader className="p-4 flex-grow">
                                         <CardTitle className="text-base font-medium line-clamp-2">{product.title}</CardTitle>
@@ -195,10 +217,11 @@ function DecouvrirContent() {
                                         )}
                                         {video.isPaid && (
                                             <Badge className="absolute top-2 left-2 flex items-center gap-1">
-                                                <Star className="h-3 w-3" />
+                                                <StarIcon className="h-3 w-3" />
                                                 Payant
                                             </Badge>
                                         )}
+                                         {video.isRecommended && <Badge className="absolute top-2 right-2" variant="destructive"><StarIcon className="h-3 w-3 mr-1" /> Recommandé</Badge>}
                                     </div>
                                 </CardContent>
                                 <CardHeader className="p-4 flex-grow">
@@ -253,5 +276,3 @@ export default function DecouvrirPage() {
         </Suspense>
     )
 }
-
-    

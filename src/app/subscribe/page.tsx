@@ -37,7 +37,7 @@ export default function SubscribePage() {
   const { user } = useAuth();
   
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null);
-  const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlans | null>(null);
+  const [subscriptionPlans, setSubscriptionPlans = useState<SubscriptionPlans | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -161,13 +161,13 @@ export default function SubscribePage() {
     <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
         {/* Left Section - Plan selection and payment details */}
         <div className="space-y-6">
-             <Accordion type="single" collapsible className="w-full">
+             <Accordion type="single" collapsible className="w-full" defaultValue='item-1'>
                 <AccordionItem value="item-1" className='border-b-0'>
                     <Card>
                         <AccordionTrigger className='p-4 hover:no-underline'>
                             <CardTitle className="flex items-center gap-3 text-xl">
                                 <ShieldCheck className="h-6 w-6 text-primary" />
-                                Confiance & Sécurité
+                                Confiance &amp; Sécurité
                             </CardTitle>
                         </AccordionTrigger>
                          <AccordionContent className='p-4 pt-0'>

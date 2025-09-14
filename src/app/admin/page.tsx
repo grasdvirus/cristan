@@ -29,7 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarTrigger } from '@/components/ui/sidebar';
-import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag, Lock, Youtube, Info } from "lucide-react";
+import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag, Lock, Youtube, Info, Star as StarIcon } from "lucide-react";
 import { useProducts } from '@/hooks/use-products';
 import { useSlides } from '@/hooks/use-slides';
 import { useContracts } from '@/hooks/use-contracts';
@@ -403,6 +403,8 @@ function AdminContent() {
             imageUrls: [],
             dataAiHint: '',
             price: 0,
+            isRecommended: false,
+            createdAt: serverTimestamp(),
             ...(isShop && { collection: productCollections[0]?.id || '' }),
             ...(isInternet && { 
                 internetClass: internetClasses[0]?.id || '',
@@ -482,7 +484,9 @@ function AdminContent() {
             },
             likes: 0,
             isPaid: false,
-            duration: 0
+            isRecommended: false,
+            duration: 0,
+            createdAt: serverTimestamp(),
         };
         setVideos(prev => [newVideo, ...prev]);
         setHasChanges(true);
@@ -754,9 +758,10 @@ function AdminContent() {
         );
     }
     
-    const articles = products.filter(p => p.articleCategory);
-    const shopProducts = products.filter(p => p.collection);
-    const internetProducts = products.filter(p => p.internetClass !== undefined);
+    const articles = products.filter(p => p.articleCategory).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    const shopProducts = products.filter(p => p.collection).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    const internetProducts = products.filter(p => p.internetClass !== undefined).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    const sortedVideos = videos.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
 
     const CategoryEditor = ({ title, categoryList, listKey }: { title: string; categoryList: CategoryItem[]; listKey: keyof AllCategories; }) => (
@@ -899,6 +904,13 @@ function AdminContent() {
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
+                                                <div className="flex items-center space-x-2 pt-6">
+                                                    <Switch id={`product-reco-${product.id}`} checked={!!product.isRecommended} onCheckedChange={(checked) => updateProduct(product.id, 'isRecommended', checked)} />
+                                                    <Label htmlFor={`product-reco-${product.id}`} className="flex items-center gap-2">
+                                                        <StarIcon className="h-4 w-4 text-yellow-500" />
+                                                        Recommandé
+                                                    </Label>
+                                                </div>
                                             </div>
                                             <div>
                                                 <Label htmlFor={`desc-${product.id}`}>Description</Label>
@@ -963,6 +975,13 @@ function AdminContent() {
                                                             ))}
                                                         </SelectContent>
                                                     </Select>
+                                                </div>
+                                                <div className="flex items-center space-x-2 pt-6">
+                                                    <Switch id={`product-reco-${product.id}`} checked={!!product.isRecommended} onCheckedChange={(checked) => updateProduct(product.id, 'isRecommended', checked)} />
+                                                    <Label htmlFor={`product-reco-${product.id}`} className="flex items-center gap-2">
+                                                        <StarIcon className="h-4 w-4 text-yellow-500" />
+                                                        Recommandé
+                                                    </Label>
                                                 </div>
                                             </div>
                                             <div>
@@ -1033,6 +1052,13 @@ function AdminContent() {
                                                     <Label htmlFor={`redirect-url-${product.id}`}>URL de visite du site</Label>
                                                     <Input id={`redirect-url-${product.id}`} value={product.redirectUrl} onChange={(e) => updateProduct(product.id, 'redirectUrl', e.target.value)} placeholder="https://exemple.com" />
                                                 </div>
+                                                <div className="flex items-center space-x-2 pt-6">
+                                                    <Switch id={`product-reco-${product.id}`} checked={!!product.isRecommended} onCheckedChange={(checked) => updateProduct(product.id, 'isRecommended', checked)} />
+                                                    <Label htmlFor={`product-reco-${product.id}`} className="flex items-center gap-2">
+                                                        <StarIcon className="h-4 w-4 text-yellow-500" />
+                                                        Recommandé
+                                                    </Label>
+                                                </div>
                                             </div>
                                             <div>
                                                 <Label htmlFor={`desc-${product.id}`}>Description</Label>
@@ -1066,7 +1092,7 @@ function AdminContent() {
                                  <Button onClick={addVideo}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter une vidéo</Button>
                             </div>
                              <div className="space-y-4">
-                                {videos.map(video => (
+                                {sortedVideos.map(video => (
                                     <Collapsible key={video.id} className="border rounded-lg p-4">
                                         <div className="flex justify-between items-start">
                                             <div className='w-full pr-8'>
@@ -1121,6 +1147,13 @@ function AdminContent() {
                                                     <Label htmlFor={`video-paid-${video.id}`} className="flex items-center gap-2">
                                                         <Star className="h-4 w-4 text-primary" />
                                                         Vidéo Payante
+                                                    </Label>
+                                                </div>
+                                                <div className="flex items-center space-x-2 pt-6">
+                                                    <Switch id={`video-reco-${video.id}`} checked={!!video.isRecommended} onCheckedChange={(checked) => updateVideo(video.id, 'isRecommended', checked)} />
+                                                    <Label htmlFor={`video-reco-${video.id}`} className="flex items-center gap-2">
+                                                        <StarIcon className="h-4 w-4 text-yellow-500" />
+                                                        Recommandée
                                                     </Label>
                                                 </div>
                                             </div>
@@ -1452,7 +1485,7 @@ function AdminContent() {
                     {activeView === 'categories' && (
                         <div>
                             <div className="mb-6">
-                                <h1 className="text-3xl font-bold">Gérer les Filtres & Catégories</h1>
+                                <h1 className="text-3xl font-bold">Gérer les Filtres &amp; Catégories</h1>
                                 <p className="text-muted-foreground">Modifiez les catégories utilisées à travers le site.</p>
                             </div>
                             {loadingCategories ? (
@@ -1628,9 +1661,5 @@ function AdminContent() {
 export default function AdminPageWrapper() {
     return <AdminContent />;
 }
-
-    
-
-    
 
     

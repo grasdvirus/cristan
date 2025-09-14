@@ -10,6 +10,8 @@ export type Product = {
   internetClass?: string;
   articleCategory?: string;
   redirectUrl?: string;
+  isRecommended?: boolean;
+  createdAt?: any; // Firestore Timestamp
 };
 
     

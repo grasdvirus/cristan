@@ -17,6 +17,8 @@ export type Video = {
   likes: number;
   isPaid?: boolean;
   duration?: number; // Duration in minutes
+  isRecommended?: boolean;
+  createdAt?: any; // Firestore Timestamp
 };
 
     

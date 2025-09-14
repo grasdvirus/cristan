@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { Globe, ShoppingBag, Tv, ArrowRight, Loader2 } from 'lucide-react';
 import Autoplay from "embla-carousel-autoplay";
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useFilterStore } from '@/hooks/use-filter-store';
 import { useProducts } from '@/hooks/use-products';
 import { useSlides } from '@/hooks/use-slides';
@@ -25,9 +25,14 @@ export default function Home() {
   
   const loading = loadingProducts || loadingSlides;
 
-  const filteredArticles = products.filter(product => 
-    (product.articleCategory) && (activeArticleCategory === 'all' || product.articleCategory === activeArticleCategory)
-  );
+  const filteredArticles = useMemo(() => {
+    return products
+      .filter(product => 
+        (product.articleCategory) && (activeArticleCategory === 'all' || product.articleCategory === activeArticleCategory)
+      )
+      .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  }, [products, activeArticleCategory]);
+
 
   if (loading) {
     return (
