@@ -26,14 +26,14 @@ export default function ArtworkDetailPage() {
     return products.find(p => p.id === id);
   }, [products, id]);
   
-  const [selectedImage, setSelectedImage] = useState(artwork?.imageUrls?.[0]);
+  const [selectedImage, setSelectedImage] = useState(artwork?.mediaUrls?.[0]);
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
 
 
   useEffect(() => {
-    if (artwork && artwork.imageUrls && artwork.imageUrls.length > 0) {
-      setSelectedImage(artwork.imageUrls[0]);
+    if (artwork && artwork.mediaUrls && artwork.mediaUrls.length > 0) {
+      setSelectedImage(artwork.mediaUrls[0]);
     }
      // Pre-select first option if available
     if (artwork?.colors && artwork.colors.length > 0) {
@@ -106,9 +106,9 @@ export default function ArtworkDetailPage() {
                         </div>
                     )}
                 </div>
-                 {artwork.imageUrls && artwork.imageUrls.length > 1 && (
+                 {artwork.mediaUrls && artwork.mediaUrls.length > 1 && (
                     <div className="flex gap-2 p-2 bg-muted/20">
-                        {artwork.imageUrls.map((url, index) => (
+                        {artwork.mediaUrls.map((url, index) => (
                             <button
                                 key={index}
                                 onClick={() => setSelectedImage(url)}

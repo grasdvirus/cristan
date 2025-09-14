@@ -209,4 +209,3 @@ export default function ArtworkDetailPage() {
     </div>
   );
 }
-
