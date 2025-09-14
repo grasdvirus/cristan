@@ -107,6 +107,7 @@ export default function RootLayout({
       <head>
         <title>Portfolio d'Artisan</title>
         <meta name="description" content="Un portfolio personnel pour un artisan numérique." />
+        <link rel="icon" href="/uploads/favico.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&family=Belleza&display=swap" rel="stylesheet" />
