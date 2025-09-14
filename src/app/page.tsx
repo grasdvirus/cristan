@@ -20,7 +20,7 @@ export default function Home() {
   const { slides, loading: loadingSlides, error: slidesError } = useSlides();
 
   const autoplayPlugin = useRef(
-      Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: false })
+      Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: false })
   );
   
   const loading = loadingProducts || loadingSlides;

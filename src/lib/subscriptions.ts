@@ -22,6 +22,7 @@ export type Subscription = {
   amount: number;
   transactionId: string;
   createdAt: any; // Firestore Timestamp
+  startDate?: any; // Firestore Timestamp, set on confirmation
   expiryDate?: any; // Firestore Timestamp, set on confirmation
   status: 'pending' | 'active' | 'expired';
 };

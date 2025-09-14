@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, ChangeEvent, useRef } from 'react';
@@ -14,7 +13,7 @@ import type { Order } from '@/lib/orders';
 import type { Subscription, SubscriptionPlans, SubscriptionPlanId } from '@/lib/subscriptions';
 import type { PaymentDetails, PaymentMethod } from '@/lib/payment';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, writeBatch, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import { useCategoryStore } from '@/lib/data';
@@ -28,7 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarTrigger } from '@/components/ui/sidebar';
-import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag } from "lucide-react";
+import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag, Lock, Youtube } from "lucide-react";
 import { useProducts } from '@/hooks/use-products';
 import { useSlides } from '@/hooks/use-slides';
 import { useContracts } from '@/hooks/use-contracts';
@@ -293,6 +292,9 @@ function AdminContent() {
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const [hasChanges, setHasChanges] = useState(false);
     const [activeView, setActiveView] = useState<ActiveView>('articles');
+    const [passwordInput, setPasswordInput] = useState('');
+    const [isPaymentUnlocked, setIsPaymentUnlocked] = useState(false);
+    const [isSubsPriceUnlocked, setIsSubsPriceUnlocked] = useState(false);
     
     const loadingData = authLoading || loadingProducts || loadingSlides || loadingContracts || loadingVideos || loadingCategories || loadingOrders || loadingSubscriptions || loadingPayment || loadingPlans;
 
@@ -544,15 +546,17 @@ function AdminContent() {
             if (subscription.plan === '24h') expiryDate.setDate(expiryDate.getDate() + 1);
             if (subscription.plan === '1w') expiryDate.setDate(expiryDate.getDate() + 7);
             if (subscription.plan === '1m') expiryDate.setMonth(expiryDate.getMonth() + 1);
+            
+            const expiryTimestamp = Timestamp.fromDate(expiryDate);
 
             await writeBatch(db)
-                .update(userRef, { subscriptionExpiry: expiryDate })
-                .update(subscriptionRef, { status: 'active', expiryDate: expiryDate })
+                .update(userRef, { subscriptionExpiry: expiryTimestamp })
+                .update(subscriptionRef, { status: 'active', expiryDate: expiryTimestamp, startDate: serverTimestamp() })
                 .commit();
 
-            const expiryDateForState = { seconds: Math.floor(expiryDate.getTime() / 1000) };
+            const updatedSub: Partial<Subscription> = { status: 'active', expiryDate: expiryTimestamp, startDate: Timestamp.now() };
 
-            setSubscriptions(prev => prev.map(s => s.id === subscription.id ? { ...s, status: 'active', expiryDate: expiryDateForState } : s));
+            setSubscriptions(prev => prev.map(s => s.id === subscription.id ? { ...s, ...updatedSub } : s));
             toast({ title: 'Abonnement confirmé!', description: `L'accès de ${subscription.userEmail} est actif jusqu'au ${format(expiryDate, 'd MMM yyyy, HH:mm', { locale: fr })}.` });
 
         } catch (error) {
@@ -610,6 +614,16 @@ function AdminContent() {
             setTimeout(() => setSaveStatus('idle'), 4000);
         }
     };
+
+    const handlePasswordSubmit = (section: 'payment' | 'subsPrice') => {
+        if (passwordInput === 'virusgrasd') {
+            if (section === 'payment') setIsPaymentUnlocked(true);
+            if (section === 'subsPrice') setIsSubsPriceUnlocked(true);
+            setPasswordInput('');
+        } else {
+            toast({ variant: 'destructive', title: 'Mot de passe incorrect' });
+        }
+    };
     
     const sidebarNav = [
         { id: 'articles', label: 'Articles (Blog)', icon: Newspaper },
@@ -664,6 +678,27 @@ function AdminContent() {
                     </div>
                 ))}
                 {(!categoryList || categoryList.length === 0) && <p className="text-sm text-muted-foreground">Aucune catégorie.</p>}
+            </CardContent>
+        </Card>
+    );
+
+    const PasswordWall = ({ section }: { section: 'payment' | 'subsPrice' }) => (
+        <Card className="max-w-md mx-auto">
+            <CardHeader>
+                <CardTitle>Accès Restreint</CardTitle>
+                <CardDescription>Veuillez entrer le mot de passe pour accéder à cette section.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex items-center gap-2">
+                    <Input
+                        type="password"
+                        placeholder="Mot de passe"
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit(section)}
+                    />
+                    <Button onClick={() => handlePasswordSubmit(section)}>Déverrouiller</Button>
+                </div>
             </CardContent>
         </Card>
     );
@@ -988,9 +1023,14 @@ function AdminContent() {
                                                 <Label htmlFor={`video-ai-hint-${video.id}`}>Indice IA pour la miniature</Label>
                                                 <Input id={`video-ai-hint-${video.id}`} value={video.dataAiHint} onChange={(e) => updateVideo(video.id, 'dataAiHint', e.target.value)} />
                                             </div>
-                                            <div>
+                                            <div className="relative">
                                                 <Label htmlFor={`video-yt-url-${video.id}`}>Ou coller le lien YouTube</Label>
                                                 <Input id={`video-yt-url-${video.id}`} value={video.src.includes('youtube.com') ? video.src : ''} onChange={(e) => updateVideo(video.id, 'src', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
+                                                {video.src.includes('youtube.com') && (
+                                                    <div className="absolute right-2 top-7 p-1 rounded-md bg-green-500/20 text-green-500">
+                                                        <Youtube className="h-5 w-5" />
+                                                    </div>
+                                                )}
                                             </div>
                                         </CollapsibleContent>
                                     </Collapsible>
@@ -1209,7 +1249,7 @@ function AdminContent() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                  <span className="text-xs text-muted-foreground">
-                                                    {sub.createdAt ? format(new Date(sub.createdAt.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr }) : 'Date inconnue'}
+                                                    {(sub.createdAt as any)?.seconds ? format(new Date((sub.createdAt as any).seconds * 1000), 'd MMM yyyy', { locale: fr }) : 'Date inconnue'}
                                                 </span>
                                                 {sub.status === 'pending' && (
                                                     <Button variant="outline" size="sm" onClick={() => handleConfirmSubscription(sub)}>
@@ -1241,9 +1281,8 @@ function AdminContent() {
                                         <CollapsibleContent className="mt-4 space-y-2 text-sm">
                                             <p><strong>ID Transaction:</strong> {sub.transactionId}</p>
                                             <p><strong>Montant:</strong> {new Intl.NumberFormat('fr-FR').format(sub.amount)} FCFA</p>
-                                            {sub.expiryDate && (
-                                                <p><strong>Expire le:</strong> {format(new Date(sub.expiryDate.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}</p>
-                                            )}
+                                            {sub.startDate && (<p><strong>Début:</strong> {format(new Date((sub.startDate as any).seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}</p>)}
+                                            {sub.expiryDate && (<p><strong>Expire le:</strong> {format(new Date((sub.expiryDate as any).seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}</p>)}
                                         </CollapsibleContent>
                                     </Collapsible>
                                 )) : (
@@ -1267,7 +1306,8 @@ function AdminContent() {
                                      <p className="text-muted-foreground">Modifiez les tarifs des forfaits vidéos.</p>
                                 </div>
                             </div>
-                             {loadingPlans ? (
+                             {!isSubsPriceUnlocked ? <PasswordWall section="subsPrice" /> :
+                             loadingPlans ? (
                                 <div className="flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
                             ) : subscriptionPlans ? (
                                 <div className="max-w-2xl mx-auto space-y-4">
@@ -1321,9 +1361,10 @@ function AdminContent() {
                                     <h1 className="text-3xl font-bold">Gérer les Moyens de Paiement</h1>
                                     <p className="text-muted-foreground">Configurez les informations de paiement manuel (jusqu'à 3).</p>
                                 </div>
-                                <Button onClick={addPaymentMethod} disabled={!paymentDetails || paymentDetails.methods.length >= 3}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter</Button>
+                                <Button onClick={addPaymentMethod} disabled={!paymentDetails || paymentDetails.methods.length >= 3 || !isPaymentUnlocked}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter</Button>
                             </div>
-                            {loadingPayment ? (
+                             {!isPaymentUnlocked ? <PasswordWall section="payment" /> :
+                             loadingPayment ? (
                                 <div className="flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
                             ) : (
                                 <div className="space-y-4">
