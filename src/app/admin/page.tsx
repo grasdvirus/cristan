@@ -15,7 +15,7 @@ import type { Subscription, SubscriptionPlans, SubscriptionPlanId } from '@/lib/
 import type { PaymentDetails, PaymentMethod } from '@/lib/payment';
 import type { AboutContent, FAQItem } from '@/lib/about';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, writeBatch, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, increment } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import { useCategoryStore } from '@/lib/data';
@@ -52,9 +52,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
+import type { CategoryItem } from '@/lib/data';
 
 
-type CategoryItem = { id: string; label: string };
 type AllCategories = {
     articleCategories: CategoryItem[];
     productCollections: CategoryItem[];
@@ -455,26 +455,11 @@ function AdminContent() {
         setVideos(produce(draft => {
             const video = draft.find(v => v.id === id);
             if (video) {
-                // Handle nested properties like 'creator.subscribers'
-                const fieldParts = field.split('.');
-                if (fieldParts.length > 1) {
-                    let current: any = video;
-                    for (let i = 0; i < fieldParts.length - 1; i++) {
-                        current = current[fieldParts[i]];
-                    }
-                    const finalField = fieldParts[fieldParts.length - 1];
-                    if (finalField === 'subscribers') {
-                         current[finalField] = parseInt(value, 10) || 0;
-                    } else {
-                        current[finalField] = value;
-                    }
-                } else {
-                    if (['views', 'likes', 'duration'].includes(field)) {
-                        (video as any)[field] = parseInt(value, 10) || 0;
-                    }
-                    else {
-                        (video as any)[field] = value;
-                    }
+                if (['views', 'likes', 'duration'].includes(field)) {
+                    (video as any)[field] = parseInt(value, 10) || 0;
+                }
+                else {
+                    (video as any)[field] = value;
                 }
             }
         }));
@@ -493,11 +478,6 @@ function AdminContent() {
             views: 0,
             channel: tvChannels[0]?.id || '',
             uploadDate: new Date().toISOString(),
-            creator: {
-                name: 'Artisan Codeur',
-                avatar: '',
-                subscribers: 0,
-            },
             likes: 0,
             isPaid: false,
             isRecommended: false,
@@ -522,8 +502,12 @@ function AdminContent() {
 
     const addCategory = (list: keyof AllCategories) => {
         const newId = uuidv4().slice(0, 8); // simple unique id
+        const newCat: CategoryItem = { id: newId, label: 'Nouvelle catégorie' };
+        if (list === 'tvChannels') {
+            (newCat as any).subscribers = 0;
+        }
         setLocalCategories(produce(draft => {
-            draft[list].push({ id: newId, label: 'Nouvelle catégorie' });
+            draft[list].push(newCat);
         }));
         setHasChanges(true);
     }
@@ -794,6 +778,9 @@ function AdminContent() {
                             value={cat.label}
                             onChange={(e) => handleCategoryChange(listKey, index, e.target.value)}
                         />
+                        {listKey === 'tvChannels' && cat.subscribers !== undefined && (
+                             <span className="text-xs text-muted-foreground whitespace-nowrap">{cat.subscribers} abos</span>
+                        )}
                         <Button variant="destructive" size="icon" onClick={() => deleteCategory(listKey, index)}>
                             <Trash2 className="h-4 w-4" />
                         </Button>
@@ -1122,7 +1109,7 @@ function AdminContent() {
                                         <div className="flex justify-between items-start">
                                             <div className='w-full pr-8'>
                                                 <h3 className="font-semibold">{video.title}</h3>
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                                                     <div>
                                                         <Label htmlFor={`video-views-${video.id}`}>Vues</Label>
                                                         <Input id={`video-views-${video.id}`} type="text" value={video.views} onChange={(e) => updateVideo(video.id, 'views', e.target.value)} />
@@ -1130,10 +1117,6 @@ function AdminContent() {
                                                     <div>
                                                         <Label htmlFor={`video-likes-${video.id}`}>J'aime</Label>
                                                         <Input id={`video-likes-${video.id}`} type="text" value={video.likes} onChange={(e) => updateVideo(video.id, 'likes', e.target.value)} />
-                                                    </div>
-                                                    <div>
-                                                        <Label htmlFor={`video-subs-${video.id}`}>Abonnés</Label>
-                                                        <Input id={`video-subs-${video.id}`} type="text" value={video.creator.subscribers} onChange={(e) => updateVideo(video.id, 'creator.subscribers', e.target.value)} />
                                                     </div>
                                                 </div>
                                             </div>

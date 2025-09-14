@@ -52,15 +52,17 @@ function TVCard({ video }: { video: Video }) {
 
     useEffect(() => {
         const videoElement = videoRef.current;
-        if (isActive && videoElement) {
+        if (!videoElement) return;
+
+        if (isActive) {
+            videoElement.currentTime = 0;
             videoElement.play().catch(e => {
-                if (e.name !== 'AbortError') {
+                 if (e.name !== 'AbortError') {
                     console.error("Autoplay a échoué", e);
                 }
             });
-        } else if (!isActive && videoElement) {
+        } else {
             videoElement.pause();
-            videoElement.currentTime = 0;
         }
     }, [isActive]);
 
@@ -76,14 +78,26 @@ function TVCard({ video }: { video: Video }) {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [cardRef]);
-
+    
     const handleInteractionStart = () => {
-        if (!isActive) {
+        if (!isActive && video.shortPreviewUrl) {
             setIsActive(true);
         }
     };
-
+    
+    const handleInteractionEnd = () => {
+        if (isActive) {
+            setIsActive(false);
+        }
+    }
+    
     const handleClick = (e: React.MouseEvent) => {
+        // S'il n'y a pas d'aperçu, on navigue directement
+        if (!video.shortPreviewUrl) {
+            router.push(`/video/${video.id}`);
+            return;
+        }
+
         if (isTouchDevice) {
             // Sur appareil tactile:
             // 1er appui: active la prévisualisation, mais ne navigue pas
@@ -104,7 +118,7 @@ function TVCard({ video }: { video: Video }) {
                 href={`/video/${video.id}`}
                 onClick={handleClick}
                 onMouseEnter={!isTouchDevice ? handleInteractionStart : undefined}
-                onMouseLeave={!isTouchDevice ? () => setIsActive(false) : undefined}
+                onMouseLeave={!isTouchDevice ? handleInteractionEnd : undefined}
                 className="group block"
                 aria-label={video.title}
             >
@@ -153,7 +167,6 @@ function TVCard({ video }: { video: Video }) {
                     </CardContent>
                     <CardHeader className="p-4 flex-grow">
                         <CardTitle className="text-lg font-semibold line-clamp-2">{video.title}</CardTitle>
-                        <CardDescription className="text-sm pt-1">{video.creator.name}</CardDescription>
                     </CardHeader>
                     <CardFooter className="p-4 pt-0">
                         <div className="text-xs text-muted-foreground">

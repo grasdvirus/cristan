@@ -3,12 +3,18 @@
 
 import { create } from 'zustand';
 
+export type CategoryItem = {
+  id: string;
+  label: string;
+  subscribers?: number; // Optional, only for tvChannels
+};
+
 // Cet état contiendra les catégories chargées depuis la base de données
 interface CategoryStore {
-  articleCategories: { id: string, label: string }[];
-  productCollections: { id: string, label: string }[];
-  internetClasses: { id: string, label: string }[];
-  tvChannels: { id: string, label: string }[];
+  articleCategories: CategoryItem[];
+  productCollections: CategoryItem[];
+  internetClasses: CategoryItem[];
+  tvChannels: CategoryItem[];
   setCategories: (categories: Partial<CategoryStore>) => void;
   loading: boolean;
   error: string | null;
@@ -24,13 +30,11 @@ export const useCategoryStore = create<CategoryStore>((set, get) => ({
   error: null,
   setCategories: (categories) => set((state) => ({ ...state, ...categories })),
   fetchCategories: async () => {
-    // Évite les chargements multiples
-    if (get().articleCategories.length > 0) {
-      set({ loading: false });
-      return;
+    // Évite les chargements multiples inutiles, mais permet le re-fetch
+    if (get().articleCategories.length === 0) {
+      set({ loading: true });
     }
 
-    set({ loading: true });
     try {
       const response = await fetch('/api/config/categories/get');
       if (!response.ok) {
@@ -41,8 +45,9 @@ export const useCategoryStore = create<CategoryStore>((set, get) => ({
         articleCategories: data.articleCategories || [],
         productCollections: data.productCollections || [],
         internetClasses: data.internetClasses || [],
-        tvChannels: data.tvChannels || [],
+        tvChannels: data.tvChannels?.map((ch: any) => ({ ...ch, subscribers: ch.subscribers || 0 })) || [],
         loading: false,
+        error: null,
       });
     } catch (error: any) {
       console.error(error);

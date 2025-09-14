@@ -13,11 +13,12 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, increment, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, increment, getDoc, writeBatch } from 'firebase/firestore';
 import Image from 'next/image';
 import { useAuth } from '@/components/auth-provider';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { useCategoryStore } from '@/lib/data';
 
 
 function formatCount(num: number) {
@@ -60,18 +61,24 @@ export default function VideoDetailPage() {
   const id = params.id as string;
   const { user } = useAuth();
   const { videos, loading, setVideos } = useVideos();
+  const { tvChannels, fetchCategories } = useCategoryStore();
   const { toast } = useToast();
   
-  const video = useMemo(() => {
-    return videos.find((v) => v.id === id);
-  }, [videos, id]);
-
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
-  
+
+  const video = useMemo(() => {
+    return videos.find((v) => v.id === id);
+  }, [videos, id]);
+
+  const channel = useMemo(() => {
+      if (!video) return null;
+      return tvChannels.find(c => c.id === video.channel);
+  }, [video, tvChannels]);
+
   // Check user subscription status
   useEffect(() => {
     if (!video || !video.isPaid) {
@@ -132,7 +139,7 @@ export default function VideoDetailPage() {
     );
   }
 
-  if (!video) {
+  if (!video || !channel) {
     notFound();
   }
   
@@ -158,19 +165,31 @@ export default function VideoDetailPage() {
   };
 
   const handleSubscribe = async () => {
-      if (isSubscribed) return;
+      if (isSubscribed || !channel) return;
       setIsSubscribed(true);
-      const videoRef = doc(db, "videos", id);
+      
+      const configDocRef = doc(db, 'config', 'categories');
+      const batch = writeBatch(db);
+
+      // Create a new array with the updated subscriber count
+      const updatedTvChannels = tvChannels.map(ch => {
+          if (ch.id === channel.id) {
+              return { ...ch, subscribers: (ch.subscribers || 0) + 1 };
+          }
+          return ch;
+      });
+
+      batch.update(configDocRef, { tvChannels: updatedTvChannels });
+      
       try {
-          await updateDoc(videoRef, {
-            'creator.subscribers': increment(1)
-          });
-          setVideos(prevVideos => prevVideos.map(v => 
-            v.id === id ? { ...v, creator: { ...v.creator, subscribers: v.creator.subscribers + 1 } } : v
-        ));
+          await batch.commit();
+          // Manually update the Zustand store to reflect the change immediately
+          fetchCategories();
+          toast({ title: `Abonné à ${channel.label} !` });
       } catch (error) {
-          console.error("Failed to update subscribers", error);
-          setIsSubscribed(false);
+          console.error("Failed to update subscribers:", error);
+          setIsSubscribed(false); // Revert on error
+          toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de s'abonner." });
       }
   }
 
@@ -273,16 +292,15 @@ export default function VideoDetailPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <Avatar>
-                            <AvatarImage src={video.creator.avatar} alt={video.creator.name} />
-                            <AvatarFallback>{video.creator.name.charAt(0)}</AvatarFallback>
+                            <AvatarFallback>{channel.label.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <div className="font-semibold text-foreground">{video.creator.name}</div>
-                            <div className="text-xs text-muted-foreground">{formatCount(video.creator.subscribers)} abonnés</div>
+                            <div className="font-semibold text-foreground">{channel.label}</div>
+                            <div className="text-xs text-muted-foreground">{formatCount(channel.subscribers || 0)} abonnés</div>
                         </div>
                     </div>
                     <Button variant={isSubscribed ? 'secondary' : 'default'} onClick={handleSubscribe} disabled={isSubscribed}>
-                        {isSubscribed ? 'Abonné' : 'S\'abonner à la chaîne'}
+                        {isSubscribed ? 'Abonné' : `S'abonner à ${channel.label}`}
                     </Button>
                 </div>
                 
