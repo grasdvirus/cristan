@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -34,6 +35,80 @@ function formatViews(num: number) {
     if (num >= 1000000) return (num / 1000000).toFixed(1).replace('.0', '') + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1).replace('.0', '') + 'k';
     return num.toString();
+}
+
+function TVCard({ video }: { video: Video }) {
+    const [isHovering, setIsHovering] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+        if (isHovering && videoRef.current) {
+            videoRef.current.play().catch(e => console.error("Autoplay failed", e));
+        }
+    }, [isHovering]);
+
+    return (
+        <Link href={`/video/${video.id}`} className="group block">
+            <Card 
+                className="overflow-hidden h-full flex flex-col transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20"
+                onMouseEnter={() => setIsHovering(true)}
+                onMouseLeave={() => setIsHovering(false)}
+            >
+                <CardContent className="p-0 relative">
+                    <div className="aspect-video overflow-hidden">
+                        {isHovering && video.shortPreviewUrl ? (
+                             <video
+                                ref={videoRef}
+                                src={video.shortPreviewUrl}
+                                muted
+                                loop
+                                className="object-cover w-full h-full transition-all duration-300"
+                            />
+                        ) : (
+                            video.imageUrl ? (
+                                <Image
+                                    src={video.imageUrl}
+                                    alt={video.title}
+                                    width={600}
+                                    height={400}
+                                    className="object-cover w-full h-full transition-transform duration-300 ease-in-out group-hover:scale-105"
+                                    data-ai-hint={video.dataAiHint}
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center">
+                                    <Play className="h-10 w-10 text-muted-foreground" />
+                                </div>
+                            )
+                        )}
+                        {video.duration && (
+                            <Badge variant="secondary" className="absolute bottom-2 right-2 flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {video.duration} min
+                            </Badge>
+                        )}
+                        {video.isPaid && (
+                            <Badge className="absolute top-2 left-2 flex items-center gap-1">
+                                <StarIcon className="h-3 w-3" />
+                                Payant
+                            </Badge>
+                        )}
+                         {video.isRecommended && <Badge className="absolute top-2 right-2" variant="destructive"><StarIcon className="h-3 w-3 mr-1" /> Recommandé</Badge>}
+                    </div>
+                </CardContent>
+                <CardHeader className="p-4 flex-grow">
+                    <CardTitle className="text-lg font-semibold line-clamp-2">{video.title}</CardTitle>
+                    <CardDescription className="text-sm pt-1">{video.creator.name}</CardDescription>
+                </CardHeader>
+                <CardFooter className="p-4 pt-0">
+                    <div className="text-xs text-muted-foreground">
+                        <span>{formatViews(video.views)} vues</span>
+                        <span className="mx-1.5">•</span>
+                        <span>{video.uploadDate ? format(new Date(video.uploadDate), "d MMM yyyy", { locale: fr }) : ''}</span>
+                    </div>
+                </CardFooter>
+            </Card>
+        </Link>
+    );
 }
 
 function DecouvrirContent() {
@@ -191,52 +266,7 @@ function DecouvrirContent() {
             return (
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredVideos.map(video => (
-                        <Link key={video.id} href={`/video/${video.id}`} className="group block">
-                             <Card className="overflow-hidden h-full flex flex-col transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20">
-                                <CardContent className="p-0 relative">
-                                    <div className="aspect-video overflow-hidden">
-                                        {video.imageUrl ? (
-                                            <Image
-                                                src={video.imageUrl}
-                                                alt={video.title}
-                                                width={600}
-                                                height={400}
-                                                className="object-cover w-full h-full transition-transform duration-300 ease-in-out group-hover:scale-105"
-                                                data-ai-hint={video.dataAiHint}
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-muted flex items-center justify-center">
-                                                <Play className="h-10 w-10 text-muted-foreground" />
-                                            </div>
-                                        )}
-                                        {video.duration && (
-                                            <Badge variant="secondary" className="absolute bottom-2 right-2 flex items-center gap-1">
-                                                <Clock className="h-3 w-3" />
-                                                {video.duration} min
-                                            </Badge>
-                                        )}
-                                        {video.isPaid && (
-                                            <Badge className="absolute top-2 left-2 flex items-center gap-1">
-                                                <StarIcon className="h-3 w-3" />
-                                                Payant
-                                            </Badge>
-                                        )}
-                                         {video.isRecommended && <Badge className="absolute top-2 right-2" variant="destructive"><StarIcon className="h-3 w-3 mr-1" /> Recommandé</Badge>}
-                                    </div>
-                                </CardContent>
-                                <CardHeader className="p-4 flex-grow">
-                                    <CardTitle className="text-lg font-semibold line-clamp-2">{video.title}</CardTitle>
-                                    <CardDescription className="text-sm pt-1">{video.creator.name}</CardDescription>
-                                </CardHeader>
-                                <CardFooter className="p-4 pt-0">
-                                    <div className="text-xs text-muted-foreground">
-                                        <span>{formatViews(video.views)} vues</span>
-                                        <span className="mx-1.5">•</span>
-                                        <span>{video.uploadDate ? format(new Date(video.uploadDate), "d MMM yyyy", { locale: fr }) : ''}</span>
-                                    </div>
-                                </CardFooter>
-                             </Card>
-                        </Link>
+                        <TVCard key={video.id} video={video} />
                     ))}
                 </div>
             )

@@ -487,6 +487,7 @@ function AdminContent() {
             title: 'Nouvelle Vidéo',
             description: '',
             imageUrl: '',
+            shortPreviewUrl: '',
             dataAiHint: '',
             src: '',
             views: 0,
@@ -1185,9 +1186,10 @@ function AdminContent() {
                                                 <Label htmlFor={`video-desc-${video.id}`}>Description</Label>
                                                 <Textarea id={`video-desc-${video.id}`} value={video.description} onChange={(e) => updateVideo(video.id, 'description', e.target.value)} />
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <FileUpload label="Miniature (Image)" value={video.imageUrl} onChange={(url) => updateVideo(video.id, 'imageUrl', url)} acceptedFileTypes="image/*" mediaType="image"/>
-                                                <FileUpload label="Fichier Vidéo" value={video.src.startsWith('/uploads/') ? video.src : ''} onChange={(url) => updateVideo(video.id, 'src', url)} acceptedFileTypes="video/*" mediaType="video"/>
+                                                <FileUpload label="Vidéo de couverture (courte)" value={video.shortPreviewUrl || ''} onChange={(url) => updateVideo(video.id, 'shortPreviewUrl', url)} acceptedFileTypes="video/mp4" mediaType="video"/>
+                                                <FileUpload label="Fichier Vidéo Complet" value={video.src.startsWith('/uploads/') ? video.src : ''} onChange={(url) => updateVideo(video.id, 'src', url)} acceptedFileTypes="video/*" mediaType="video"/>
                                             </div>
                                             <div>
                                                 <Label htmlFor={`video-ai-hint-${video.id}`}>Indice IA pour la miniature</Label>

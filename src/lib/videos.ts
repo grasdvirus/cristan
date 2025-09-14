@@ -1,9 +1,11 @@
 
+
 export type Video = {
   id: string;
   title: string;
   description: string;
   imageUrl: string;
+  shortPreviewUrl?: string;
   dataAiHint: string;
   src: string;
   views: number;
