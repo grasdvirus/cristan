@@ -43,22 +43,28 @@ function TVCard({ video }: { video: Video }) {
     const [isActive, setIsActive] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
-    const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window);
+    
+    // Détecte si c'est un appareil tactile une seule fois
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
+    useEffect(() => {
+        setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    }, []);
 
     useEffect(() => {
-        if (isActive && videoRef.current) {
-            videoRef.current.play().catch(e => {
+        const videoElement = videoRef.current;
+        if (isActive && videoElement) {
+            videoElement.play().catch(e => {
                 if (e.name !== 'AbortError') {
-                    console.error("Autoplay failed", e);
+                    console.error("Autoplay a échoué", e);
                 }
             });
-        } else if (!isActive && videoRef.current) {
-            videoRef.current.pause();
-            videoRef.current.currentTime = 0;
+        } else if (!isActive && videoElement) {
+            videoElement.pause();
+            videoElement.currentTime = 0;
         }
     }, [isActive]);
 
-    // Handle clicks outside to deactivate
+    // Gère les clics en dehors pour désactiver
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
@@ -76,24 +82,18 @@ function TVCard({ video }: { video: Video }) {
             setIsActive(true);
         }
     };
-    
-    const handleInteractionEnd = () => {
-        if (isActive) {
-            setIsActive(false);
-        }
-    };
 
     const handleClick = (e: React.MouseEvent) => {
         if (isTouchDevice) {
+            // Sur appareil tactile:
+            // 1er appui: active la prévisualisation, mais ne navigue pas
             if (!isActive) {
-                e.preventDefault();
+                e.preventDefault(); // Empêche le Link de naviguer
                 setIsActive(true);
-            } else {
-                // If active, the click should navigate
-                 router.push(`/video/${video.id}`);
             }
+            // 2ème appui (ou plus): le Link suivra son cours normal et naviguera
         } else {
-            // On desktop, click always navigates
+            // Sur ordinateur, un clic navigue toujours
             router.push(`/video/${video.id}`);
         }
     }
@@ -103,13 +103,12 @@ function TVCard({ video }: { video: Video }) {
             <Link
                 href={`/video/${video.id}`}
                 onClick={handleClick}
+                onMouseEnter={!isTouchDevice ? handleInteractionStart : undefined}
+                onMouseLeave={!isTouchDevice ? () => setIsActive(false) : undefined}
                 className="group block"
+                aria-label={video.title}
             >
-                <Card 
-                    className="overflow-hidden h-full flex flex-col transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20"
-                    onMouseEnter={!isTouchDevice ? handleInteractionStart : undefined}
-                    onMouseLeave={!isTouchDevice ? handleInteractionEnd : undefined}
-                >
+                <Card className="overflow-hidden h-full flex flex-col transition-shadow duration-300 hover:shadow-lg hover:shadow-primary/20">
                     <CardContent className="p-0 relative">
                         <div className="aspect-video overflow-hidden">
                             {isActive && video.shortPreviewUrl ? (
@@ -133,7 +132,7 @@ function TVCard({ video }: { video: Video }) {
                                     />
                                 ) : (
                                     <div className="w-full h-full bg-muted flex items-center justify-center">
-                                        {/* No fallback content to keep it clean */}
+                                        {/* Pas de contenu de secours pour garder une interface épurée */}
                                     </div>
                                 )
                             )}
