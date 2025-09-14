@@ -292,7 +292,6 @@ function AdminContent() {
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const [hasChanges, setHasChanges] = useState(false);
     const [activeView, setActiveView] = useState<ActiveView>('articles');
-    const [passwordInput, setPasswordInput] = useState('');
     const [isPaymentUnlocked, setIsPaymentUnlocked] = useState(false);
     const [isSubsPriceUnlocked, setIsSubsPriceUnlocked] = useState(false);
     
@@ -342,7 +341,11 @@ function AdminContent() {
         setProducts(produce(draft => {
             const product = draft.find(p => p.id === id);
             if (product) {
-                (product as any)[field] = value;
+                if (field === 'price') {
+                    (product as any)[field] = parseFloat(value) || 0;
+                } else {
+                    (product as any)[field] = value;
+                }
             }
         }));
         setHasChanges(true);
@@ -413,8 +416,15 @@ function AdminContent() {
             if (video) {
                 if (field.startsWith('creator.')) {
                     const creatorField = field.split('.')[1] as keyof Video['creator'];
-                    (video.creator as any)[creatorField] = value;
-                } else {
+                    if (creatorField === 'subscribers') {
+                         (video.creator as any)[creatorField] = parseInt(value, 10) || 0;
+                    } else {
+                        (video.creator as any)[creatorField] = value;
+                    }
+                } else if (['views', 'likes', 'duration'].includes(field)) {
+                    (video as any)[field] = parseInt(value, 10) || 0;
+                }
+                else {
                     (video as any)[field] = value;
                 }
             }
@@ -573,8 +583,8 @@ function AdminContent() {
             
             const updatedSub: Partial<Subscription> = { 
                 status: 'active', 
-                expiryDate: { seconds: expiryTimestamp.seconds, nanoseconds: expiryTimestamp.nanoseconds } as any,
-                startDate: { seconds: startTimestamp.seconds, nanoseconds: startTimestamp.nanoseconds } as any,
+                expiryDate: expiryTimestamp,
+                startDate: startTimestamp,
             };
 
             setSubscriptions(prev => prev.map(s => s.id === subscription.id ? { ...s, ...updatedSub } : s));
@@ -635,16 +645,6 @@ function AdminContent() {
             setTimeout(() => setSaveStatus('idle'), 4000);
         }
     };
-
-    const handlePasswordSubmit = (section: 'payment' | 'subsPrice') => {
-        if (passwordInput === 'virusgrasd') {
-            if (section === 'payment') setIsPaymentUnlocked(true);
-            if (section === 'subsPrice') setIsSubsPriceUnlocked(true);
-            setPasswordInput('');
-        } else {
-            toast({ variant: 'destructive', title: 'Mot de passe incorrect' });
-        }
-    };
     
     const sidebarNav = [
         { id: 'articles', label: 'Articles (Blog)', icon: Newspaper },
@@ -703,26 +703,39 @@ function AdminContent() {
         </Card>
     );
 
-    const PasswordWall = ({ section }: { section: 'payment' | 'subsPrice' }) => (
-        <Card className="max-w-md mx-auto">
-            <CardHeader>
-                <CardTitle>Accès Restreint</CardTitle>
-                <CardDescription>Veuillez entrer le mot de passe pour accéder à cette section.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-center gap-2">
-                    <Input
-                        type="password"
-                        placeholder="Mot de passe"
-                        value={passwordInput}
-                        onChange={(e) => setPasswordInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit(section)}
-                    />
-                    <Button onClick={() => handlePasswordSubmit(section)}>Déverrouiller</Button>
-                </div>
-            </CardContent>
-        </Card>
-    );
+    const PasswordWall = ({ onUnlock }: { onUnlock: () => void }) => {
+        const [passwordInput, setPasswordInput] = useState('');
+        
+        const handlePasswordSubmit = () => {
+            if (passwordInput === 'virusgrasd') {
+                onUnlock();
+                setPasswordInput('');
+            } else {
+                toast({ variant: 'destructive', title: 'Mot de passe incorrect' });
+            }
+        };
+
+        return (
+            <Card className="max-w-md mx-auto">
+                <CardHeader>
+                    <CardTitle>Accès Restreint</CardTitle>
+                    <CardDescription>Veuillez entrer le mot de passe pour accéder à cette section.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center gap-2">
+                        <Input
+                            type="password"
+                            placeholder="Mot de passe"
+                            value={passwordInput}
+                            onChange={(e) => setPasswordInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                        />
+                        <Button onClick={handlePasswordSubmit}>Déverrouiller</Button>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    };
 
     return (
         <SidebarProvider>
@@ -857,7 +870,7 @@ function AdminContent() {
                                                 </div>
                                                  <div>
                                                     <Label htmlFor={`price-${product.id}`}>Prix (FCFA)</Label>
-                                                    <Input id={`price-${product.id}`} type="text" value={product.price} onChange={(e) => updateProduct(product.id, 'price', parseFloat(e.target.value) || 0)} />
+                                                    <Input id={`price-${product.id}`} type="text" value={product.price} onChange={(e) => updateProduct(product.id, 'price', e.target.value)} />
                                                 </div>
                                                 <div>
                                                     <Label>Collection</Label>
@@ -922,7 +935,7 @@ function AdminContent() {
                                                 </div>
                                                  <div>
                                                     <Label htmlFor={`price-${product.id}`}>Prix (FCFA)</Label>
-                                                    <Input id={`price-${product.id}`} type="text" value={product.price} onChange={(e) => updateProduct(product.id, 'price', parseFloat(e.target.value) || 0)} />
+                                                    <Input id={`price-${product.id}`} type="text" value={product.price} onChange={(e) => updateProduct(product.id, 'price', e.target.value)} />
                                                 </div>
                                                 <div>
                                                     <Label>Classe Internet</Label>
@@ -982,15 +995,15 @@ function AdminContent() {
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                                                     <div>
                                                         <Label htmlFor={`video-views-${video.id}`}>Vues</Label>
-                                                        <Input id={`video-views-${video.id}`} type="text" value={video.views} onChange={(e) => updateVideo(video.id, 'views', parseInt(e.target.value, 10) || 0)} />
+                                                        <Input id={`video-views-${video.id}`} type="text" value={video.views} onChange={(e) => updateVideo(video.id, 'views', e.target.value)} />
                                                     </div>
                                                     <div>
                                                         <Label htmlFor={`video-likes-${video.id}`}>J'aime</Label>
-                                                        <Input id={`video-likes-${video.id}`} type="text" value={video.likes} onChange={(e) => updateVideo(video.id, 'likes', parseInt(e.target.value, 10) || 0)} />
+                                                        <Input id={`video-likes-${video.id}`} type="text" value={video.likes} onChange={(e) => updateVideo(video.id, 'likes', e.target.value)} />
                                                     </div>
                                                     <div>
                                                         <Label htmlFor={`video-subs-${video.id}`}>Abonnés</Label>
-                                                        <Input id={`video-subs-${video.id}`} type="text" value={video.creator.subscribers} onChange={(e) => updateVideo(video.id, 'creator.subscribers', parseInt(e.target.value, 10) || 0)} />
+                                                        <Input id={`video-subs-${video.id}`} type="text" value={video.creator.subscribers} onChange={(e) => updateVideo(video.id, 'creator.subscribers', e.target.value)} />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1022,7 +1035,7 @@ function AdminContent() {
                                                 </div>
                                                 <div>
                                                     <Label htmlFor={`video-duration-${video.id}`}>Durée (minutes)</Label>
-                                                    <Input id={`video-duration-${video.id}`} type="text" value={video.duration} onChange={(e) => updateVideo(video.id, 'duration', parseInt(e.target.value, 10) || 0)} />
+                                                    <Input id={`video-duration-${video.id}`} type="text" value={video.duration} onChange={(e) => updateVideo(video.id, 'duration', e.target.value)} />
                                                 </div>
                                                 <div className="flex items-center space-x-2 pt-6">
                                                     <Switch id={`video-paid-${video.id}`} checked={video.isPaid} onCheckedChange={(checked) => updateVideo(video.id, 'isPaid', checked)} />
@@ -1303,7 +1316,8 @@ function AdminContent() {
                                             <p><strong>ID Transaction:</strong> {sub.transactionId}</p>
                                             <p><strong>Montant:</strong> {new Intl.NumberFormat('fr-FR').format(sub.amount)} FCFA</p>
                                             {sub.startDate?.seconds && (<p><strong>Début:</strong> {format(new Date(sub.startDate.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}</p>)}
-                                            {sub.expiryDate?.seconds && (<p><strong>Expire le:</strong> {format(new Date(sub.expiryDate.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}</p>)}
+                                            {sub.expiryDate?.seconds ? (<p><strong>Expire le:</strong> {format(new Date(sub.expiryDate.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}</p>)
+                                            : sub.expiryDate ? (<p><strong>Expire le:</strong> {format(sub.expiryDate, 'd MMM yyyy, HH:mm', { locale: fr })}</p>) : null}
                                         </CollapsibleContent>
                                     </Collapsible>
                                 )) : (
@@ -1327,7 +1341,7 @@ function AdminContent() {
                                      <p className="text-muted-foreground">Modifiez les tarifs des forfaits vidéos.</p>
                                 </div>
                             </div>
-                             {!isSubsPriceUnlocked ? <PasswordWall section="subsPrice" /> :
+                             {!isSubsPriceUnlocked ? <PasswordWall onUnlock={() => setIsSubsPriceUnlocked(true)} /> :
                              loadingPlans ? (
                                 <div className="flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
                             ) : subscriptionPlans ? (
@@ -1384,7 +1398,7 @@ function AdminContent() {
                                 </div>
                                 <Button onClick={addPaymentMethod} disabled={!paymentDetails || paymentDetails.methods.length >= 3 || !isPaymentUnlocked}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter</Button>
                             </div>
-                             {!isPaymentUnlocked ? <PasswordWall section="payment" /> :
+                             {!isPaymentUnlocked ? <PasswordWall onUnlock={() => setIsPaymentUnlocked(true)} /> :
                              loadingPayment ? (
                                 <div className="flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
                             ) : (
@@ -1470,6 +1484,8 @@ function AdminContent() {
 export default function AdminPageWrapper() {
     return <AdminContent />;
 }
+
+    
 
     
 
