@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, ChangeEvent, useRef } from 'react';
@@ -761,7 +760,7 @@ function AdminContent() {
     const articles = products.filter(p => p.articleCategory).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     const shopProducts = products.filter(p => p.collection).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     const internetProducts = products.filter(p => p.internetClass !== undefined).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-    const sortedVideos = videos.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    const sortedVideos = [...videos].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
 
     const CategoryEditor = ({ title, categoryList, listKey }: { title: string; categoryList: CategoryItem[]; listKey: keyof AllCategories; }) => (
@@ -1662,4 +1661,5 @@ export default function AdminPageWrapper() {
     return <AdminContent />;
 }
 
+    
     
