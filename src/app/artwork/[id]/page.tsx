@@ -13,6 +13,7 @@ import { useMemo, useState } from 'react';
 import { useCartStore } from '@/hooks/use-cart-store';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export default function ArtworkDetailPage() {
   const params = useParams();
@@ -122,6 +123,30 @@ export default function ArtworkDetailPage() {
                 </CardHeader>
                 <CardContent className="space-y-4 flex-grow">
                     <p className="text-base text-foreground/90">{artwork.description}</p>
+                     {(artwork.colors && artwork.colors.length > 0) || (artwork.sizes && artwork.sizes.length > 0) ? (
+                        <div className="space-y-4">
+                            {artwork.colors && artwork.colors.length > 0 && (
+                                <div>
+                                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Couleurs</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {artwork.colors.map(color => (
+                                            <Badge key={color} variant="outline">{color}</Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {artwork.sizes && artwork.sizes.length > 0 && (
+                                <div>
+                                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Tailles</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {artwork.sizes.map(size => (
+                                            <Badge key={size} variant="outline">{size}</Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
                 </CardContent>
                  <CardFooter className="flex-col items-stretch gap-4 p-6 bg-card/50">
                     <div className="flex justify-between items-center">

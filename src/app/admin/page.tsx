@@ -374,7 +374,10 @@ function AdminContent() {
             if (product) {
                 if (field === 'price') {
                     (product as any)[field] = parseFloat(value) || 0;
-                } else {
+                } else if (field === 'colors' || field === 'sizes') {
+                    (product as any)[field] = typeof value === 'string' ? value.split(',').map(s => s.trim()) : [];
+                }
+                else {
                     (product as any)[field] = value;
                 }
             }
@@ -404,7 +407,11 @@ function AdminContent() {
             price: 0,
             isRecommended: false,
             createdAt: serverTimestamp(),
-            ...(isShop && { collection: productCollections[0]?.id || '' }),
+            ...(isShop && { 
+                collection: productCollections[0]?.id || '',
+                colors: [],
+                sizes: [],
+            }),
             ...(isInternet && { 
                 internetClass: internetClasses[0]?.id || '',
                 redirectUrl: ''
@@ -981,6 +988,14 @@ function AdminContent() {
                                                         <StarIcon className="h-4 w-4 text-yellow-500" />
                                                         Recommandé
                                                     </Label>
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor={`colors-${product.id}`}>Couleurs (séparées par des virgules)</Label>
+                                                    <Input id={`colors-${product.id}`} value={(product.colors || []).join(', ')} onChange={(e) => updateProduct(product.id, 'colors', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor={`sizes-${product.id}`}>Tailles (séparées par des virgules)</Label>
+                                                    <Input id={`sizes-${product.id}`} value={(product.sizes || []).join(', ')} onChange={(e) => updateProduct(product.id, 'sizes', e.target.value)} />
                                                 </div>
                                             </div>
                                             <div>
@@ -1660,6 +1675,3 @@ function AdminContent() {
 export default function AdminPageWrapper() {
     return <AdminContent />;
 }
-
-    
-    

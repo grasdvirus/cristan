@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { AuthProvider, useAuth } from '@/components/auth-provider';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
 
 
 function AppContent({ children }: { children: React.ReactNode }) {
@@ -119,6 +120,7 @@ export default function RootLayout({
             </AppContent>
         </AuthProvider>
         <Toaster />
+        <ScrollToTopButton />
       </body>
     </html>
   );

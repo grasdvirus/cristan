@@ -12,6 +12,8 @@ export type Product = {
   redirectUrl?: string;
   isRecommended?: boolean;
   createdAt?: any; // Firestore Timestamp
+  colors?: string[];
+  sizes?: string[];
 };
 
     
