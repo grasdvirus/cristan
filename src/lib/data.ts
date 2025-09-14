@@ -15,7 +15,7 @@ interface CategoryStore {
   productCollections: CategoryItem[];
   internetClasses: CategoryItem[];
   tvChannels: CategoryItem[];
-  setCategories: (categories: Partial<CategoryStore>) => void;
+  setCategories: (categories: Partial<Omit<CategoryStore, 'setCategories' | 'loading' | 'error' | 'fetchCategories'>>) => void;
   loading: boolean;
   error: string | null;
   fetchCategories: () => Promise<void>;
@@ -31,9 +31,11 @@ export const useCategoryStore = create<CategoryStore>((set, get) => ({
   setCategories: (categories) => set((state) => ({ ...state, ...categories })),
   fetchCategories: async () => {
     // Évite les chargements multiples inutiles, mais permet le re-fetch
-    if (get().articleCategories.length === 0) {
-      set({ loading: true });
+    if (get().loading || get().articleCategories.length > 0) {
+      // return;
     }
+
+    set({ loading: true });
 
     try {
       const response = await fetch('/api/config/categories/get');
