@@ -24,37 +24,32 @@ interface ContactFormProps {
   partnerForm?: boolean;
 }
 
-const createContactFormSchema = (isPartnerForm: boolean) => {
-  let schema = z.object({
-      name: z.string().min(2, {
-        message: "Le nom doit comporter au moins 2 caractères.",
-      }),
-      firstname: z.string(),
-      email: z.string().email({
-        message: "Veuillez saisir une adresse e-mail valide.",
-      }),
-      phone: z.string(),
-      reason: z.string(),
-      message: z.string(),
-  });
 
-  if (isPartnerForm) {
-      schema = schema.extend({
-          firstname: z.string().min(2, { message: "Le prénom doit comporter au moins 2 caractères." }),
-          phone: z.string().min(8, { message: "Le numéro de téléphone est trop court."}),
-          reason: z.string().min(2, { message: "Veuillez sélectionner un motif."}),
-          message: z.string().optional(),
-      });
-  } else {
-      schema = schema.extend({
-          message: z.string().min(10, { message: "Le message doit comporter au moins 10 caractères." }),
-          firstname: z.string().optional(),
-          phone: z.string().optional(),
-          reason: z.string().optional(),
-      });
-  }
-  
-  return schema;
+const createContactFormSchema = (isPartnerForm: boolean) => {
+    return z.object({
+        name: z.string().min(2, { message: "Le nom doit comporter au moins 2 caractères." }),
+        email: z.string().email({ message: "Veuillez saisir une adresse e-mail valide." }),
+        firstname: z.string().optional(),
+        phone: z.string().optional(),
+        reason: z.string().optional(),
+        message: z.string().optional(),
+    }).superRefine((data, ctx) => {
+        if (isPartnerForm) {
+            if (!data.firstname || data.firstname.length < 2) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Le prénom doit comporter au moins 2 caractères.", path: ['firstname'] });
+            }
+            if (!data.phone || data.phone.length < 8) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Le numéro de téléphone est trop court.", path: ['phone'] });
+            }
+            if (!data.reason || data.reason.length < 2) {
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Veuillez sélectionner un motif.", path: ['reason'] });
+            }
+        } else {
+            if (!data.message || data.message.length < 10) {
+                 ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Le message doit comporter au moins 10 caractères.", path: ['message'] });
+            }
+        }
+    });
 };
 
 
