@@ -37,7 +37,7 @@ export default function SubscribePage() {
   const { user } = useAuth();
   
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null);
-  const [subscriptionPlans, setSubscriptionPlans = useState<SubscriptionPlans | null>(null);
+  const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlans | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
