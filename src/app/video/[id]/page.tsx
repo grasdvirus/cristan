@@ -7,18 +7,18 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ThumbsUp, ThumbsDown, Share2, Loader2, Play, Star, Crown } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { useMemo, useState, useEffect } from 'react';
-import { useVideos } from '@/hooks/use-videos';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, increment, getDoc, writeBatch } from 'firebase/firestore';
+import { doc, updateDoc, increment, getDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import Image from 'next/image';
 import { useAuth } from '@/components/auth-provider';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useCategoryStore } from '@/lib/data';
+import type { Video } from '@/lib/videos';
 
 
 function formatCount(num: number) {
@@ -60,24 +60,44 @@ export default function VideoDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const { user } = useAuth();
-  const { videos, loading, setVideos } = useVideos();
-  const { tvChannels, fetchCategories } = useCategoryStore();
+  const { tvChannels, fetchCategories, setCategories } = useCategoryStore();
   const { toast } = useToast();
   
+  const [video, setVideo] = useState<Video | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
 
-  const video = useMemo(() => {
-    return videos.find((v) => v.id === id);
-  }, [videos, id]);
+  const channel = video ? tvChannels.find(c => c.id === video.channel) : null;
+  
+  useEffect(() => {
+    if (!id) {
+        setError("No ID provided");
+        setLoading(false);
+        return;
+    }
 
-  const channel = useMemo(() => {
-      if (!video) return null;
-      return tvChannels.find(c => c.id === video.channel);
-  }, [video, tvChannels]);
+    setLoading(true);
+    const unsub = onSnapshot(doc(db, "videos", id), (doc) => {
+        if (doc.exists()) {
+            setVideo({ id: doc.id, ...doc.data() } as Video);
+        } else {
+            setError("Video not found");
+        }
+        setLoading(false);
+    }, (err) => {
+        console.error("Error fetching video:", err);
+        setError("Failed to fetch video");
+        setLoading(false);
+    });
+
+    return () => unsub();
+  }, [id]);
+
 
   // Check user subscription status
   useEffect(() => {
@@ -94,6 +114,7 @@ export default function VideoDetailPage() {
     }
 
     const checkSubscription = async () => {
+        setCheckingAccess(true);
         const userDocRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
 
@@ -121,11 +142,9 @@ export default function VideoDetailPage() {
           const videoRef = doc(db, "videos", id);
           updateDoc(videoRef, {
               views: increment(1)
-          }).then(() => {
-              setVideos(prevVideos => prevVideos.map(v => 
-                  v.id === id ? { ...v, views: v.views + 1 } : v
-              ));
           }).catch(err => console.error("Failed to increment views:", err));
+          // Note: The view count will be updated via the snapshot listener,
+          // so no need to update local state here.
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, hasAccess, checkingAccess]);
@@ -136,6 +155,14 @@ export default function VideoDetailPage() {
       <div className="flex h-96 w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+        <div className="flex h-96 w-full items-center justify-center text-red-500">
+            {error}
+        </div>
     );
   }
 
@@ -155,9 +182,6 @@ export default function VideoDetailPage() {
         await updateDoc(videoRef, {
             likes: increment(1)
         });
-        setVideos(prevVideos => prevVideos.map(v => 
-            v.id === id ? { ...v, likes: v.likes + 1 } : v
-        ));
     } catch (error) {
         console.error("Failed to update likes", error);
         setIsLiked(false); // Revert state on error
@@ -184,7 +208,7 @@ export default function VideoDetailPage() {
       try {
           await batch.commit();
           // Manually update the Zustand store to reflect the change immediately
-          fetchCategories();
+          setCategories({ tvChannels: updatedTvChannels });
           toast({ title: `Abonné à ${channel.label} !` });
       } catch (error) {
           console.error("Failed to update subscribers:", error);
@@ -332,7 +356,5 @@ export default function VideoDetailPage() {
     </div>
   );
 }
-
-    
 
     

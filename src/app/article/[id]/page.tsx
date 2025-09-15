@@ -9,8 +9,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2, Heart, MessageCircle, Send } from 'lucide-react';
-import { useProducts } from '@/hooks/use-products';
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useViewStore } from '@/hooks/use-view-store';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc, arrayUnion, increment, onSnapshot } from "firebase/firestore";
@@ -27,33 +26,46 @@ import { useToast } from '@/hooks/use-toast';
 export default function ArticleDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const { products, loading: loadingProducts, error } = useProducts();
   const { user } = useAuth();
   const { addViewedArticle } = useViewStore();
   const { toast } = useToast();
 
-  const [article, setArticle] = useState<Product | undefined>(() => products.find(p => p.id === id));
+  const [article, setArticle] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      const unsub = onSnapshot(doc(db, "products", id), (doc) => {
-        if (doc.exists()) {
-          setArticle({ id: doc.id, ...doc.data() } as Product);
-        }
-      });
-      return () => unsub();
+    if (!id) {
+        setError("No ID provided");
+        setLoading(false);
+        return;
     }
+    
+    setLoading(true);
+    const unsub = onSnapshot(doc(db, "products", id), (doc) => {
+        if (doc.exists()) {
+            setArticle({ id: doc.id, ...doc.data() } as Product);
+        } else {
+            setError("Article not found");
+        }
+        setLoading(false);
+    }, (err) => {
+        console.error("Error fetching article:", err);
+        setError("Failed to fetch article");
+        setLoading(false);
+    });
+
+    return () => unsub();
   }, [id]);
+
 
   useEffect(() => {
     if (article) {
       addViewedArticle(article.id);
     }
   }, [article, addViewedArticle]);
-  
-  const loading = loadingProducts && !article;
   
   const handleLike = async () => {
     if (!user) {

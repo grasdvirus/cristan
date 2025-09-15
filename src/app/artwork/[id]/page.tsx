@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ShoppingCart, Loader2, ExternalLink, Check, Heart, MessageCircle, Send } from 'lucide-react';
-import { useProducts } from '@/hooks/use-products';
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useCartStore } from '@/hooks/use-cart-store';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -27,13 +26,14 @@ import { Separator } from '@/components/ui/separator';
 export default function ArtworkDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const { products: initialProducts, loading: loadingProducts, error } = useProducts();
   const { addToCart } = useCartStore();
   const { toast } = useToast();
   const { user } = useAuth();
   
-  const [artwork, setArtwork] = useState<Product | undefined>(() => initialProducts.find(p => p.id === id));
-  const [selectedImage, setSelectedImage] = useState(artwork?.mediaUrls?.[0]);
+  const [artwork, setArtwork] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | undefined>(undefined);
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
   const [commentText, setCommentText] = useState("");
@@ -41,8 +41,14 @@ export default function ArtworkDetailPage() {
   
   // Listen for real-time updates on the product
   useEffect(() => {
-    if (id) {
-      const unsub = onSnapshot(doc(db, "products", id), (doc) => {
+    if (!id) {
+        setError("No ID provided");
+        setLoading(false);
+        return;
+    }
+
+    setLoading(true);
+    const unsub = onSnapshot(doc(db, "products", id), (doc) => {
         if (doc.exists()) {
           const data = { id: doc.id, ...doc.data() } as Product;
           setArtwork(data);
@@ -56,15 +62,20 @@ export default function ArtworkDetailPage() {
           if (!selectedSize && data.sizes && data.sizes.length > 0) {
               setSelectedSize(data.sizes[0]);
           }
+        } else {
+            setError("Product not found");
         }
-      });
-      return () => unsub();
-    }
+        setLoading(false);
+    }, (err) => {
+        console.error("Error fetching product:", err);
+        setError("Failed to fetch product");
+        setLoading(false);
+    });
+
+    return () => unsub();
   }, [id, selectedImage, selectedColor, selectedSize]);
 
   
-  const loading = loadingProducts && !artwork;
-
   const handleAddToCart = () => {
     if (artwork) {
         addToCart({ ...artwork, selectedColor, selectedSize });
