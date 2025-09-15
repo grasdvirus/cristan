@@ -24,9 +24,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === '/login';
   const isAdminPage = pathname.startsWith('/admin');
   const isVideoPage = pathname.startsWith('/video');
-  const isSubscriptionPage = pathname === '/subscribe';
   
-  // Routes that require authentication
   const protectedRoutes = [
       '/admin',
       '/profile',
@@ -37,27 +35,23 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
   useEffect(() => {
-    if (loading) return; 
-
-    if (user && isLoginPage) {
-      router.push('/');
+    // Ne rien faire pendant que l'authentification est en cours de vérification.
+    if (loading) {
+      return; 
     }
 
-    if (!user && isProtectedRoute) {
-        router.push('/login');
+    // Une fois le chargement terminé, appliquer les règles de redirection.
+    if (user && isLoginPage) {
+      // Si l'utilisateur est connecté et va sur la page de login, le rediriger.
+      router.push('/');
+    } else if (!user && isProtectedRoute) {
+      // Si l'utilisateur n'est pas connecté et tente d'accéder à une page protégée, le rediriger.
+      router.push('/login');
     }
     
   }, [user, loading, isLoginPage, isProtectedRoute, router, pathname]);
 
-  useEffect(() => {
-    // This effect is not ideal as it can be bypassed.
-    // A more robust solution for content protection would involve server-side checks
-    // or more advanced client-side measures if required.
-    const preventCopy = (e: ClipboardEvent) => e.preventDefault();
-    document.addEventListener('copy', preventCopy);
-    return () => document.removeEventListener('copy', preventCopy);
-  }, []);
-
+  // Si le chargement est en cours, afficher un loader pour éviter tout rendu prématuré.
   if (loading) {
      return (
         <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
@@ -67,7 +61,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
      );
   }
   
-  // If we are checking for auth on a protected route, show a loader
+  // Si on est sur une route protégée sans utilisateur (le temps que la redirection s'effectue)
   if (!user && isProtectedRoute) {
      return (
         <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
@@ -77,12 +71,12 @@ function AppContent({ children }: { children: React.ReactNode }) {
      );
   }
 
-  // Allow login page to render without the main layout
+  // Permettre l'affichage de la page de login sans le layout principal
   if (isLoginPage) {
     return <>{children}</>;
   }
   
-  // Admin page has its own layout
+  // La page admin a son propre layout interne
   if (isAdminPage) {
     return (
         <main className="flex-1">
