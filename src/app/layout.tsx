@@ -12,7 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { AuthProvider, useAuth } from '@/components/auth-provider';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ScrollToTopButton, ScrollToTop } from '@/components/ui/scroll-to-top';
+import { ScrollToTopButton } from '@/components/ui/scroll-to-top';
 import { Loader2 } from 'lucide-react';
 
 
