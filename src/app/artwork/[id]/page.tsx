@@ -2,7 +2,7 @@
 
 'use client';
 
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import Link from 'next/link';
@@ -26,6 +26,7 @@ import { Separator } from '@/components/ui/separator';
 export default function ArtworkDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter();
   const { addToCart } = useCartStore();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -51,17 +52,23 @@ export default function ArtworkDetailPage() {
     const unsub = onSnapshot(doc(db, "products", id), (doc) => {
         if (doc.exists()) {
           const data = { id: doc.id, ...doc.data() } as Product;
-          setArtwork(data);
-           // Set initial selections only once when artwork data arrives
-          if (!selectedImage && data.mediaUrls && data.mediaUrls.length > 0) {
-            setSelectedImage(data.mediaUrls[0]);
-          }
-          if (data.colors && data.colors.length > 0 && selectedColor === undefined) {
-             setSelectedColor(data.colors[0]);
-          }
-          if (data.sizes && data.sizes.length > 0 && selectedSize === undefined) {
-              setSelectedSize(data.sizes[0]);
-          }
+          
+          setArtwork((prevArtwork) => {
+            // Only set initial selections if the artwork is being loaded for the first time
+            if (!prevArtwork) {
+              if (data.mediaUrls && data.mediaUrls.length > 0) {
+                setSelectedImage(data.mediaUrls[0]);
+              }
+              if (data.colors && data.colors.length > 0) {
+                setSelectedColor(data.colors[0]);
+              }
+              if (data.sizes && data.sizes.length > 0) {
+                setSelectedSize(data.sizes[0]);
+              }
+            }
+            return data;
+          });
+
         } else {
             setError("Product not found");
         }
@@ -150,12 +157,10 @@ export default function ArtworkDetailPage() {
   return (
     <>
       <div className="space-y-8">
-        <Link href="/decouvrir" scroll={false} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => router.back()} className="inline-flex items-center">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour à la boutique
+              Retour
           </Button>
-        </Link>
         <Card className="overflow-hidden shadow-lg">
           <div className="grid grid-cols-1 md:grid-cols-2">
               <div className="flex flex-col">
@@ -317,7 +322,7 @@ export default function ArtworkDetailPage() {
                           <p className="font-semibold text-sm">{comment.author}</p>
                           <p className="text-muted-foreground">{comment.text}</p>
                           <p className="text-xs text-muted-foreground/70 self-end">
-                              {format(new Date(comment.createdAt.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}
+                              {comment.createdAt?.seconds ? format(new Date(comment.createdAt.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr }) : ''}
                           </p>
                       </div>
                   ))}

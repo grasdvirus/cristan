@@ -12,7 +12,7 @@ import { ArrowLeft, Loader2, Heart, MessageCircle, Send } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useViewStore } from '@/hooks/use-view-store';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, arrayUnion, increment, onSnapshot } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, increment, onSnapshot, getDoc } from "firebase/firestore";
 import type { Product, Comment } from '@/lib/products';
 import { useAuth } from '@/components/auth-provider';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +22,16 @@ import { fr } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+
+async function getArticle(id: string): Promise<Product | null> {
+    const docRef = doc(db, "products", id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as Product;
+    }
+    return null;
+}
+
 
 export default function ArticleDetailPage() {
   const params = useParams();
@@ -33,39 +43,33 @@ export default function ArticleDetailPage() {
 
   const [article, setArticle] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  
+  // Use onSnapshot for real-time updates of comments/likes
   useEffect(() => {
-    if (!id) {
-        setLoading(false);
-        setError("No ID provided");
-        return;
-    }
-    
+    if (!id) return;
     const unsub = onSnapshot(doc(db, "products", id), (doc) => {
         if (doc.exists()) {
             setArticle({ id: doc.id, ...doc.data() } as Product);
-        } else {
-            setError("Article not found");
+        }
+    });
+    return () => unsub();
+  }, [id]);
+  
+  // Initial fetch and marking as viewed
+  useEffect(() => {
+    getArticle(id).then(initialArticle => {
+        if (initialArticle) {
+            setArticle(initialArticle);
+            addViewedArticle(id);
         }
         setLoading(false);
-    }, (err) => {
-        console.error("Error fetching article:", err);
-        setError("Failed to fetch article");
-        setLoading(false);
     });
-
-    return () => unsub();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
 
-  useEffect(() => {
-    if (article) {
-      addViewedArticle(article.id);
-    }
-  }, [article, addViewedArticle]);
   
   const handleLike = async () => {
     if (!user) {
@@ -109,10 +113,10 @@ export default function ArticleDetailPage() {
 
 
   if (loading) {
-    return null;
+    return null; // Return null on initial load to prevent flicker, page will show top on nav
   }
 
-  if (error || !article) {
+  if (!article) {
     notFound();
   }
   
@@ -121,7 +125,7 @@ export default function ArticleDetailPage() {
   return (
     <>
       <div className="space-y-8">
-        <Button variant="outline" size="sm" onClick={() => router.back()} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+        <Button variant="outline" size="sm" onClick={() => router.back()} className="inline-flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour
         </Button>
@@ -210,7 +214,7 @@ export default function ArticleDetailPage() {
                               <p className="font-semibold text-sm">{comment.author}</p>
                               <p className="text-muted-foreground">{comment.text}</p>
                               <p className="text-xs text-muted-foreground/70 self-end">
-                                  {format(new Date(comment.createdAt.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}
+                                  {comment.createdAt?.seconds ? format(new Date(comment.createdAt.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr }) : ''}
                               </p>
                           </div>
                       ))}
