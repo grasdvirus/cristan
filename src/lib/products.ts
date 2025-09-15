@@ -13,6 +13,7 @@ export type Product = {
   mediaUrls: string[]; // Changed from imageUrls to mediaUrls to support video
   dataAiHint: string;
   price: number;
+  originalPrice?: number;
   collection?: string;
   internetClass?: string;
   articleCategory?: string;
@@ -26,4 +27,3 @@ export type Product = {
 };
 
     
-

@@ -302,7 +302,14 @@ function DecouvrirContent() {
                                         <CardTitle className="text-base font-medium line-clamp-2">{product.title}</CardTitle>
                                     </CardHeader>
                                     <CardFooter className="p-4 pt-0">
-                                        <div className="text-lg font-bold text-primary">{new Intl.NumberFormat('fr-FR').format(product.price)} FCFA</div>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-lg font-bold text-primary">{new Intl.NumberFormat('fr-FR').format(product.price)} FCFA</span>
+                                            {product.originalPrice && product.originalPrice > product.price && (
+                                                <span className="text-sm text-muted-foreground line-through">
+                                                    {new Intl.NumberFormat('fr-FR').format(product.originalPrice)} FCFA
+                                                </span>
+                                            )}
+                                        </div>
                                     </CardFooter>
                                 </Card>
                             </Link>

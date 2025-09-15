@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, arrayUnion, increment, onSnapshot } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, increment, onSnapshot, getDoc } from "firebase/firestore";
 import type { Product, Comment } from '@/lib/products';
 import { useAuth } from '@/components/auth-provider';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +22,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
+
+async function getProduct(id: string): Promise<Product | null> {
+    const docRef = doc(db, "products", id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as Product;
+    }
+    return null;
+}
 
 export default function ArtworkDetailPage() {
   const params = useParams();
@@ -33,49 +42,42 @@ export default function ArtworkDetailPage() {
   
   const [artwork, setArtwork] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | undefined>(undefined);
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Listen for real-time updates on the product
   useEffect(() => {
     if (!id) {
-        setError("No ID provided");
         setLoading(false);
         return;
     }
 
     setLoading(true);
+    // Use onSnapshot for real-time updates of comments/likes
     const unsub = onSnapshot(doc(db, "products", id), (doc) => {
         if (doc.exists()) {
-          const data = { id: doc.id, ...doc.data() } as Product;
-          
-          setArtwork((prevArtwork) => {
-            // Only set initial selections if the artwork is being loaded for the first time
-            if (!prevArtwork) {
-              if (data.mediaUrls && data.mediaUrls.length > 0) {
-                setSelectedImage(data.mediaUrls[0]);
-              }
-              if (data.colors && data.colors.length > 0) {
-                setSelectedColor(data.colors[0]);
-              }
-              if (data.sizes && data.sizes.length > 0) {
-                setSelectedSize(data.sizes[0]);
-              }
+            const data = { id: doc.id, ...doc.data() } as Product;
+            setArtwork(data);
+            
+            // Set initial selections only when the component first loads
+            // or when the artwork ID changes.
+            if (!artwork || artwork.id !== data.id) {
+                 if (data.mediaUrls && data.mediaUrls.length > 0) {
+                    setSelectedImage(data.mediaUrls[0]);
+                }
+                if (data.colors && data.colors.length > 0) {
+                    setSelectedColor(data.colors[0]);
+                }
+                if (data.sizes && data.sizes.length > 0) {
+                    setSelectedSize(data.sizes[0]);
+                }
             }
-            return data;
-          });
-
-        } else {
-            setError("Product not found");
         }
         setLoading(false);
     }, (err) => {
         console.error("Error fetching product:", err);
-        setError("Failed to fetch product");
         setLoading(false);
     });
 
@@ -136,14 +138,6 @@ export default function ArtworkDetailPage() {
 
   if (loading) {
     return null;
-  }
-
-  if (error) {
-    return (
-        <div className="flex h-96 w-full items-center justify-center text-red-500">
-            Erreur de chargement du produit : {error}
-        </div>
-    );
   }
 
   if (!artwork) {
@@ -265,9 +259,14 @@ export default function ArtworkDetailPage() {
                       </div>
                   </CardContent>
                    <CardFooter className="flex-col items-stretch gap-4 p-6 bg-card/50">
-                      <div className="flex justify-between items-center">
-                          <span className="text-2xl font-bold text-primary">{new Intl.NumberFormat('fr-FR').format(artwork.price)} FCFA</span>
-                      </div>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-bold text-primary">{new Intl.NumberFormat('fr-FR').format(artwork.price)} FCFA</span>
+                            {artwork.originalPrice && artwork.originalPrice > artwork.price && (
+                                <span className="text-lg text-muted-foreground line-through">
+                                    {new Intl.NumberFormat('fr-FR').format(artwork.originalPrice)} FCFA
+                                </span>
+                            )}
+                        </div>
                        <div className="flex flex-col sm:flex-row gap-2">
                           {isInternetProduct && artwork.redirectUrl ? (
                                <>

@@ -373,7 +373,7 @@ function AdminContent() {
         setProducts(produce(draft => {
             const product = draft.find(p => p.id === id);
             if (product) {
-                if (field === 'price') {
+                if (field === 'price' || field === 'originalPrice') {
                     (product as any)[field] = parseFloat(value) || 0;
                 } else if (field === 'colors' || field === 'sizes') {
                     (product as any)[field] = typeof value === 'string' ? value.split(',').map(s => s.trim()) : [];
@@ -407,6 +407,7 @@ function AdminContent() {
             mediaUrls: [],
             dataAiHint: '',
             price: 0,
+            originalPrice: 0,
             isRecommended: false,
             createdAt: serverTimestamp(),
             likes: 0,
@@ -991,9 +992,15 @@ function AdminContent() {
                                                     <Label htmlFor={`title-${product.id}`}>Titre</Label>
                                                     <Input id={`title-${product.id}`} value={product.title} onChange={(e) => updateProduct(product.id, 'title', e.target.value)} />
                                                 </div>
-                                                 <div>
-                                                    <Label htmlFor={`price-${product.id}`}>Prix (FCFA)</Label>
-                                                    <Input id={`price-${product.id}`} type="text" value={product.price} onChange={(e) => updateProduct(product.id, 'price', e.target.value)} />
+                                                 <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <Label htmlFor={`price-${product.id}`}>Prix de vente (FCFA)</Label>
+                                                        <Input id={`price-${product.id}`} type="text" value={product.price} onChange={(e) => updateProduct(product.id, 'price', e.target.value)} />
+                                                    </div>
+                                                    <div>
+                                                        <Label htmlFor={`original-price-${product.id}`}>Prix original (barré)</Label>
+                                                        <Input id={`original-price-${product.id}`} type="text" value={product.originalPrice || ''} onChange={(e) => updateProduct(product.id, 'originalPrice', e.target.value)} placeholder="Optionnel" />
+                                                    </div>
                                                 </div>
                                                 <div>
                                                     <Label>Collection</Label>
@@ -1076,9 +1083,15 @@ function AdminContent() {
                                                     <Label htmlFor={`title-${product.id}`}>Titre</Label>
                                                     <Input id={`title-${product.id}`} value={product.title} onChange={(e) => updateProduct(product.id, 'title', e.target.value)} />
                                                 </div>
-                                                 <div>
-                                                    <Label htmlFor={`price-${product.id}`}>Prix (FCFA)</Label>
-                                                    <Input id={`price-${product.id}`} type="text" value={product.price} onChange={(e) => updateProduct(product.id, 'price', e.target.value)} />
+                                                 <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <Label htmlFor={`price-${product.id}`}>Prix de vente (FCFA)</Label>
+                                                        <Input id={`price-${product.id}`} type="text" value={product.price} onChange={(e) => updateProduct(product.id, 'price', e.target.value)} />
+                                                    </div>
+                                                    <div>
+                                                        <Label htmlFor={`original-price-${product.id}`}>Prix original (barré)</Label>
+                                                        <Input id={`original-price-${product.id}`} type="text" value={product.originalPrice || ''} onChange={(e) => updateProduct(product.id, 'originalPrice', e.target.value)} placeholder="Optionnel" />
+                                                    </div>
                                                 </div>
                                                 <div>
                                                     <Label>Classe Internet</Label>
