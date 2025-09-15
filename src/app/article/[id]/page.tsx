@@ -129,7 +129,7 @@ export default function ArticleDetailPage() {
   return (
     <>
       <div className="space-y-8">
-        <Link href="/" scroll={false} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+        <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <Button variant="outline" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Retour à l'accueil
