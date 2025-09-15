@@ -49,14 +49,3 @@ export function ScrollToTopButton() {
     </div>
   );
 }
-
-// Component to scroll to top on route change
-export function ScrollToTop() {
-    const pathname = usePathname();
-
-    useEffect(() => {
-        window.scrollTo(0, 0);
-    }, [pathname]);
-
-    return null;
-}

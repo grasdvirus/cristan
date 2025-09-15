@@ -38,7 +38,7 @@ export default function Home() {
 
 
   if (loading) {
-    return null
+    return null;
   }
 
   if (productsError || slidesError) {
@@ -168,7 +168,7 @@ export default function Home() {
                     <p className="text-sm text-muted-foreground line-clamp-3">{product.description}</p>
                   </CardContent>
                   <CardFooter>
-                    <Link href={`/article/${product.id}`} passHref className="w-full flex justify-center p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
+                    <Link href={`/article/${product.id}`} className="w-full flex justify-center p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
                         <ArrowRight className="h-6 w-6 animate-horizontal-bounce" />
                     </Link>
                   </CardFooter>
