@@ -52,14 +52,14 @@ export default function ArtworkDetailPage() {
         if (doc.exists()) {
           const data = { id: doc.id, ...doc.data() } as Product;
           setArtwork(data);
-           // Update initial selections if they haven't been changed by the user
+           // Set initial selections only once when artwork data arrives
           if (!selectedImage && data.mediaUrls && data.mediaUrls.length > 0) {
             setSelectedImage(data.mediaUrls[0]);
           }
-          if (!selectedColor && data.colors && data.colors.length > 0) {
+          if (data.colors && data.colors.length > 0 && selectedColor === undefined) {
              setSelectedColor(data.colors[0]);
           }
-          if (!selectedSize && data.sizes && data.sizes.length > 0) {
+          if (data.sizes && data.sizes.length > 0 && selectedSize === undefined) {
               setSelectedSize(data.sizes[0]);
           }
         } else {
@@ -73,7 +73,8 @@ export default function ArtworkDetailPage() {
     });
 
     return () => unsub();
-  }, [id, selectedImage, selectedColor, selectedSize]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   
   const handleAddToCart = () => {
