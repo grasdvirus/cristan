@@ -22,7 +22,6 @@ import { fr } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollToTop } from '@/components/ui/scroll-to-top';
 
 export default function ArticleDetailPage() {
   const params = useParams();
@@ -133,7 +132,6 @@ export default function ArticleDetailPage() {
 
   return (
     <>
-      <ScrollToTop />
       <div className="space-y-8">
         <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <Button variant="outline" size="sm">

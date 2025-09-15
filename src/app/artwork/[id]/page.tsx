@@ -22,7 +22,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
-import { ScrollToTop } from '@/components/ui/scroll-to-top';
 
 export default function ArtworkDetailPage() {
   const params = useParams();
@@ -153,7 +152,6 @@ export default function ArtworkDetailPage() {
 
   return (
     <>
-      <ScrollToTop />
       <div className="space-y-8">
         <Link href="/decouvrir" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <Button variant="outline" size="sm">
