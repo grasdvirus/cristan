@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from '@/components/auth-provider';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
+import { Loader2 } from 'lucide-react';
 
 
 function AppContent({ children }: { children: React.ReactNode }) {
@@ -23,20 +24,30 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === '/login';
   const isAdminPage = pathname.startsWith('/admin');
   const isVideoPage = pathname.startsWith('/video');
+  const isSubscriptionPage = pathname === '/subscribe';
+  
+  // Routes that require authentication
+  const protectedRoutes = [
+      '/admin',
+      '/profile',
+      '/subscribe',
+      '/paiement',
+      '/contact',
+  ];
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
   useEffect(() => {
     if (loading) return; 
 
     if (user && isLoginPage) {
       router.push('/');
-      return;
     }
 
-    if (!user && !isLoginPage) {
+    if (!user && isProtectedRoute) {
         router.push('/login');
-        return;
     }
-  }, [user, loading, isLoginPage, router, pathname]);
+    
+  }, [user, loading, isLoginPage, isProtectedRoute, router, pathname]);
 
   useEffect(() => {
     // This effect is not ideal as it can be bypassed.
@@ -50,23 +61,28 @@ function AppContent({ children }: { children: React.ReactNode }) {
   if (loading) {
      return (
         <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-            <p className="text-muted-foreground">Chargement de la session...</p>
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-muted-foreground mt-4">Chargement de la session...</p>
         </div>
      );
   }
   
-  if (!user && !isLoginPage) {
+  // If we are checking for auth on a protected route, show a loader
+  if (!user && isProtectedRoute) {
      return (
         <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-            <p className="text-muted-foreground">Redirection vers la connexion...</p>
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-muted-foreground mt-4">Redirection vers la connexion...</p>
         </div>
      );
   }
 
+  // Allow login page to render without the main layout
   if (isLoginPage) {
     return <>{children}</>;
   }
-
+  
+  // Admin page has its own layout
   if (isAdminPage) {
     return (
         <main className="flex-1">

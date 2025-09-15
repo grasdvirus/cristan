@@ -301,7 +301,7 @@ function AdminContent() {
     const { subscriptions, setSubscriptions, loading: loadingSubscriptions } = useSubscriptions();
     
     // Global category state from Zustand
-    const { articleCategories, productCollections, internetClasses, tvChannels, loading: loadingCategories, setCategories: setGlobalCategories } = useCategoryStore();
+    const { articleCategories, productCollections, internetClasses, tvChannels, loading: loadingCategories, setCategories: setGlobalCategories, fetchCategories } = useCategoryStore();
     
     // Local state for editing categories and payment
     const [localCategories, setLocalCategories] = useState<AllCategories>({ articleCategories: [], productCollections: [], internetClasses: [], tvChannels: [] });
@@ -716,6 +716,7 @@ function AdminContent() {
             
             // Re-sync the global state with the local changes that were just saved
             setGlobalCategories(localCategories);
+            fetchCategories();
 
             setSaveStatus('success');
             setHasChanges(false);
