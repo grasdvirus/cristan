@@ -7,44 +7,63 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ShoppingCart, Loader2, ExternalLink, Check } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Loader2, ExternalLink, Check, Heart, MessageCircle, Send } from 'lucide-react';
 import { useProducts } from '@/hooks/use-products';
 import { useMemo, useState, useEffect } from 'react';
 import { useCartStore } from '@/hooks/use-cart-store';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc, arrayUnion, increment, onSnapshot } from "firebase/firestore";
+import type { Product, Comment } from '@/lib/products';
+import { useAuth } from '@/components/auth-provider';
+import { Textarea } from '@/components/ui/textarea';
+import { v4 as uuidv4 } from 'uuid';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Separator } from '@/components/ui/separator';
 
 export default function ArtworkDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const { products, loading: loadingProducts, error } = useProducts();
+  const { products: initialProducts, loading: loadingProducts, error } = useProducts();
   const { addToCart } = useCartStore();
   const { toast } = useToast();
-
-  const artwork = useMemo(() => {
-    return products.find(p => p.id === id);
-  }, [products, id]);
+  const { user } = useAuth();
   
+  const [artwork, setArtwork] = useState<Product | undefined>(() => initialProducts.find(p => p.id === id));
   const [selectedImage, setSelectedImage] = useState(artwork?.mediaUrls?.[0]);
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
-
-
-  useEffect(() => {
-    if (artwork && artwork.mediaUrls && artwork.mediaUrls.length > 0) {
-      setSelectedImage(artwork.mediaUrls[0]);
-    }
-     // Pre-select first option if available
-    if (artwork?.colors && artwork.colors.length > 0) {
-      setSelectedColor(artwork.colors[0]);
-    }
-    if (artwork?.sizes && artwork.sizes.length > 0) {
-      setSelectedSize(artwork.sizes[0]);
-    }
-  }, [artwork]);
+  const [commentText, setCommentText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const loading = loadingProducts;
+  // Listen for real-time updates on the product
+  useEffect(() => {
+    if (id) {
+      const unsub = onSnapshot(doc(db, "products", id), (doc) => {
+        if (doc.exists()) {
+          const data = { id: doc.id, ...doc.data() } as Product;
+          setArtwork(data);
+           // Update initial selections if they haven't been changed by the user
+          if (!selectedImage && data.mediaUrls && data.mediaUrls.length > 0) {
+            setSelectedImage(data.mediaUrls[0]);
+          }
+          if (!selectedColor && data.colors && data.colors.length > 0) {
+             setSelectedColor(data.colors[0]);
+          }
+          if (!selectedSize && data.sizes && data.sizes.length > 0) {
+              setSelectedSize(data.sizes[0]);
+          }
+        }
+      });
+      return () => unsub();
+    }
+  }, [id, selectedImage, selectedColor, selectedSize]);
+
+  
+  const loading = loadingProducts && !artwork;
 
   const handleAddToCart = () => {
     if (artwork) {
@@ -53,6 +72,46 @@ export default function ArtworkDetailPage() {
             title: "Ajouté au panier !",
             description: `"${artwork.title}" a été ajouté à votre panier.`,
         });
+    }
+  };
+
+  const handleLike = async () => {
+    if (!user) {
+        toast({ variant: "destructive", title: "Connectez-vous pour aimer ce produit."});
+        return;
+    }
+    const productRef = doc(db, "products", id);
+    await updateDoc(productRef, {
+      likes: increment(1)
+    });
+  };
+
+  const handleCommentSubmit = async () => {
+    if (!user) {
+        toast({ variant: "destructive", title: "Connectez-vous pour commenter."});
+        return;
+    }
+    if (commentText.trim() === "") return;
+
+    setIsSubmitting(true);
+    const productRef = doc(db, "products", id);
+    const newComment: Comment = {
+        id: uuidv4(),
+        author: user.email || "Anonyme",
+        text: commentText,
+        createdAt: new Date(),
+    };
+    
+    try {
+        await updateDoc(productRef, {
+            comments: arrayUnion(newComment)
+        });
+        setCommentText("");
+    } catch(err) {
+        console.error("Error adding comment: ", err);
+        toast({ variant: "destructive", title: "Erreur", description: "Impossible d'ajouter le commentaire."});
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -78,6 +137,7 @@ export default function ArtworkDetailPage() {
   
   const isInternetProduct = !!artwork.internetClass;
   const hasOptions = (artwork.colors && artwork.colors.length > 0) || (artwork.sizes && artwork.sizes.length > 0);
+  const sortedComments = artwork.comments?.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds) || [];
 
   return (
     <div className="space-y-8">
@@ -90,13 +150,13 @@ export default function ArtworkDetailPage() {
       <Card className="overflow-hidden shadow-lg">
         <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="flex flex-col">
-                <div className="relative aspect-square w-full">
+                <div className="relative aspect-square w-full bg-black/10">
                     {selectedImage ? (
                         <Image
                             src={selectedImage}
                             alt={artwork.title}
                             fill
-                            className="object-cover"
+                            className="object-contain"
                             data-ai-hint={artwork.dataAiHint}
                             sizes="(max-width: 768px) 100vw, 50vw"
                         />
@@ -176,6 +236,19 @@ export default function ArtworkDetailPage() {
                             )}
                         </div>
                     ) : null}
+                    <Separator />
+                     <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                             <button onClick={handleLike} className="flex items-center gap-1.5 group">
+                                <Heart className={cn("h-5 w-5 transition-colors group-hover:fill-red-500 group-hover:text-red-500")} />
+                                <span>{artwork.likes || 0} J'aime</span>
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <MessageCircle className="h-5 w-5" />
+                            <span>{artwork.comments?.length || 0} Commentaires</span>
+                        </div>
+                    </div>
                 </CardContent>
                  <CardFooter className="flex-col items-stretch gap-4 p-6 bg-card/50">
                     <div className="flex justify-between items-center">
@@ -205,6 +278,42 @@ export default function ArtworkDetailPage() {
                 </CardFooter>
             </div>
         </div>
+      </Card>
+      <Card className="shadow-lg">
+        <CardHeader>
+            <CardTitle>Commentaires</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+             {user ? (
+                <div className="flex items-start gap-4">
+                    <Textarea 
+                        placeholder="Laissez votre commentaire..."
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        rows={2}
+                        className="flex-grow"
+                    />
+                    <Button onClick={handleCommentSubmit} disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="animate-spin" /> : <Send />}
+                    </Button>
+                </div>
+            ) : (
+                <div className="text-center text-muted-foreground p-4 border rounded-md">
+                    <Link href="/login" className="underline">Connectez-vous</Link> pour laisser un commentaire.
+                </div>
+            )}
+            <div className="space-y-4">
+                {sortedComments.map(comment => (
+                    <div key={comment.id} className="flex flex-col gap-1 border-b pb-4">
+                        <p className="font-semibold text-sm">{comment.author}</p>
+                        <p className="text-muted-foreground">{comment.text}</p>
+                        <p className="text-xs text-muted-foreground/70 self-end">
+                            {format(new Date(comment.createdAt.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        </CardContent>
       </Card>
     </div>
   );

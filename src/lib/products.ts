@@ -1,4 +1,11 @@
 
+export type Comment = {
+  id: string;
+  author: string;
+  text: string;
+  createdAt: any; // Firestore Timestamp
+};
+
 export type Product = {
   id: string;
   title: string;
@@ -14,6 +21,8 @@ export type Product = {
   createdAt?: any; // Firestore Timestamp
   colors?: string[];
   sizes?: string[];
+  likes?: number;
+  comments?: Comment[];
 };
 
     

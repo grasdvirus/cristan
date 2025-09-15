@@ -39,18 +39,12 @@ function AppContent({ children }: { children: React.ReactNode }) {
   }, [user, loading, isLoginPage, router, pathname]);
 
   useEffect(() => {
-    const preventRightClick = (e: MouseEvent) => e.preventDefault();
+    // This effect is not ideal as it can be bypassed.
+    // A more robust solution for content protection would involve server-side checks
+    // or more advanced client-side measures if required.
     const preventCopy = (e: ClipboardEvent) => e.preventDefault();
-
-    document.body.classList.add('select-none');
-    document.addEventListener('contextmenu', preventRightClick);
     document.addEventListener('copy', preventCopy);
-
-    return () => {
-      document.body.classList.remove('select-none');
-      document.removeEventListener('contextmenu', preventRightClick);
-      document.removeEventListener('copy', preventCopy);
-    };
+    return () => document.removeEventListener('copy', preventCopy);
   }, []);
 
   if (loading) {
@@ -108,6 +102,7 @@ export default function RootLayout({
       <head>
         <title>Portfolio d'Artisan</title>
         <meta name="description" content="Un portfolio personnel pour un artisan numérique." />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <link rel="icon" href="/uploads/favico.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

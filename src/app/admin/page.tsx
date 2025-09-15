@@ -6,7 +6,7 @@ import { useState, useEffect, ChangeEvent, useRef } from 'react';
 import Image from 'next/image';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/components/auth-provider';
-import type { Product } from '@/lib/products';
+import type { Product, Comment } from '@/lib/products';
 import type { Slide } from '@/lib/slides';
 import type { Contract } from '@/lib/contracts';
 import type { Video } from '@/lib/videos';
@@ -29,7 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarTrigger } from '@/components/ui/sidebar';
-import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag, Lock, Youtube, Info, Star as StarIcon } from "lucide-react";
+import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag, Lock, Youtube, Info, Star as StarIcon, Heart, MessageCircle } from "lucide-react";
 import { useProducts } from '@/hooks/use-products';
 import { useSlides } from '@/hooks/use-slides';
 import { useContracts } from '@/hooks/use-contracts';
@@ -79,7 +79,7 @@ async function updateProductsClient(products: Product[]): Promise<void> {
     const sanitizedData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
 
     const docRef = doc(db, 'products', id);
-    batch.set(docRef, sanitizedData);
+    batch.set(docRef, sanitizedData, { merge: true }); // Use merge to avoid overwriting likes/comments from other clients
     existingIds.delete(id);
   });
 
@@ -409,6 +409,8 @@ function AdminContent() {
             price: 0,
             isRecommended: false,
             createdAt: serverTimestamp(),
+            likes: 0,
+            comments: [],
             ...(isShop && { 
                 collection: productCollections[0]?.id || '',
                 colors: [],
@@ -826,6 +828,25 @@ function AdminContent() {
         );
     };
 
+    const CommentsViewer = ({ comments }: { comments: Comment[] }) => (
+        <div className="mt-4 space-y-3">
+            <h4 className="font-semibold flex items-center gap-2 text-sm"><MessageCircle className="h-4 w-4" /> Commentaires ({comments.length})</h4>
+            <div className="max-h-60 overflow-y-auto space-y-2 rounded-md border p-3 bg-muted/20">
+                {comments.length > 0 ? (
+                    comments.map(comment => (
+                        <div key={comment.id} className="text-xs p-2 rounded bg-background">
+                            <p className="font-bold">{comment.author || 'Anonyme'}</p>
+                            <p className="text-muted-foreground">{comment.text}</p>
+                            <p className="text-muted-foreground/60 text-right">{comment.createdAt ? format(new Date(comment.createdAt.seconds * 1000), 'dd/MM/yy HH:mm', { locale: fr }) : ''}</p>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-xs text-muted-foreground text-center py-4">Aucun commentaire.</p>
+                )}
+            </div>
+        </div>
+    );
+
     return (
         <SidebarProvider>
             <div className="flex min-h-screen bg-background text-foreground">
@@ -916,6 +937,10 @@ function AdminContent() {
                                                         Recommandé
                                                     </Label>
                                                 </div>
+                                                 <div className="flex items-center gap-2 pt-6 text-sm text-muted-foreground">
+                                                    <Heart className="h-4 w-4 text-red-500" />
+                                                    <span>{product.likes || 0} J'aime</span>
+                                                </div>
                                             </div>
                                             <div>
                                                 <Label htmlFor={`desc-${product.id}`}>Description</Label>
@@ -930,6 +955,7 @@ function AdminContent() {
                                                 <Label htmlFor={`ai-hint-${product.id}`}>Indice IA pour l'image de couverture</Label>
                                                 <Input id={`ai-hint-${product.id}`} value={product.dataAiHint} onChange={(e) => updateProduct(product.id, 'dataAiHint', e.target.value)} />
                                             </div>
+                                            <CommentsViewer comments={product.comments || []} />
                                         </CollapsibleContent>
                                     </Collapsible>
                                 ))}
@@ -988,6 +1014,10 @@ function AdminContent() {
                                                         Recommandé
                                                     </Label>
                                                 </div>
+                                                 <div className="flex items-center gap-2 pt-6 text-sm text-muted-foreground">
+                                                    <Heart className="h-4 w-4 text-red-500" />
+                                                    <span>{product.likes || 0} J'aime</span>
+                                                </div>
                                                 <div>
                                                     <Label htmlFor={`colors-${product.id}`}>Couleurs (séparées par des virgules)</Label>
                                                     <Input id={`colors-${product.id}`} value={(product.colors || []).join(', ')} onChange={(e) => updateProduct(product.id, 'colors', e.target.value)} />
@@ -1010,6 +1040,7 @@ function AdminContent() {
                                                 <Label htmlFor={`ai-hint-${product.id}`}>Indice IA pour l'image</Label>
                                                 <Input id={`ai-hint-${product.id}`} value={product.dataAiHint} onChange={(e) => updateProduct(product.id, 'dataAiHint', e.target.value)} />
                                             </div>
+                                            <CommentsViewer comments={product.comments || []} />
                                         </CollapsibleContent>
                                     </Collapsible>
                                 ))}
@@ -1072,6 +1103,10 @@ function AdminContent() {
                                                         Recommandé
                                                     </Label>
                                                 </div>
+                                                 <div className="flex items-center gap-2 pt-6 text-sm text-muted-foreground">
+                                                    <Heart className="h-4 w-4 text-red-500" />
+                                                    <span>{product.likes || 0} J'aime</span>
+                                                </div>
                                             </div>
                                             <div>
                                                 <Label htmlFor={`desc-${product.id}`}>Description</Label>
@@ -1086,6 +1121,7 @@ function AdminContent() {
                                                 <Label htmlFor={`ai-hint-${product.id}`}>Indice IA pour l'image</Label>
                                                 <Input id={`ai-hint-${product.id}`} value={product.dataAiHint} onChange={(e) => updateProduct(product.id, 'dataAiHint', e.target.value)} />
                                             </div>
+                                            <CommentsViewer comments={product.comments || []} />
                                         </CollapsibleContent>
                                     </Collapsible>
                                 ))}
@@ -1680,10 +1716,3 @@ function AdminContent() {
 export default function AdminPageWrapper() {
     return <AdminContent />;
 }
-
-    
-
-    
-
-    
-
