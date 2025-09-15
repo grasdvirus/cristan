@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { notFound, useParams, useRouter } from 'next/navigation';
@@ -175,13 +174,14 @@ export default function ArtworkDetailPage() {
                       )}
                   </div>
                    {artwork.mediaUrls && artwork.mediaUrls.length > 1 && (
-                      <div className="flex gap-2 p-2 bg-muted/20">
+                      <div className="flex gap-2 p-2 bg-muted/20 overflow-x-auto">
                           {artwork.mediaUrls.map((url, index) => (
+                            url && (
                               <button
                                   key={index}
                                   onClick={() => setSelectedImage(url)}
                                   className={cn(
-                                      "relative aspect-square w-20 rounded-md overflow-hidden transition-all",
+                                      "relative aspect-square w-20 rounded-md overflow-hidden transition-all flex-shrink-0",
                                       selectedImage === url ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'hover:opacity-80'
                                   )}
                               >
@@ -192,6 +192,7 @@ export default function ArtworkDetailPage() {
                                       className="object-cover"
                                   />
                               </button>
+                            )
                           ))}
                       </div>
                   )}
@@ -332,3 +333,5 @@ export default function ArtworkDetailPage() {
     </>
   );
 }
+
+    
