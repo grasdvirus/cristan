@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
-import { Globe, ShoppingBag, Tv, ArrowRight, Loader2, Video as VideoIcon, Images as ImagesIcon } from 'lucide-react';
+import { Globe, ShoppingBag, Tv, ArrowRight, Video as VideoIcon, Images as ImagesIcon } from 'lucide-react';
 import Autoplay from "embla-carousel-autoplay";
 import React, { useMemo, useRef } from 'react';
 import { useFilterStore } from '@/hooks/use-filter-store';
