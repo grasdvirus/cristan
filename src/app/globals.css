@@ -54,6 +54,7 @@
   }
   body {
     @apply bg-background text-foreground select-none;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
