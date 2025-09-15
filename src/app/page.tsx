@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
-import { Globe, ShoppingBag, Tv, ArrowRight, Loader2 } from 'lucide-react';
+import { Globe, ShoppingBag, Tv, ArrowRight, Loader2, Video as VideoIcon, Images as ImagesIcon } from 'lucide-react';
 import Autoplay from "embla-carousel-autoplay";
 import React, { useMemo, useRef } from 'react';
 import { useFilterStore } from '@/hooks/use-filter-store';
@@ -129,41 +129,58 @@ export default function Home() {
             </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredArticles.map((product) => (
-            <Card key={product.id} className="overflow-hidden group transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-primary/20 shadow-lg flex flex-col">
-              <CardContent className="p-0 relative">
-                 {product.mediaUrls && product.mediaUrls.length > 0 && (
-                    <Image
-                      src={product.mediaUrls[0]}
-                      alt={product.title}
-                      width={600}
-                      height={400}
-                      className="object-cover w-full h-64 transition-transform duration-300 ease-in-out group-hover:scale-110"
-                      data-ai-hint={product.dataAiHint}
-                    />
-                 )}
-                 {product.createdAt && (
-                    <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                         {format(new Date(product.createdAt.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}
-                    </div>
-                )}
-              </CardContent>
-              <CardHeader>
-                <CardTitle className="font-headline text-2xl text-foreground">{product.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <p className="text-sm text-muted-foreground line-clamp-3">{product.description}</p>
-              </CardContent>
-              <CardFooter>
-                <Link href={`/article/${product.id}`} passHref className="p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
-                    <ArrowRight className="h-4 w-4 animate-horizontal-bounce" />
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
+          {filteredArticles.map((product) => {
+            const hasVideo = product.mediaUrls.some(url => url.includes('.mp4') || url.includes('.mov'));
+            const imageCount = product.mediaUrls.filter(url => !url.includes('.mp4') && !url.includes('.mov')).length;
+
+            return (
+                <Card key={product.id} className="overflow-hidden group transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-primary/20 shadow-lg flex flex-col">
+                  <CardContent className="p-0 relative">
+                     {product.mediaUrls && product.mediaUrls.length > 0 && (
+                        <Image
+                          src={product.mediaUrls[0]}
+                          alt={product.title}
+                          width={600}
+                          height={400}
+                          className="object-cover w-full h-64 transition-transform duration-300 ease-in-out group-hover:scale-110"
+                          data-ai-hint={product.dataAiHint}
+                        />
+                     )}
+                     <div className="absolute top-2 right-2 flex items-center gap-2">
+                        {hasVideo && (
+                            <div className="bg-black/50 text-white p-1.5 rounded-full">
+                                <VideoIcon className="h-4 w-4" />
+                            </div>
+                        )}
+                        {imageCount > 1 && (
+                             <div className="bg-black/50 text-white p-1.5 rounded-full flex items-center gap-1 text-xs">
+                                <ImagesIcon className="h-4 w-4" />
+                                <span>{imageCount}</span>
+                            </div>
+                        )}
+                     </div>
+                     {product.createdAt && (
+                        <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                             {format(new Date(product.createdAt.seconds * 1000), 'd MMM yyyy, HH:mm', { locale: fr })}
+                        </div>
+                    )}
+                  </CardContent>
+                  <CardHeader>
+                    <CardTitle className="font-headline text-2xl text-foreground">{product.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="text-sm text-muted-foreground line-clamp-3">{product.description}</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Link href={`/article/${product.id}`} passHref className="p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
+                        <ArrowRight className="h-4 w-4 animate-horizontal-bounce" />
+                    </Link>
+                  </CardFooter>
+                </Card>
+            )
+          })}
         </div>
       </section>
     </div>
   );
 }
-

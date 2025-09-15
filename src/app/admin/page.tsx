@@ -922,12 +922,12 @@ function AdminContent() {
                                                 <Textarea id={`desc-${product.id}`} value={product.description} onChange={(e) => updateProduct(product.id, 'description', e.target.value)} />
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <FileUpload label="Média 1 (Image/Vidéo)" value={product.mediaUrls?.[0] || ''} onChange={(url) => updateProductMedia(product.id, 0, url)} acceptedFileTypes="image/*,video/mp4,video/quicktime" mediaType={product.mediaUrls?.[0]?.includes('mp4') ? 'video' : 'image'} />
+                                                <FileUpload label="Média 1 (Couverture Image)" value={product.mediaUrls?.[0] || ''} onChange={(url) => updateProductMedia(product.id, 0, url)} acceptedFileTypes="image/*" mediaType={'image'} />
                                                 <FileUpload label="Média 2 (Image/Vidéo)" value={product.mediaUrls?.[1] || ''} onChange={(url) => updateProductMedia(product.id, 1, url)} acceptedFileTypes="image/*,video/mp4,video/quicktime" mediaType={product.mediaUrls?.[1]?.includes('mp4') ? 'video' : 'image'}/>
                                                 <FileUpload label="Média 3 (Image/Vidéo)" value={product.mediaUrls?.[2] || ''} onChange={(url) => updateProductMedia(product.id, 2, url)} acceptedFileTypes="image/*,video/mp4,video/quicktime" mediaType={product.mediaUrls?.[2]?.includes('mp4') ? 'video' : 'image'}/>
                                             </div>
                                             <div>
-                                                <Label htmlFor={`ai-hint-${product.id}`}>Indice IA pour l'image</Label>
+                                                <Label htmlFor={`ai-hint-${product.id}`}>Indice IA pour l'image de couverture</Label>
                                                 <Input id={`ai-hint-${product.id}`} value={product.dataAiHint} onChange={(e) => updateProduct(product.id, 'dataAiHint', e.target.value)} />
                                             </div>
                                         </CollapsibleContent>
@@ -1686,4 +1686,3 @@ export default function AdminPageWrapper() {
     
 
     
-
