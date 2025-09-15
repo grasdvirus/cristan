@@ -1,12 +1,13 @@
 
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, Send, Paperclip } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import Link from 'next/link';
 
 // Mock data, replace with real data fetching
 const conversations = [
@@ -24,7 +25,6 @@ const conversations = [
 
 
 export default function DialoguePage() {
-  const router = useRouter();
   const params = useParams();
   const { id } = params;
 
@@ -35,7 +35,9 @@ export default function DialoguePage() {
     return (
         <div className="flex flex-col h-full items-center justify-center text-muted-foreground">
             <p>Conversation non trouvée.</p>
-            <Button variant="link" onClick={() => router.push('/contact')}>Retour aux messages</Button>
+            <Button variant="link" asChild>
+                <Link href="/contact">Retour aux messages</Link>
+            </Button>
         </div>
     );
   }
@@ -43,8 +45,10 @@ export default function DialoguePage() {
   return (
     <Card className="flex flex-col h-full w-full shadow-none border-none">
       <CardHeader className="flex flex-row items-center gap-4 p-4 border-b">
-        <Button variant="ghost" size="icon" onClick={() => router.push('/contact')}>
-          <ArrowLeft className="h-5 w-5" />
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/contact">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
         </Button>
         <Avatar>
             <AvatarImage src={conversation.avatar} alt={conversation.name} />
