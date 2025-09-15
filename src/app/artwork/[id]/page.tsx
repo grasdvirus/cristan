@@ -149,7 +149,7 @@ export default function ArtworkDetailPage() {
   return (
     <>
       <div className="space-y-8">
-        <Link href="/decouvrir" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+        <Link href="/decouvrir" scroll={false} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <Button variant="outline" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Retour à la boutique
