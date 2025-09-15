@@ -2,7 +2,7 @@
 
 'use client'
 
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
@@ -29,6 +29,7 @@ export default function ArticleDetailPage() {
   const { user } = useAuth();
   const { addViewedArticle } = useViewStore();
   const { toast } = useToast();
+  const router = useRouter();
 
   const [article, setArticle] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -129,12 +130,10 @@ export default function ArticleDetailPage() {
   return (
     <>
       <div className="space-y-8">
-        <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-          <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour à l'accueil
-          </Button>
-        </Link>
+        <Button variant="outline" size="sm" onClick={() => router.back()} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour
+        </Button>
         <Card className="overflow-hidden shadow-lg">
            <CardHeader>
               <CardTitle className="font-headline text-4xl text-primary">{article.title}</CardTitle>
