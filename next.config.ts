@@ -23,6 +23,12 @@ const nextConfig = {
       },
     ],
   },
+  // Exclude the uploads directory from serverless function bundles
+  experimental: {
+    outputFileTracingExcludes: {
+      '/api/upload': ['./public/uploads/**/*'],
+    },
+  },
 };
 
 module.exports = nextConfig;
