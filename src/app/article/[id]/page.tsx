@@ -39,12 +39,11 @@ export default function ArticleDetailPage() {
 
   useEffect(() => {
     if (!id) {
-        setError("No ID provided");
         setLoading(false);
+        setError("No ID provided");
         return;
     }
     
-    setLoading(true);
     const unsub = onSnapshot(doc(db, "products", id), (doc) => {
         if (doc.exists()) {
             setArticle({ id: doc.id, ...doc.data() } as Product);
@@ -110,18 +109,14 @@ export default function ArticleDetailPage() {
 
 
   if (loading) {
-    return null;
-  }
-
-  if (error) {
     return (
-        <div className="flex h-96 w-full items-center justify-center text-red-500">
-            Erreur de chargement de l'article : {error}
+        <div className="flex h-96 w-full items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
     );
   }
 
-  if (!article) {
+  if (error || !article) {
     notFound();
   }
   
