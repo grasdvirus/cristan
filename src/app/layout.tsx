@@ -12,7 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { AuthProvider, useAuth } from '@/components/auth-provider';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ScrollToTopButton } from '@/components/ui/scroll-to-top';
+import { ScrollToTopButton, ScrollToTop } from '@/components/ui/scroll-to-top';
 import { Loader2 } from 'lucide-react';
 
 
@@ -112,7 +112,7 @@ export default function RootLayout({
       <head>
         <title>Cristan</title>
         <meta name="description" content="Portfolio et boutique de Cristan, artisan numérique." />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <link rel="icon" href="/uploads/favico.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
