@@ -1042,7 +1042,7 @@ function AdminContent() {
                                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <FileUpload label="Média 1 (Image)" value={product.mediaUrls?.[0] || ''} onChange={(url) => updateProductMedia(product.id, 0, url)} acceptedFileTypes="image/*" mediaType='image' />
                                                 <FileUpload label="Média 2 (Image)" value={product.mediaUrls?.[1] || ''} onChange={(url) => updateProductMedia(product.id, 1, url)} acceptedFileTypes="image/*" mediaType='image' />
-                                                <FileUpload label="Média 3 (Image)" value={product.mediaUrls?.[2] || ''} onChange={(url) => updateProductMedia(product.id, 2, url)} acceptedFileTypes="image/*" mediaType='image' />
+                                                <FileUpload label="Vidéo de démo (courte)" value={product.shortPreviewUrl || ''} onChange={(url) => updateProduct(product.id, 'shortPreviewUrl', url)} acceptedFileTypes="video/mp4,video/quicktime" mediaType='video' />
                                             </div>
                                             <div>
                                                 <Label htmlFor={`ai-hint-${product.id}`}>Indice IA pour l'image</Label>
@@ -1129,7 +1129,7 @@ function AdminContent() {
                                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <FileUpload label="Média 1 (Image)" value={product.mediaUrls?.[0] || ''} onChange={(url) => updateProductMedia(product.id, 0, url)} acceptedFileTypes="image/*" mediaType='image' />
                                                 <FileUpload label="Média 2 (Image)" value={product.mediaUrls?.[1] || ''} onChange={(url) => updateProductMedia(product.id, 1, url)} acceptedFileTypes="image/*" mediaType='image' />
-                                                <FileUpload label="Média 3 (Image)" value={product.mediaUrls?.[2] || ''} onChange={(url) => updateProductMedia(product.id, 2, url)} acceptedFileTypes="image/*" mediaType='image' />
+                                                <FileUpload label="Vidéo de démo (courte)" value={product.shortPreviewUrl || ''} onChange={(url) => updateProduct(product.id, 'shortPreviewUrl', url)} acceptedFileTypes="video/mp4,video/quicktime" mediaType='video' />
                                             </div>
                                             <div>
                                                 <Label htmlFor={`ai-hint-${product.id}`}>Indice IA pour l'image</Label>

@@ -11,6 +11,7 @@ export type Product = {
   title: string;
   description: string;
   mediaUrls: string[]; // Changed from imageUrls to mediaUrls to support video
+  shortPreviewUrl?: string; // For short, autoplaying videos on cards
   dataAiHint: string;
   price: number;
   originalPrice?: number;
@@ -25,5 +26,3 @@ export type Product = {
   likes?: number;
   comments?: Comment[];
 };
-
-    

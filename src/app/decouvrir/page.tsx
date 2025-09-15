@@ -37,6 +37,121 @@ function formatViews(num: number) {
     return num.toString();
 }
 
+function ProductCard({ product }: { product: Product }) {
+    const router = useRouter();
+    const [isActive, setIsActive] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const cardRef = useRef<HTMLDivElement>(null);
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+    useEffect(() => {
+        setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    }, []);
+
+    useEffect(() => {
+        const videoElement = videoRef.current;
+        if (!videoElement) return;
+
+        if (isActive && product.shortPreviewUrl) {
+            videoElement.currentTime = 0;
+            const playPromise = videoElement.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    if (error.name !== 'AbortError') {
+                        console.error("Autoplay error:", error);
+                    }
+                });
+            }
+        } else {
+            videoElement.pause();
+        }
+    }, [isActive, product.shortPreviewUrl]);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
+                setIsActive(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleInteractionStart = () => !isActive && setIsActive(true);
+    const handleInteractionEnd = () => isActive && setIsActive(false);
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (!product.shortPreviewUrl || !isTouchDevice) {
+            router.push(`/artwork/${product.id}`);
+            return;
+        }
+
+        if (!isActive) {
+            e.preventDefault();
+            setIsActive(true);
+        }
+    };
+    
+    return (
+        <div ref={cardRef} className="break-inside-avoid">
+            <Link
+                href={`/artwork/${product.id}`}
+                onClick={handleClick}
+                onMouseEnter={!isTouchDevice ? handleInteractionStart : undefined}
+                onMouseLeave={!isTouchDevice ? handleInteractionEnd : undefined}
+                className="group block"
+            >
+                <Card className="overflow-hidden group-hover:shadow-primary/20 transition-all duration-300 flex flex-col h-full">
+                    <CardContent className="p-0 relative">
+                        <div className="aspect-[4/3] overflow-hidden">
+                             {isActive && product.shortPreviewUrl ? (
+                                <video
+                                    ref={videoRef}
+                                    src={product.shortPreviewUrl}
+                                    muted
+                                    loop
+                                    playsInline
+                                    className="object-cover w-full h-full transition-all duration-300"
+                                    preload="metadata"
+                                />
+                            ) : (
+                                product.mediaUrls && product.mediaUrls.length > 0 ? (
+                                    <Image 
+                                        src={product.mediaUrls[0]} 
+                                        alt={product.title} 
+                                        width={600} 
+                                        height={400} 
+                                        className="object-cover w-full h-full transition-transform duration-300 ease-in-out group-hover:scale-105" 
+                                        data-ai-hint={product.dataAiHint} 
+                                    />
+                                ) : (
+                                    <div className="flex aspect-[4/3] items-center justify-center bg-muted">
+                                        <span className="text-sm text-muted-foreground">Pas d'image</span>
+                                    </div>
+                                )
+                            )}
+                        </div>
+                        {product.isRecommended && <Badge className="absolute top-2 left-2" variant="destructive"><StarIcon className="h-3 w-3 mr-1" /> Recommandé</Badge>}
+                    </CardContent>
+                    <CardHeader className="p-4 flex-grow">
+                        <CardTitle className="text-base font-medium line-clamp-2">{product.title}</CardTitle>
+                    </CardHeader>
+                    <CardFooter className="p-4 pt-0">
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-lg font-bold text-primary">{new Intl.NumberFormat('fr-FR').format(product.price)} FCFA</span>
+                            {product.originalPrice && product.originalPrice > product.price && (
+                                <span className="text-sm text-muted-foreground line-through">
+                                    {new Intl.NumberFormat('fr-FR').format(product.originalPrice)} FCFA
+                                </span>
+                            )}
+                        </div>
+                    </CardFooter>
+                </Card>
+            </Link>
+        </div>
+    );
+}
+
 function TVCard({ video }: { video: Video }) {
     const router = useRouter();
     const [isActive, setIsActive] = useState(false);
@@ -285,35 +400,7 @@ function DecouvrirContent() {
              return (
                 <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
                     {filteredProducts.map((product) => (
-                        <div key={product.id} className="break-inside-avoid">
-                             <Link href={`/artwork/${product.id}`} className="group block">
-                                <Card className="overflow-hidden group-hover:shadow-primary/20 transition-all duration-300 flex flex-col h-full">
-                                    <CardContent className="p-0 relative">
-                                        {product.mediaUrls && product.mediaUrls.length > 0 ? (
-                                            <Image src={product.mediaUrls[0]} alt={product.title} width={600} height={400} className="object-cover w-full h-auto transition-transform duration-300 ease-in-out group-hover:scale-105" data-ai-hint={product.dataAiHint} />
-                                        ) : (
-                                            <div className="flex aspect-[4/3] items-center justify-center bg-muted">
-                                                <span className="text-sm text-muted-foreground">Pas d'image</span>
-                                            </div>
-                                        )}
-                                         {product.isRecommended && <Badge className="absolute top-2 left-2" variant="destructive"><StarIcon className="h-3 w-3 mr-1" /> Recommandé</Badge>}
-                                    </CardContent>
-                                    <CardHeader className="p-4 flex-grow">
-                                        <CardTitle className="text-base font-medium line-clamp-2">{product.title}</CardTitle>
-                                    </CardHeader>
-                                    <CardFooter className="p-4 pt-0">
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-lg font-bold text-primary">{new Intl.NumberFormat('fr-FR').format(product.price)} FCFA</span>
-                                            {product.originalPrice && product.originalPrice > product.price && (
-                                                <span className="text-sm text-muted-foreground line-through">
-                                                    {new Intl.NumberFormat('fr-FR').format(product.originalPrice)} FCFA
-                                                </span>
-                                            )}
-                                        </div>
-                                    </CardFooter>
-                                </Card>
-                            </Link>
-                        </div>
+                        <ProductCard key={product.id} product={product} />
                     ))}
                 </div>
             )
