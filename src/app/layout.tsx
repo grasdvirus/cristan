@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import './globals.css';
@@ -12,7 +13,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { AuthProvider, useAuth } from '@/components/auth-provider';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
+import { ScrollToTopButton } from '@/components/ui/scroll-to-top';
 import { Loader2 } from 'lucide-react';
 
 
@@ -51,8 +52,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
     
   }, [user, loading, isLoginPage, isProtectedRoute, router, pathname]);
 
-  // Si le chargement est en cours, afficher un loader pour éviter tout rendu prématuré.
-  if (loading) {
+  // Si le chargement est en cours sur une page protégée, afficher un loader
+  if (loading && isProtectedRoute) {
      return (
         <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -110,15 +111,15 @@ export default function RootLayout({
   return (
     <html lang="fr" className="dark">
       <head>
-        <title>Portfolio d'Artisan</title>
-        <meta name="description" content="Un portfolio personnel pour un artisan numérique." />
+        <title>Cristan</title>
+        <meta name="description" content="Portfolio et boutique de Cristan, artisan numérique." />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <link rel="icon" href="/uploads/favico.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&family=Belleza&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased bg-background text-foreground scroll-hover">
+      <body className="font-body antialiased bg-background text-foreground">
         <AuthProvider>
             <AppContent>
                 {children}
