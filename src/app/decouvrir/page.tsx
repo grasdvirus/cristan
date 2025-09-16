@@ -43,6 +43,7 @@ function ProductCard({ product }: { product: Product }) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isTouchDevice, setIsTouchDevice] = useState(false);
+    const interactionRef = useRef(false);
 
     useEffect(() => {
         setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -71,14 +72,26 @@ function ProductCard({ product }: { product: Product }) {
         function handleClickOutside(event: MouseEvent) {
             if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
                 setIsActive(false);
+                interactionRef.current = false;
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleInteractionStart = () => !isActive && setIsActive(true);
-    const handleInteractionEnd = () => isActive && setIsActive(false);
+    const handleInteractionStart = () => {
+      if (!interactionRef.current) {
+        setIsActive(true);
+        interactionRef.current = true;
+      }
+    };
+
+    const handleInteractionEnd = () => {
+      if(interactionRef.current) {
+        setIsActive(false);
+        interactionRef.current = false;
+      }
+    };
 
     const handleClick = (e: React.MouseEvent) => {
         if (!product.shortPreviewUrl || !isTouchDevice) {
@@ -89,6 +102,7 @@ function ProductCard({ product }: { product: Product }) {
         if (!isActive) {
             e.preventDefault();
             setIsActive(true);
+            interactionRef.current = true;
         }
     };
     
@@ -158,6 +172,7 @@ function TVCard({ video }: { video: Video }) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isTouchDevice, setIsTouchDevice] = useState(false);
+    const interactionRef = useRef(false);
 
     useEffect(() => {
         setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -186,14 +201,26 @@ function TVCard({ video }: { video: Video }) {
         function handleClickOutside(event: MouseEvent) {
             if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
                 setIsActive(false);
+                interactionRef.current = false;
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
     
-    const handleInteractionStart = () => !isActive && setIsActive(true);
-    const handleInteractionEnd = () => isActive && setIsActive(false);
+    const handleInteractionStart = () => {
+      if (!interactionRef.current) {
+        setIsActive(true);
+        interactionRef.current = true;
+      }
+    };
+
+    const handleInteractionEnd = () => {
+      if(interactionRef.current) {
+        setIsActive(false);
+        interactionRef.current = false;
+      }
+    };
 
     const handleClick = (e: React.MouseEvent) => {
         // If there's no preview, or if on desktop, navigate immediately.
@@ -207,6 +234,7 @@ function TVCard({ video }: { video: Video }) {
             // 1st tap: prevent navigation, activate preview.
             e.preventDefault();
             setIsActive(true);
+            interactionRef.current = true;
         }
         // 2nd tap: will proceed with navigation as isActive is true.
     };
