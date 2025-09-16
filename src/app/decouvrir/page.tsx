@@ -1,5 +1,4 @@
 
-
 'use client'
 
 import { useState, useEffect, useMemo, Suspense, useRef } from 'react';
@@ -467,3 +466,5 @@ export default function DecouvrirPage() {
         </Suspense>
     )
 }
+
+    
