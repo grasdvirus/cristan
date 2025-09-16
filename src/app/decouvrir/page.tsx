@@ -131,7 +131,7 @@ function ProductCard({ product }: { product: Product }) {
                                 )
                             )}
                         </div>
-                        {product.isRecommended && <Badge className="absolute top-2 left-2" variant="destructive"><StarIcon className="h-3 w-3 mr-1" /> Recommandé</Badge>}
+                        {product.isRecommended && <Badge className="absolute top-2 left-2 pointer-events-none" variant="destructive"><StarIcon className="h-3 w-3 mr-1" /> Recommandé</Badge>}
                     </CardContent>
                     <CardHeader className="p-4 flex-grow">
                         <CardTitle className="text-base font-medium line-clamp-2">{product.title}</CardTitle>
@@ -249,18 +249,18 @@ function TVCard({ video }: { video: Video }) {
                                 )
                             )}
                             {video.duration && (
-                                <Badge variant="secondary" className="absolute bottom-2 right-2 flex items-center gap-1">
+                                <Badge variant="secondary" className="absolute bottom-2 right-2 flex items-center gap-1 pointer-events-none">
                                     <Clock className="h-3 w-3" />
                                     {video.duration} min
                                 </Badge>
                             )}
                             {video.isPaid && (
-                                <Badge className="absolute top-2 left-2 flex items-center gap-1">
+                                <Badge className="absolute top-2 left-2 flex items-center gap-1 pointer-events-none">
                                     <StarIcon className="h-3 w-3" />
                                     Payant
                                 </Badge>
                             )}
-                            {video.isRecommended && <Badge className="absolute top-2 right-2" variant="destructive"><StarIcon className="h-3 w-3 mr-1" /> Recommandé</Badge>}
+                            {video.isRecommended && <Badge className="absolute top-2 right-2 pointer-events-none" variant="destructive"><StarIcon className="h-3 w-3 mr-1" /> Recommandé</Badge>}
                         </div>
                     </CardContent>
                     <CardHeader className="p-4 flex-grow">
