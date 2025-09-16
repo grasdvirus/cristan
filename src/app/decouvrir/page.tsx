@@ -43,7 +43,6 @@ function ProductCard({ product }: { product: Product }) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isTouchDevice, setIsTouchDevice] = useState(false);
-    const interactionRef = useRef(false);
 
     useEffect(() => {
         setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -72,25 +71,22 @@ function ProductCard({ product }: { product: Product }) {
         function handleClickOutside(event: MouseEvent) {
             if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
                 setIsActive(false);
-                interactionRef.current = false;
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleInteractionStart = () => {
-      if (!interactionRef.current) {
-        setIsActive(true);
-        interactionRef.current = true;
-      }
+    const handleMouseEnter = () => {
+        if (!isTouchDevice) {
+            setIsActive(true);
+        }
     };
 
-    const handleInteractionEnd = () => {
-      if(interactionRef.current) {
-        setIsActive(false);
-        interactionRef.current = false;
-      }
+    const handleMouseLeave = () => {
+        if (!isTouchDevice) {
+            setIsActive(false);
+        }
     };
 
     const handleClick = (e: React.MouseEvent) => {
@@ -102,7 +98,6 @@ function ProductCard({ product }: { product: Product }) {
         if (!isActive) {
             e.preventDefault();
             setIsActive(true);
-            interactionRef.current = true;
         }
     };
     
@@ -111,8 +106,8 @@ function ProductCard({ product }: { product: Product }) {
             <Link
                 href={`/artwork/${product.id}`}
                 onClick={handleClick}
-                onMouseEnter={!isTouchDevice ? handleInteractionStart : undefined}
-                onMouseLeave={!isTouchDevice ? handleInteractionEnd : undefined}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 className="group block"
             >
                 <Card className="overflow-hidden group-hover:shadow-primary/20 transition-all duration-300 flex flex-col h-full">
@@ -172,7 +167,6 @@ function TVCard({ video }: { video: Video }) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isTouchDevice, setIsTouchDevice] = useState(false);
-    const interactionRef = useRef(false);
 
     useEffect(() => {
         setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -201,25 +195,22 @@ function TVCard({ video }: { video: Video }) {
         function handleClickOutside(event: MouseEvent) {
             if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
                 setIsActive(false);
-                interactionRef.current = false;
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
     
-    const handleInteractionStart = () => {
-      if (!interactionRef.current) {
-        setIsActive(true);
-        interactionRef.current = true;
-      }
+    const handleMouseEnter = () => {
+        if (!isTouchDevice) {
+            setIsActive(true);
+        }
     };
 
-    const handleInteractionEnd = () => {
-      if(interactionRef.current) {
-        setIsActive(false);
-        interactionRef.current = false;
-      }
+    const handleMouseLeave = () => {
+        if (!isTouchDevice) {
+            setIsActive(false);
+        }
     };
 
     const handleClick = (e: React.MouseEvent) => {
@@ -234,7 +225,6 @@ function TVCard({ video }: { video: Video }) {
             // 1st tap: prevent navigation, activate preview.
             e.preventDefault();
             setIsActive(true);
-            interactionRef.current = true;
         }
         // 2nd tap: will proceed with navigation as isActive is true.
     };
@@ -244,8 +234,8 @@ function TVCard({ video }: { video: Video }) {
             <Link
                 href={`/video/${video.id}`}
                 onClick={handleClick}
-                onMouseEnter={!isTouchDevice ? handleInteractionStart : undefined}
-                onMouseLeave={!isTouchDevice ? handleInteractionEnd : undefined}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 className="group block"
                 aria-label={video.title}
             >
