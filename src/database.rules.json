@@ -39,7 +39,10 @@
       ".indexOn": "createdAt",
       ".read": "true",
       "$featureId": {
-        ".write": "(request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback'])) || (auth != null && auth.token.email == 'christianvirus77@gmail.com')"
+         // L'administrateur peut modifier l'ensemble du document.
+        "write": "auth != null && auth.token.email == 'christianvirus77@gmail.com'",
+        // Tout utilisateur authentifié peut mettre à jour le champ 'feedback'.
+        "update": "request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback'])"
       }
     },
     "config": {
