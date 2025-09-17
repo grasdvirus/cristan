@@ -37,7 +37,8 @@ import { useContracts } from '@/hooks/use-contracts';
 import { useVideos } from '@/hooks/use-videos';
 import { useOrders } from '@/hooks/use-orders';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
-import { useFeatures, useSetFeatures } from '@/hooks/use-features';
+import { useFeatures } from '@/hooks/use-features';
+import { useSetFeatures } from '@/hooks/use-features';
 import Link from 'next/link';
 import { Progress } from "@/components/ui/progress";
 import { produce } from 'immer';
@@ -1468,7 +1469,7 @@ setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
                                                                 
                                                                 {fb.adminReply ? (
                                                                     <div className="mt-2 ml-4 p-2 border-l-2 border-primary bg-primary/10 rounded-r-md">
-                                                                        <p className="font-bold text-primary">Votre réponse</p>
+                                                                        <p className="font-bold text-primary">Réponse de Cristan</p>
                                                                         <p className="text-muted-foreground">{fb.adminReply.text}</p>
                                                                         <p className="text-muted-foreground/60 text-right">{format(new Date((fb.adminReply.createdAt as Timestamp).seconds * 1000), 'dd/MM/yy HH:mm', { locale: fr })}</p>
                                                                     </div>

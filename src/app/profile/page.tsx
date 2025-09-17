@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useAuth } from "@/components/auth-provider";
@@ -20,7 +21,7 @@ import { v4 as uuidv4 } from "uuid";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 
-function FeatureCard({ feature, user, onFeedbackSubmit, onFeedbackDelete }: { feature: Feature, user: any, onFeedbackSubmit: (featureId: string, newFeedback: FeatureFeedback) => Promise<void>, onFeedbackDelete: (featureId: string, feedback: FeatureFeedback) => Promise<void> }) {
+function FeatureCard({ feature, user, onFeedbackSubmit }: { feature: Feature, user: any, onFeedbackSubmit: (featureId: string, newFeedback: FeatureFeedback) => Promise<void> }) {
     const [feedbackText, setFeedbackText] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
@@ -73,29 +74,10 @@ function FeatureCard({ feature, user, onFeedbackSubmit, onFeedbackDelete }: { fe
                                         <p className="font-semibold text-foreground">{fb.authorEmail}</p>
                                         <p className="text-muted-foreground">{fb.text}</p>
                                     </div>
-                                    {user && user.uid === fb.authorId && (
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                 <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                                                    <Trash2 className="h-3 w-3 text-destructive" />
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Supprimer votre avis ?</AlertDialogTitle>
-                                                    <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => onFeedbackDelete(feature.id, fb)}>Supprimer</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    )}
                                 </div>
                                 {fb.adminReply && (
                                      <div className="mt-2 ml-4 p-2 border-l-2 border-primary bg-primary/10 rounded-r-md">
-                                        <p className="font-bold text-primary text-xs">Réponse de l'admin</p>
+                                        <p className="font-bold text-primary text-xs">Réponse de Cristan</p>
                                         <p className="text-muted-foreground italic">{fb.adminReply.text}</p>
                                     </div>
                                 )}
@@ -136,20 +118,6 @@ export default function ProfilePage() {
     } catch (error) {
         console.error("Failed to submit feedback", error);
         toast({ variant: 'destructive', title: "Erreur", description: "Impossible d'envoyer l'avis." });
-        throw error;
-    }
-  };
-
-  const handleFeedbackDelete = async (featureId: string, feedbackToDelete: FeatureFeedback) => {
-    try {
-        const featureRef = doc(db, 'features', featureId);
-        await updateDoc(featureRef, {
-            feedback: arrayRemove(feedbackToDelete)
-        });
-        toast({ title: "Avis supprimé !" });
-    } catch (error) {
-        console.error("Failed to delete feedback", error);
-        toast({ variant: 'destructive', title: "Erreur", description: "Impossible de supprimer l'avis." });
         throw error;
     }
   };
@@ -195,7 +163,7 @@ export default function ProfilePage() {
                         <Button asChild variant="outline">
                             <Link href="/a-propos">
                                 <Info className="mr-2 h-4 w-4" />
-                                À propos du site
+                                À propos de Cristan
                             </Link>
                         </Button>
                         <Button onClick={signOutUser}>
@@ -231,7 +199,7 @@ export default function ProfilePage() {
                      <div className="flex justify-center"><Loader2 className="animate-spin" /></div>
                 ) : features.length > 0 ? (
                     features.map(feature => (
-                        <FeatureCard key={feature.id} feature={feature} user={user} onFeedbackSubmit={handleFeedbackSubmit} onFeedbackDelete={handleFeedbackDelete} />
+                        <FeatureCard key={feature.id} feature={feature} user={user} onFeedbackSubmit={handleFeedbackSubmit} />
                     ))
                 ) : (
                     <p className="text-center text-muted-foreground">Aucune annonce pour le moment.</p>
