@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import type { FeatureFeedback } from '@/lib/features';
 
@@ -21,17 +21,27 @@ export async function POST(request: Request) {
       text,
       authorId,
       authorEmail,
-      createdAt: new Date(),
+      createdAt: Timestamp.now(),
     };
 
     await updateDoc(featureRef, {
         feedback: arrayUnion(newFeedback)
     });
+    
+    const responseFeedback = {
+        ...newFeedback,
+        createdAt: {
+            seconds: newFeedback.createdAt.seconds,
+            nanoseconds: newFeedback.createdAt.nanoseconds
+        }
+    };
 
-    return NextResponse.json({ success: true, message: 'Feedback submitted successfully', feedback: newFeedback });
+    return NextResponse.json({ success: true, message: 'Feedback submitted successfully', feedback: responseFeedback });
 
   } catch (error: any) {
     console.error('Error submitting feedback:', error);
     return NextResponse.json({ error: 'Failed to submit feedback', details: error.message }, { status: 500 });
   }
 }
+
+    

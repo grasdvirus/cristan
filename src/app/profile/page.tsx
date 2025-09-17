@@ -15,6 +15,9 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Feature, FeatureFeedback } from "@/lib/features";
 import { produce } from "immer";
+import { db } from "@/lib/firebase";
+import { doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { v4 as uuidv4 } from "uuid";
 
 
 function FeatureCard({ feature, user, onFeedbackSubmit }: { feature: Feature, user: any, onFeedbackSubmit: (featureId: string, text: string) => Promise<void> }) {
@@ -82,22 +85,22 @@ export default function ProfilePage() {
 
   const handleFeedbackSubmit = async (featureId: string, text: string) => {
     if (!user) return;
+    
+    const newFeedback: FeatureFeedback = {
+        id: uuidv4(),
+        authorId: user.uid,
+        authorEmail: user.email!,
+        text: text,
+        createdAt: new Date(),
+    };
+
     try {
-        const response = await fetch('/api/features/feedback', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                featureId,
-                text,
-                authorId: user.uid,
-                authorEmail: user.email,
-            }),
+        const featureRef = doc(db, 'features', featureId);
+        await updateDoc(featureRef, {
+            feedback: arrayUnion(newFeedback)
         });
-        if (!response.ok) throw new Error('Failed to submit feedback');
 
-        const { feedback: newFeedback } = await response.json();
-
-        // Update state with the feedback returned from the server
+        // Optimistic update
         setFeatures(produce(draft => {
             const feature = draft.find(f => f.id === featureId);
             if (feature) {
@@ -199,3 +202,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    

@@ -673,7 +673,7 @@ function AdminContent() {
         const updatedFeedback = produce(feature.feedback, draft => {
             draft[feedbackIndex].adminReply = {
                 text: adminReplyText,
-                createdAt: new Date(),
+                createdAt: Timestamp.now(),
             };
         });
 
@@ -1425,13 +1425,13 @@ setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
                                                             <div key={fb.id} className="text-xs p-2 rounded bg-background">
                                                                 <p className="font-bold">{fb.authorEmail}</p>
                                                                 <p className="text-muted-foreground">{fb.text}</p>
-                                                                <p className="text-muted-foreground/60 text-right">{fb.createdAt ? format(new Date(fb.createdAt.seconds * 1000), 'dd/MM/yy HH:mm', { locale: fr }) : ''}</p>
+                                                                <p className="text-muted-foreground/60 text-right">{fb.createdAt ? format(new Date((fb.createdAt as Timestamp).seconds * 1000), 'dd/MM/yy HH:mm', { locale: fr }) : ''}</p>
                                                                 
                                                                 {fb.adminReply ? (
                                                                     <div className="mt-2 ml-4 p-2 border-l-2 border-primary bg-primary/10 rounded-r-md">
                                                                         <p className="font-bold text-primary">Votre réponse</p>
                                                                         <p className="text-muted-foreground">{fb.adminReply.text}</p>
-                                                                        <p className="text-muted-foreground/60 text-right">{format(new Date(fb.adminReply.createdAt), 'dd/MM/yy HH:mm', { locale: fr })}</p>
+                                                                        <p className="text-muted-foreground/60 text-right">{format(new Date((fb.adminReply.createdAt as Timestamp).seconds * 1000), 'dd/MM/yy HH:mm', { locale: fr })}</p>
                                                                     </div>
                                                                 ) : (
                                                                      <div className="mt-2">
@@ -1917,6 +1917,8 @@ setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
 export default function AdminPageWrapper() {
     return <AdminContent />;
 }
+
+    
 
     
 
