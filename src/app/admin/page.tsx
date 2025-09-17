@@ -320,7 +320,7 @@ function AdminContent() {
     const loadingData = authLoading || loadingProducts || loadingSlides || loadingContracts || loadingVideos || loadingCategories || loadingOrders || loadingSubscriptions || loadingPayment || loadingPlans || loadingAbout;
 
     useEffect(() => {
-        if (user && user.email !== 'grasdvirus@gmail.com') {
+        if (user && user.email !== 'christianvirus77@gmail.com') {
             // This case is handled in the main component return
         }
     }, [user]);
@@ -752,7 +752,7 @@ function AdminContent() {
         return <div className="flex h-screen w-full items-center justify-center"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
     }
 
-    if (!user || user.email !== 'grasdvirus@gmail.com') {
+    if (!user || user.email !== 'christianvirus77@gmail.com') {
         return (
             <div className="flex h-screen w-full items-center justify-center">
                 <Card className="max-w-md text-center">

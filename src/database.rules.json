@@ -6,51 +6,51 @@
     ".write": "auth != null",
     "products": {
       ".read": "true",
-      ".write": "auth.token.email == 'grasdvirus@gmail.com'"
+      ".write": "auth.token.email == 'christianvirus77@gmail.com'"
     },
     "slides": {
       ".read": "true",
-      ".write": "auth.token.email == 'grasdvirus@gmail.com'"
+      ".write": "auth.token.email == 'christianvirus77@gmail.com'"
     },
     "contracts": {
-      ".read": "auth.token.email == 'grasdvirus@gmail.com'",
+      ".read": "auth.token.email == 'christianvirus77@gmail.com'",
       ".write": "auth != null"
     },
     "videos": {
       ".read": "true",
-      ".write": "auth.token.email == 'grasdvirus@gmail.com'"
+      ".write": "auth.token.email == 'christianvirus77@gmail.com'"
     },
     "orders": {
-      ".read": "auth.token.email == 'grasdvirus@gmail.com'",
+      ".read": "auth.token.email == 'christianvirus77@gmail.com'",
       ".write": "auth != null"
     },
     "subscriptions": {
       ".indexOn": "createdAt",
-      ".read": "auth.token.email == 'grasdvirus@gmail.com'",
+      ".read": "auth.token.email == 'christianvirus77@gmail.com'",
       ".write": "auth != null"
     },
     "users": {
       "$uid": {
-        ".read": "$uid == auth.uid || auth.token.email == 'grasdvirus@gmail.com'",
-        ".write": "$uid == auth.uid || auth.token.email == 'grasdvirus@gmail.com'"
+        ".read": "$uid == auth.uid || auth.token.email == 'christianvirus77@gmail.com'",
+        ".write": "$uid == auth.uid || auth.token.email == 'christianvirus77@gmail.com'"
       }
     },
     "config": {
        "categories": {
          ".read": "true",
-         ".write": "auth.token.email == 'grasdvirus@gmail.com'"
+         ".write": "auth.token.email == 'christianvirus77@gmail.com'"
        },
        "payment": {
          ".read": "true",
-         ".write": "auth.token.email == 'grasdvirus@gmail.com'"
+         ".write": "auth.token.email == 'christianvirus77@gmail.com'"
        },
        "subscriptionPlans": {
          ".read": "true",
-         ".write": "auth.token.email == 'grasdvirus@gmail.com'"
+         ".write": "auth.token.email == 'christianvirus77@gmail.com'"
        },
        "about": {
          ".read": "true",
-         ".write": "auth.token.email == 'grasdvirus@gmail.com'"
+         ".write": "auth.token.email == 'christianvirus77@gmail.com'"
        }
     }
   }

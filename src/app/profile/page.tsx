@@ -39,7 +39,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="flex flex-col gap-3 max-w-xs mx-auto">
-                        {user.email === 'grasdvirus@gmail.com' && (
+                        {user.email === 'christianvirus77@gmail.com' && (
                             <Button asChild variant="secondary">
                                 <Link href="/admin">
                                     <LayoutGrid className="mr-2 h-4 w-4" />
