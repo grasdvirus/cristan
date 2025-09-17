@@ -30,7 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarTrigger } from '@/components/ui/sidebar';
-import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag, Lock, Youtube, Info, Star as StarIcon, Heart, MessageCircle, Megaphone, Send } from "lucide-react";
+import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag, Lock, Youtube, Info, Star as StarIcon, Heart, MessageCircle, Megaphone, Send, X } from "lucide-react";
 import { useProducts } from '@/hooks/use-products';
 import { useSlides } from '@/hooks/use-slides';
 import { useContracts } from '@/hooks/use-contracts';
@@ -339,7 +339,7 @@ function AdminContent() {
         
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const [hasChanges, setHasChanges] = useState(false);
-    const [activeView, setActiveView] = useState<ActiveView>('articles');
+    const [activeView, setActiveView] = useState<ActiveView>('features');
     const [isPaymentUnlocked, setIsPaymentUnlocked] = useState(false);
     const [isSubsPriceUnlocked, setIsSubsPriceUnlocked] = useState(false);
     
@@ -644,8 +644,8 @@ function AdminContent() {
     const addFeature = () => {
         const newFeature: Feature = {
             id: uuidv4(),
-            title: 'Nouvelle fonctionnalité',
-            description: '',
+            title: 'Nouvelles Fonctionnalités !',
+            description: `Nous sommes ravis de vous présenter les dernières améliorations :\n\n1.  **Annonces & Avis :** Votre page de profil a une nouvelle section "Quoi de neuf ?" pour vous tenir au courant des nouveautés. Vous pouvez maintenant donner votre avis directement et nous y répondrons !\n\n2.  **Tutoriels Audio :** Plus besoin de lire ! Cliquez sur le bouton "Lire le tuto" pour écouter les descriptions des nouvelles fonctionnalités grâce à la synthèse vocale.\n\n3.  **Accès Facile :** Un bouton "À propos" a été ajouté sur votre page de profil pour accéder plus facilement aux informations sur le site.\n\nNous espérons que vous apprécierez ces nouveautés !`,
             createdAt: serverTimestamp(),
             feedback: [],
         };
@@ -721,7 +721,7 @@ function AdminContent() {
         try {
             const contractRef = doc(db, 'contracts', contractId);
             await updateDoc(contractRef, { status });
-            setContracts(prevContracts => prevContracts.map(c => c.id === contractId ? { ...c, status } : c));
+            setContracts(prevContracts => prevContracts.map(c => c.id === contractId ? { ...c, status } : o));
             toast({ title: "Statut mis à jour", description: `Le contrat a été marqué comme ${status === 'completed' ? 'vu' : 'en attente'}.` });
         } catch (error) {
             console.error("Failed to update contract status", error);
@@ -1917,5 +1917,7 @@ setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
 export default function AdminPageWrapper() {
     return <AdminContent />;
 }
+
+    
 
     
