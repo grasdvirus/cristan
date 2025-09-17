@@ -14,7 +14,6 @@ const firebaseConfig = {
   storageBucket: "artisan-portfolio-ug95w.appspot.com",
   messagingSenderId: "904872842607",
   appId: "1:904872842607:web:e24398e6333cf7361e449a",
-  measurementId: "G-5B373TRP7C"
 };
 
 // Initialize Firebase
