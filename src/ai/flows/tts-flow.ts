@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -8,7 +9,7 @@
  */
 
 import { ai } from 'genkit';
-import { z } from 'genkit/zod';
+import { z } from 'zod';
 import { googleAI } from '@genkit-ai/googleai';
 import * as wav from 'wav';
 
