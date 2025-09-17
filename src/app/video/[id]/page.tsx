@@ -253,7 +253,28 @@ export default function VideoDetailPage() {
       }
       return (
         <div className="overflow-hidden bg-black aspect-video relative">
-            {!showVideo && youtubeEmbedUrl ? (
+            {showVideo ? (
+                 youtubeEmbedUrlAutoplay ? (
+                    <iframe
+                        src={youtubeEmbedUrlAutoplay}
+                        title={video.title}
+                        frameBorder="0"
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allowFullScreen
+                        sandbox="allow-scripts allow-same-origin"
+                        className="w-full h-full"
+                    />
+                ) : video.src ? (
+                    <video
+                        src={video.src}
+                        controls
+                        autoPlay
+                        playsInline
+                        loop
+                        className="w-full h-full"
+                    />
+                ) : null
+            ) : (
                 <div className="w-full h-full cursor-pointer relative group" onClick={() => setShowVideo(true)}>
                     {video.imageUrl ? (
                         <Image
@@ -265,30 +286,13 @@ export default function VideoDetailPage() {
                             priority
                         />
                     ) : null}
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Play className="h-16 w-16 text-white" />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity">
+                        <div className="bg-black/50 rounded-full p-4">
+                           <Play className="h-16 w-16 text-white" />
+                        </div>
                     </div>
                 </div>
-            ) : youtubeEmbedUrlAutoplay ? (
-                <iframe
-                    src={youtubeEmbedUrlAutoplay}
-                    title={video.title}
-                    frameBorder="0"
-                    allow="autoplay; encrypted-media; picture-in-picture"
-                    allowFullScreen
-                    sandbox="allow-scripts allow-same-origin"
-                    className="w-full h-full"
-                />
-            ) : video.src ? (
-                <video
-                    src={video.src}
-                    controls
-                    autoPlay
-                    playsInline
-                    loop
-                    className="w-full h-full"
-                />
-            ) : null}
+            )}
         </div>
       );
   }
@@ -353,3 +357,5 @@ export default function VideoDetailPage() {
     </div>
   );
 }
+
+    
