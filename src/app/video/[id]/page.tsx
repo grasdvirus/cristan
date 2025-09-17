@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ThumbsUp, ThumbsDown, Share2, Loader2, Play, Star, Crown } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -71,6 +71,8 @@ export default function VideoDetailPage() {
   const [showVideo, setShowVideo] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
+  
+  const viewIncremented = useRef(false);
 
   const channel = video ? tvChannels.find(c => c.id === video.channel) : null;
   
@@ -101,7 +103,9 @@ export default function VideoDetailPage() {
 
   // Check user subscription status
   useEffect(() => {
-    if (!video || !video.isPaid) {
+    if (!video) return;
+
+    if (!video.isPaid) {
         setHasAccess(true);
         setCheckingAccess(false);
         return;
@@ -136,17 +140,18 @@ export default function VideoDetailPage() {
   }, [user, video]);
 
 
-  // Increment view count if user has access
+  // Increment view count ONCE if user has access
   useEffect(() => {
-      if (id && hasAccess && !checkingAccess) {
+      if (id && hasAccess && !checkingAccess && !viewIncremented.current) {
+          viewIncremented.current = true; // Mark as incremented immediately
           const videoRef = doc(db, "videos", id);
           updateDoc(videoRef, {
               views: increment(1)
-          }).catch(err => console.error("Failed to increment views:", err));
-          // Note: The view count will be updated via the snapshot listener,
-          // so no need to update local state here.
+          }).catch(err => {
+              console.error("Failed to increment views:", err);
+              viewIncremented.current = false; // Allow retry on error
+          });
       }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, hasAccess, checkingAccess]);
 
 
@@ -167,7 +172,6 @@ export default function VideoDetailPage() {
   }
   
   const uploadDate = video.uploadDate ? format(new Date(video.uploadDate), "d MMM yyyy", { locale: fr }) : 'Date inconnue';
-  const youtubeEmbedUrl = getYouTubeEmbedUrl(video.src);
   const youtubeEmbedUrlAutoplay = getYouTubeEmbedUrl(video.src, true);
 
   const handleLike = async () => {
@@ -358,4 +362,3 @@ export default function VideoDetailPage() {
   );
 }
 
-    
