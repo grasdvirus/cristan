@@ -45,9 +45,7 @@
       "create": "auth.token.email == 'christianvirus77@gmail.com'",
       "delete": "auth.token.email == 'christianvirus77@gmail.com'",
       "$featureId": {
-        // Admin can update any part of the feature document
-        // Authenticated users can only update the 'feedback' field
-        "update": "(auth.token.email == 'christianvirus77@gmail.com') || (auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback']))"
+        "update": "auth.token.email == 'christianvirus77@gmail.com' || (auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback']))"
       }
     },
     "config": {
@@ -73,4 +71,3 @@
     
 
     
-
