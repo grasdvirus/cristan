@@ -75,6 +75,8 @@ export default function Home() {
                         className="object-cover"
                         data-ai-hint={slide.dataAiHint}
                         priority={index === 0}
+                        sizes="100vw"
+                        fetchPriority={index === 0 ? 'high' : 'auto'}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                     </div>
