@@ -5,8 +5,10 @@
     ".read": "true",
     ".write": "auth != null",
     "products": {
-      ".read": "true",
-      ".write": "auth.token.email == 'christianvirus77@gmail.com'"
+      "update": "auth.token.email == 'christianvirus77@gmail.com' || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'comments'])",
+      "create": "auth.token.email == 'christianvirus77@gmail.com'",
+      "delete": "auth.token.email == 'christianvirus77@gmail.com'",
+      ".read": "true"
     },
     "slides": {
       ".read": "true",
@@ -17,8 +19,10 @@
       ".write": "auth != null"
     },
     "videos": {
-      ".read": "true",
-      ".write": "auth.token.email == 'christianvirus77@gmail.com'"
+       "update": "auth.token.email == 'christianvirus77@gmail.com' || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'likes'])",
+       "create": "auth.token.email == 'christianvirus77@gmail.com'",
+       "delete": "auth.token.email == 'christianvirus77@gmail.com'",
+      ".read": "true"
     },
     "orders": {
       ".read": "auth.token.email == 'christianvirus77@gmail.com'",
@@ -39,10 +43,10 @@
       ".indexOn": "createdAt",
       ".read": "true",
       "$featureId": {
-         // L'administrateur peut modifier l'ensemble du document.
         "write": "auth != null && auth.token.email == 'christianvirus77@gmail.com'",
-        // Tout utilisateur authentifié peut mettre à jour le champ 'feedback'.
-        "update": "request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback'])"
+        "feedback": {
+          "write": "auth != null"
+        }
       }
     },
     "config": {
