@@ -15,18 +15,41 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Feature, FeatureFeedback } from "@/lib/features";
 import { produce } from "immer";
+import { db } from "@/lib/firebase";
+import { doc, updateDoc, arrayUnion, Timestamp } from "firebase/firestore";
+import { v4 as uuidv4 } from "uuid";
 
 
-function FeatureCard({ feature, user, onFeedbackSubmit }: { feature: Feature, user: any, onFeedbackSubmit: (featureId: string, text: string) => Promise<void> }) {
+function FeatureCard({ feature, user, onFeedbackSubmit }: { feature: Feature, user: any, onFeedbackSubmit: (featureId: string, newFeedback: FeatureFeedback) => Promise<void> }) {
     const [feedbackText, setFeedbackText] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { toast } = useToast();
 
     const handleFeedbackSubmit = async () => {
+        if (!user) {
+            toast({ variant: 'destructive', title: "Vous devez être connecté." });
+            return;
+        }
         if (!feedbackText.trim()) return;
+
         setIsSubmitting(true);
-        await onFeedbackSubmit(feature.id, feedbackText);
-        setFeedbackText("");
-        setIsSubmitting(false);
+        
+        const newFeedback: FeatureFeedback = {
+          id: uuidv4(),
+          text: feedbackText,
+          authorId: user.uid,
+          authorEmail: user.email,
+          createdAt: Timestamp.now(),
+        };
+
+        try {
+            await onFeedbackSubmit(feature.id, newFeedback);
+            setFeedbackText("");
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
     
     return (
@@ -80,38 +103,35 @@ export default function ProfilePage() {
   const { features, setFeatures, loading: loadingFeatures } = useFeatures();
   const { toast } = useToast();
 
-  const handleFeedbackSubmit = async (featureId: string, text: string) => {
-    if (!user) return;
-
+  const handleFeedbackSubmit = async (featureId: string, newFeedback: FeatureFeedback) => {
     try {
-        const response = await fetch('/api/features/feedback', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                featureId,
-                text,
-                authorId: user.uid,
-                authorEmail: user.email,
-            }),
+        const featureRef = doc(db, 'features', featureId);
+        await updateDoc(featureRef, {
+            feedback: arrayUnion(newFeedback)
         });
 
-        if (!response.ok) throw new Error('Failed to submit feedback');
-
-        const { feedback: newFeedback } = await response.json();
-
-        // Update the state with the feedback returned from the API
+        // Update the state with the feedback, converting Timestamp to a plain object for state
         setFeatures(produce(draft => {
             const feature = draft.find(f => f.id === featureId);
             if (feature) {
                 if (!feature.feedback) feature.feedback = [];
-                feature.feedback.push(newFeedback);
+                // Create a serializable version of feedback to avoid non-serializable data in state error
+                const serializableFeedback = {
+                    ...newFeedback,
+                    createdAt: {
+                        seconds: newFeedback.createdAt.seconds,
+                        nanoseconds: newFeedback.createdAt.nanoseconds,
+                    }
+                };
+                feature.feedback.push(serializableFeedback);
             }
         }));
 
         toast({ title: "Avis envoyé !", description: "Merci pour votre contribution." });
     } catch (error) {
-        console.error(error);
+        console.error("Failed to submit feedback", error);
         toast({ variant: 'destructive', title: "Erreur", description: "Impossible d'envoyer l'avis." });
+        throw error; // Re-throw to be caught by the caller
     }
   };
 

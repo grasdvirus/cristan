@@ -1,5 +1,4 @@
 
-
 {
   "rules": {
     ".read": "true",
@@ -44,9 +43,7 @@
       ".read": "true",
       "create": "auth.token.email == 'christianvirus77@gmail.com'",
       "delete": "auth.token.email == 'christianvirus77@gmail.com'",
-      "$featureId": {
-        "update": "auth.token.email == 'christianvirus77@gmail.com' || (request.auth != null && request.resource.data.title == resource.data.title && request.resource.data.description == resource.data.description)"
-      }
+      "update": "auth.token.email == 'christianvirus77@gmail.com' || (request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback']))"
     },
     "config": {
        "categories": {
@@ -68,7 +65,3 @@
     }
   }
 }
-    
-
-    
-
