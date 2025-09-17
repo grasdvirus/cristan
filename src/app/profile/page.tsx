@@ -17,30 +17,9 @@ import type { Feature } from "@/lib/features";
 import { produce } from "immer";
 
 
-async function getSpeech(text: string): Promise<string | null> {
-    try {
-        const response = await fetch('/api/tts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text }),
-        });
-        if (!response.ok) throw new Error('Failed to get speech');
-        const { audioDataUri } = await response.json();
-        return audioDataUri;
-    } catch (error) {
-        console.error('TTS Error:', error);
-        return null;
-    }
-}
-
-
 function FeatureCard({ feature, user, onFeedbackSubmit }: { feature: Feature, user: any, onFeedbackSubmit: (featureId: string, text: string) => Promise<void> }) {
-    const { toast } = useToast();
     const [feedbackText, setFeedbackText] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [isGeneratingSpeech, setIsGeneratingSpeech] = useState(false);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const handleFeedbackSubmit = async () => {
         if (!feedbackText.trim()) return;
@@ -50,44 +29,6 @@ function FeatureCard({ feature, user, onFeedbackSubmit }: { feature: Feature, us
         setIsSubmitting(false);
     };
     
-    const handlePlayTutorial = async () => {
-        if (isPlaying) {
-            audioRef.current?.pause();
-            setIsPlaying(false);
-            return;
-        }
-
-        if (audioRef.current?.src) {
-            audioRef.current.play();
-            setIsPlaying(true);
-        } else {
-            setIsGeneratingSpeech(true);
-            const audioDataUri = await getSpeech(feature.description);
-            setIsGeneratingSpeech(false);
-            if (audioDataUri) {
-                if (!audioRef.current) {
-                    audioRef.current = new Audio();
-                    audioRef.current.onended = () => setIsPlaying(false);
-                }
-                audioRef.current.src = audioDataUri;
-                audioRef.current.play();
-                setIsPlaying(true);
-            } else {
-                toast({ variant: 'destructive', title: "Erreur de lecture", description: "Impossible de générer l'audio." });
-            }
-        }
-    };
-    
-    useEffect(() => {
-        // Cleanup audio on component unmount
-        return () => {
-            if (audioRef.current) {
-                audioRef.current.pause();
-                audioRef.current = null;
-            }
-        };
-    }, []);
-
     return (
         <Card>
             <CardHeader>
@@ -98,10 +39,6 @@ function FeatureCard({ feature, user, onFeedbackSubmit }: { feature: Feature, us
             </CardHeader>
             <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{feature.description}</p>
-                <Button onClick={handlePlayTutorial} disabled={isGeneratingSpeech} variant="outline" size="sm">
-                    {isGeneratingSpeech ? <Loader2 className="mr-2 animate-spin" /> : <Volume2 className="mr-2" />}
-                    {isPlaying ? 'Pause' : 'Lire le tuto'}
-                </Button>
                 <Separator />
                 <div className="space-y-4">
                     <h4 className="font-semibold flex items-center gap-2 text-sm"><MessageCircle /> Avis &amp; Réponses</h4>
