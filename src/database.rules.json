@@ -45,7 +45,7 @@
       "create": "auth.token.email == 'christianvirus77@gmail.com'",
       "delete": "auth.token.email == 'christianvirus77@gmail.com'",
       "$featureId": {
-        "update": "auth.token.email == 'christianvirus77@gmail.com' || (auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback']))"
+        "update": "auth.token.email == 'christianvirus77@gmail.com' || (request.auth != null && request.resource.data.title == resource.data.title && request.resource.data.description == resource.data.description)"
       }
     },
     "config": {
@@ -62,7 +62,7 @@
          ".write": "auth.token.email == 'christianvirus77@gmail.com'"
        },
        "about": {
-         ".read": "true",
+         ".read": "true,
          ".write": "auth.token.email == 'christianvirus77@gmail.com'"
        }
     }
