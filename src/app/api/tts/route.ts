@@ -10,9 +10,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
     
-    const { audioDataUri } = await textToSpeech({ text });
+    const { audioUrl } = await textToSpeech({ text });
     
-    return NextResponse.json({ audioDataUri });
+    return NextResponse.json({ audioDataUri: audioUrl });
 
   } catch (error) {
     console.error(error);

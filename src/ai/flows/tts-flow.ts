@@ -8,7 +8,7 @@
  * - TextToSpeechOutput: The return type for the textToSpeech function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai } from 'genkit';
 import { z } from 'genkit/zod';
 import { googleAI } from '@genkit-ai/googleai';
 import * as wav from 'wav';
@@ -21,7 +21,7 @@ export type TextToSpeechInput = z.infer<typeof TextToSpeechInputSchema>;
 
 // Define the output schema for the TTS flow
 const TextToSpeechOutputSchema = z.object({
-  audioDataUri: z.string().describe("The generated audio as a 'data:audio/wav;base64,...' URI."),
+  audioUrl: z.string().describe("The generated audio as a 'data:audio/wav;base64,...' URI."),
 });
 export type TextToSpeechOutput = z.infer<typeof TextToSpeechOutputSchema>;
 
@@ -86,7 +86,7 @@ const textToSpeechFlow = ai.defineFlow(
     const wavBase64 = await toWav(pcmData);
     
     return {
-      audioDataUri: `data:audio/wav;base64,${wavBase64}`,
+      audioUrl: `data:audio/wav;base64,${wavBase64}`,
     };
   }
 );
