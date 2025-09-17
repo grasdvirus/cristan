@@ -4,16 +4,16 @@
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { LogOut, User, Fingerprint, LogIn, LayoutGrid, Info, Megaphone, Send, Volume2, Loader2, MessageCircle } from "lucide-react";
+import { LogOut, User, Fingerprint, LogIn, LayoutGrid, Info, Megaphone, Send, Loader2, MessageCircle } from "lucide-react";
 import Link from 'next/link';
 import { useFeatures } from "@/hooks/use-features";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import type { Feature } from "@/lib/features";
+import type { Feature, FeatureFeedback } from "@/lib/features";
 import { produce } from "immer";
 
 
@@ -95,20 +95,14 @@ export default function ProfilePage() {
         });
         if (!response.ok) throw new Error('Failed to submit feedback');
 
-        // Optimistic update
-        const newFeedback = {
-            id: 'temp-id', // Temporary ID
-            text,
-            authorId: user.uid,
-            authorEmail: user.email,
-            createdAt: new Date()
-        };
+        const { feedback: newFeedback } = await response.json();
 
+        // Update state with the feedback returned from the server
         setFeatures(produce(draft => {
             const feature = draft.find(f => f.id === featureId);
             if (feature) {
                 if (!feature.feedback) feature.feedback = [];
-                feature.feedback.push(newFeedback as any);
+                feature.feedback.push(newFeedback);
             }
         }));
 

@@ -28,7 +28,7 @@ export async function POST(request: Request) {
         feedback: arrayUnion(newFeedback)
     });
 
-    return NextResponse.json({ success: true, message: 'Feedback submitted successfully' });
+    return NextResponse.json({ success: true, message: 'Feedback submitted successfully', feedback: newFeedback });
 
   } catch (error: any) {
     console.error('Error submitting feedback:', error);
