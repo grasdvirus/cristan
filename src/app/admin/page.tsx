@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, ChangeEvent, useRef } from 'react';
@@ -13,8 +14,9 @@ import type { Order } from '@/lib/orders';
 import type { Subscription, SubscriptionPlans, SubscriptionPlanId } from '@/lib/subscriptions';
 import type { PaymentDetails, PaymentMethod } from '@/lib/payment';
 import type { AboutContent, FAQItem } from '@/lib/about';
+import type { Feature, FeatureFeedback } from '@/lib/features';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, writeBatch, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, increment } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, increment, arrayUnion } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import { useCategoryStore } from '@/lib/data';
@@ -28,13 +30,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarTrigger } from '@/components/ui/sidebar';
-import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag, Lock, Youtube, Info, Star as StarIcon, Heart, MessageCircle } from "lucide-react";
+import { Loader2, ChevronDown, Trash2, PlusCircle, Save, CheckCircle, AlertTriangle, Upload, Inbox, FileText, ShoppingCart, SlidersHorizontal, Users, Newspaper, Grip, LayoutDashboard, Home as HomeIcon, Globe, Tv, Video as VideoIcon, CreditCard, ShoppingBag, Eye, Star, Crown, Tag, Lock, Youtube, Info, Star as StarIcon, Heart, MessageCircle, Megaphone, Send } from "lucide-react";
 import { useProducts } from '@/hooks/use-products';
 import { useSlides } from '@/hooks/use-slides';
 import { useContracts } from '@/hooks/use-contracts';
 import { useVideos } from '@/hooks/use-videos';
 import { useOrders } from '@/hooks/use-orders';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
+import { useFeatures } from '@/hooks/use-features';
 import Link from 'next/link';
 import { Progress } from "@/components/ui/progress";
 import { produce } from 'immer';
@@ -62,7 +65,7 @@ type AllCategories = {
 }
 
 type SaveStatus = 'idle' | 'saving' | 'success' | 'error';
-type ActiveView = 'articles' | 'products' | 'internet' | 'tv' | 'slides' | 'contracts' | 'orders' | 'subscriptions' | 'subscriptionPrices' | 'categories' | 'payment' | 'about';
+type ActiveView = 'articles' | 'products' | 'internet' | 'tv' | 'slides' | 'contracts' | 'orders' | 'subscriptions' | 'subscriptionPrices' | 'categories' | 'payment' | 'about' | 'features';
 
 
 async function updateProductsClient(products: Product[]): Promise<void> {
@@ -196,6 +199,28 @@ async function updateAboutContentClient(content: AboutContent): Promise<void> {
     await setDoc(aboutDocRef, content, { merge: true });
 }
 
+async function updateFeaturesClient(features: Feature[]): Promise<void> {
+    const featuresCollection = collection(db, 'features');
+    const batch = writeBatch(db);
+
+    const existingDocsSnapshot = await getDocs(featuresCollection);
+    const existingIds = new Set(existingDocsSnapshot.docs.map(doc => doc.id));
+
+    features.forEach(feature => {
+        const { id, ...data } = feature;
+        const sanitizedData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+        const docRef = doc(db, 'features', id);
+        batch.set(docRef, sanitizedData, { merge: true });
+        existingIds.delete(id);
+    });
+
+    existingIds.forEach(idToDelete => {
+        batch.delete(doc(db, 'features', idToDelete));
+    });
+
+    await batch.commit();
+}
+
 
 function FileUpload({ value, onChange, label, acceptedFileTypes, mediaType = 'image' }: { value: string, onChange: (url: string) => void, label: string, acceptedFileTypes: string, mediaType?: 'image' | 'video' }) {
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -298,6 +323,7 @@ function AdminContent() {
     const { videos, setVideos, loading: loadingVideos } = useVideos();
     const { orders, setOrders, loading: loadingOrders } = useOrders();
     const { subscriptions, setSubscriptions, loading: loadingSubscriptions } = useSubscriptions();
+    const { features, setFeatures, loading: loadingFeatures } = useFeatures();
     
     // Global category state from Zustand
     const { articleCategories, productCollections, internetClasses, tvChannels, loading: loadingCategories, setCategories: setGlobalCategories, fetchCategories } = useCategoryStore();
@@ -317,7 +343,11 @@ function AdminContent() {
     const [isPaymentUnlocked, setIsPaymentUnlocked] = useState(false);
     const [isSubsPriceUnlocked, setIsSubsPriceUnlocked] = useState(false);
     
-    const loadingData = authLoading || loadingProducts || loadingSlides || loadingContracts || loadingVideos || loadingCategories || loadingOrders || loadingSubscriptions || loadingPayment || loadingPlans || loadingAbout;
+    const [adminReplyText, setAdminReplyText] = useState('');
+    const [replyingTo, setReplyingTo] = useState<{ featureId: string; feedbackId: string } | null>(null);
+
+
+    const loadingData = authLoading || loadingProducts || loadingSlides || loadingContracts || loadingVideos || loadingCategories || loadingOrders || loadingSubscriptions || loadingPayment || loadingPlans || loadingAbout || loadingFeatures;
 
     useEffect(() => {
         if (user && user.email !== 'christianvirus77@gmail.com') {
@@ -601,6 +631,68 @@ function AdminContent() {
         }
     };
 
+    const updateFeature = (id: string, field: keyof Feature, value: any) => {
+        setFeatures(produce(draft => {
+            const feature = draft.find(f => f.id === id);
+            if (feature) {
+                (feature as any)[field] = value;
+            }
+        }));
+        setHasChanges(true);
+    };
+
+    const addFeature = () => {
+        const newFeature: Feature = {
+            id: uuidv4(),
+            title: 'Nouvelle fonctionnalité',
+            description: '',
+            createdAt: serverTimestamp(),
+            feedback: [],
+        };
+        setFeatures(prev => [newFeature, ...prev]);
+        setHasChanges(true);
+    };
+
+    const deleteFeature = (id: string) => {
+        setFeatures(prev => prev.filter(f => f.id !== id));
+        setHasChanges(true);
+    };
+
+    const handleAdminReplySubmit = async (featureId: string, feedbackId: string) => {
+        if (!adminReplyText.trim()) return;
+
+        const featureRef = doc(db, 'features', featureId);
+        
+        // Find the specific feature and feedback to update
+        const feature = features.find(f => f.id === featureId);
+        if (!feature) return;
+
+        const feedbackIndex = feature.feedback.findIndex(fb => fb.id === feedbackId);
+        if (feedbackIndex === -1) return;
+
+        const updatedFeedback = produce(feature.feedback, draft => {
+            draft[feedbackIndex].adminReply = {
+                text: adminReplyText,
+                createdAt: new Date(),
+            };
+        });
+
+        try {
+            await updateDoc(featureRef, { feedback: updatedFeedback });
+            setFeatures(produce(draft => {
+                const featureToUpdate = draft.find(f => f.id === featureId);
+                if (featureToUpdate) {
+                    featureToUpdate.feedback = updatedFeedback;
+                }
+            }));
+            setReplyingTo(null);
+            setAdminReplyText('');
+            toast({ title: "Réponse envoyée !" });
+        } catch (error) {
+            console.error("Failed to submit reply", error);
+            toast({ variant: 'destructive', title: "Erreur", description: "Impossible d'envoyer la réponse." });
+        }
+    };
 
     const handleUpdateOrderStatus = async (orderId: string, status: Order['status']) => {
         try {
@@ -640,7 +732,7 @@ function AdminContent() {
     const handleDeleteContract = async (contractId: string) => {
         try {
             await deleteDoc(doc(db, 'contracts', contractId));
-            setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
+setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
             toast({ title: "Contrat supprimé", description: "Le contrat a été supprimé avec succès." });
         } catch (error) {
             console.error("Failed to delete contract", error);
@@ -712,6 +804,7 @@ function AdminContent() {
                 updatePaymentDetailsClient(paymentDetails),
                 subscriptionPlans ? updateSubscriptionPlansClient(subscriptionPlans) : Promise.resolve(),
                 aboutContent ? updateAboutContentClient(aboutContent) : Promise.resolve(),
+                updateFeaturesClient(features),
             ]);
             
             // Re-sync the global state with the local changes that were just saved
@@ -739,6 +832,7 @@ function AdminContent() {
         { id: 'internet', label: 'Produits (Internet)', icon: Globe },
         { id: 'tv', label: 'Contenus (TV)', icon: Tv },
         { id: 'slides', label: 'Slides Carrousel', icon: SlidersHorizontal },
+        { id: 'features', label: 'Annonces & Avis', icon: Megaphone },
         { id: 'contracts', label: 'Contrats Partenaires', icon: FileText },
         { id: 'orders', label: 'Commandes', icon: ShoppingBag },
         { id: 'subscriptions', label: 'Abonnements TV', icon: Crown },
@@ -767,6 +861,7 @@ function AdminContent() {
     const shopProducts = products.filter(p => p.collection).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     const internetProducts = products.filter(p => p.internetClass !== undefined).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     const sortedVideos = [...videos].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    const sortedFeatures = [...features].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
 
     const CategoryEditor = ({ title, categoryList, listKey }: { title: string; categoryList: CategoryItem[]; listKey: keyof AllCategories; }) => (
@@ -1290,6 +1385,95 @@ function AdminContent() {
                             </div>
                         </div>
                     )}
+                    
+                    {activeView === 'features' && (
+                        <div>
+                             <div className="flex justify-between items-center mb-6">
+                                <div>
+                                     <h1 className="text-3xl font-bold">Annonces & Avis</h1>
+                                     <p className="text-muted-foreground">Gérez les annonces de fonctionnalités et répondez aux avis.</p>
+                                </div>
+                                <Button onClick={addFeature}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter une annonce</Button>
+                            </div>
+                             <div className="space-y-4">
+                                {sortedFeatures.map(feature => (
+                                    <Collapsible key={feature.id} className="border rounded-lg p-4">
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="font-semibold">{feature.title}</h3>
+                                            <div className="flex items-center gap-2">
+                                                <Button variant="destructive" size="icon" onClick={() => deleteFeature(feature.id)}><Trash2 className="h-4 w-4" /></Button>
+                                                <CollapsibleTrigger asChild>
+                                                    <Button variant="ghost" size="icon"><ChevronDown className="h-4 w-4" /></Button>
+                                                </CollapsibleTrigger>
+                                            </div>
+                                        </div>
+                                        <CollapsibleContent className="mt-4 space-y-4">
+                                            <div>
+                                                <Label htmlFor={`feature-title-${feature.id}`}>Titre</Label>
+                                                <Input id={`feature-title-${feature.id}`} value={feature.title} onChange={(e) => updateFeature(feature.id, 'title', e.target.value)} />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor={`feature-desc-${feature.id}`}>Description (Tutoriel)</Label>
+                                                <Textarea id={`feature-desc-${feature.id}`} value={feature.description} onChange={(e) => updateFeature(feature.id, 'description', e.target.value)} rows={4} />
+                                            </div>
+
+                                            <div className="mt-4 space-y-3">
+                                                <h4 className="font-semibold flex items-center gap-2 text-sm"><MessageCircle className="h-4 w-4" /> Avis ({feature.feedback.length})</h4>
+                                                <div className="max-h-96 overflow-y-auto space-y-3 rounded-md border p-3 bg-muted/20">
+                                                    {feature.feedback.length > 0 ? (
+                                                        feature.feedback.map(fb => (
+                                                            <div key={fb.id} className="text-xs p-2 rounded bg-background">
+                                                                <p className="font-bold">{fb.authorEmail}</p>
+                                                                <p className="text-muted-foreground">{fb.text}</p>
+                                                                <p className="text-muted-foreground/60 text-right">{fb.createdAt ? format(new Date(fb.createdAt.seconds * 1000), 'dd/MM/yy HH:mm', { locale: fr }) : ''}</p>
+                                                                
+                                                                {fb.adminReply ? (
+                                                                    <div className="mt-2 ml-4 p-2 border-l-2 border-primary bg-primary/10 rounded-r-md">
+                                                                        <p className="font-bold text-primary">Votre réponse</p>
+                                                                        <p className="text-muted-foreground">{fb.adminReply.text}</p>
+                                                                        <p className="text-muted-foreground/60 text-right">{format(new Date(fb.adminReply.createdAt), 'dd/MM/yy HH:mm', { locale: fr })}</p>
+                                                                    </div>
+                                                                ) : (
+                                                                     <div className="mt-2">
+                                                                        {replyingTo?.feedbackId === fb.id ? (
+                                                                            <div className="flex items-start gap-2">
+                                                                                <Textarea
+                                                                                    value={adminReplyText}
+                                                                                    onChange={(e) => setAdminReplyText(e.target.value)}
+                                                                                    placeholder="Répondre..."
+                                                                                    className="text-xs"
+                                                                                    rows={2}
+                                                                                />
+                                                                                <div className="flex flex-col gap-1">
+                                                                                    <Button size="icon" onClick={() => handleAdminReplySubmit(feature.id, fb.id)}>
+                                                                                        <Send className="h-3 w-3" />
+                                                                                    </Button>
+                                                                                    <Button size="icon" variant="ghost" onClick={() => setReplyingTo(null)}>
+                                                                                        <X className="h-3 w-3" />
+                                                                                    </Button>
+                                                                                </div>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <Button variant="outline" size="sm" className="h-auto py-1 px-2 text-xs" onClick={() => { setReplyingTo({ featureId: feature.id, feedbackId: fb.id }); setAdminReplyText(''); }}>
+                                                                                Répondre
+                                                                            </Button>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-xs text-muted-foreground text-center py-4">Aucun avis pour le moment.</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </CollapsibleContent>
+                                    </Collapsible>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
 
                     {activeView === 'contracts' && (
                         <div>

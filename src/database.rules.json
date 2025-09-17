@@ -35,6 +35,15 @@
         ".write": "$uid == auth.uid || auth.token.email == 'christianvirus77@gmail.com'"
       }
     },
+     "features": {
+      ".indexOn": "createdAt",
+      ".read": "true",
+      "__write_permission_to_investigate": "The following write rule on this collection is set to 'auth.token.email == 'christianvirus77@gmail.com' for creating/deleting features, but individual documents need to be updatable by any authenticated user to add feedback. A more granular rule is needed.",
+      "$featureId": {
+        // Admin can create/write/delete the whole feature document
+        ".write": "auth.token.email == 'christianvirus77@gmail.com' || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback']) && request.auth != null)"
+      }
+    },
     "config": {
        "categories": {
          ".read": "true",
