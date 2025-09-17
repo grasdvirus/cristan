@@ -37,7 +37,7 @@ import { useContracts } from '@/hooks/use-contracts';
 import { useVideos } from '@/hooks/use-videos';
 import { useOrders } from '@/hooks/use-orders';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
-import { useFeatures } from '@/hooks/use-features';
+import { useFeatures, useSetFeatures } from '@/hooks/use-features';
 import Link from 'next/link';
 import { Progress } from "@/components/ui/progress";
 import { produce } from 'immer';
@@ -323,7 +323,8 @@ function AdminContent() {
     const { videos, setVideos, loading: loadingVideos } = useVideos();
     const { orders, setOrders, loading: loadingOrders } = useOrders();
     const { subscriptions, setSubscriptions, loading: loadingSubscriptions } = useSubscriptions();
-    const { features, setFeatures, loading: loadingFeatures } = useFeatures();
+    const { features, loading: loadingFeatures } = useFeatures();
+    const setFeatures = useSetFeatures();
     
     // Global category state from Zustand
     const { articleCategories, productCollections, internetClasses, tvChannels, loading: loadingCategories, setCategories: setGlobalCategories, fetchCategories } = useCategoryStore();
@@ -679,12 +680,15 @@ function AdminContent() {
 
         try {
             await updateDoc(featureRef, { feedback: updatedFeedback });
-            setFeatures(produce(draft => {
+            
+            // This hook now only contains the setter function
+            setFeatures(produce(features, draft => {
                 const featureToUpdate = draft.find(f => f.id === featureId);
                 if (featureToUpdate) {
                     featureToUpdate.feedback = updatedFeedback;
                 }
             }));
+
             setReplyingTo(null);
             setAdminReplyText('');
             toast({ title: "Réponse envoyée !" });
@@ -1917,6 +1921,8 @@ setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
 export default function AdminPageWrapper() {
     return <AdminContent />;
 }
+
+    
 
     
 
