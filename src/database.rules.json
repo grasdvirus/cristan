@@ -62,7 +62,7 @@
          ".write": "auth.token.email == 'christianvirus77@gmail.com'"
        },
        "about": {
-         ".read": "true,
+         ".read": "true",
          ".write": "auth.token.email == 'christianvirus77@gmail.com'"
        }
     }
@@ -71,3 +71,4 @@
     
 
     
+
