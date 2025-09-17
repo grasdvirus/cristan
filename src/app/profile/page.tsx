@@ -4,9 +4,9 @@
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { LogOut, User, Fingerprint, LogIn, LayoutGrid, Info, Megaphone, Send, Loader2, MessageCircle } from "lucide-react";
+import { LogOut, User, Fingerprint, LogIn, LayoutGrid, Info, Megaphone, Send, Loader2, MessageCircle, Trash2 } from "lucide-react";
 import Link from 'next/link';
-import { useFeatures, useSetFeatures } from "@/hooks/use-features";
+import { useFeatures } from "@/hooks/use-features";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Separator } from "@/components/ui/separator";
@@ -14,13 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Feature, FeatureFeedback } from "@/lib/features";
-import { produce } from "immer";
 import { db } from "@/lib/firebase";
-import { doc, updateDoc, arrayUnion, Timestamp } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, arrayRemove, Timestamp } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 
-function FeatureCard({ feature, user, onFeedbackSubmit }: { feature: Feature, user: any, onFeedbackSubmit: (featureId: string, newFeedback: FeatureFeedback) => Promise<void> }) {
+function FeatureCard({ feature, user, onFeedbackSubmit, onFeedbackDelete }: { feature: Feature, user: any, onFeedbackSubmit: (featureId: string, newFeedback: FeatureFeedback) => Promise<void>, onFeedbackDelete: (featureId: string, feedback: FeatureFeedback) => Promise<void> }) {
     const [feedbackText, setFeedbackText] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
@@ -65,11 +65,34 @@ function FeatureCard({ feature, user, onFeedbackSubmit }: { feature: Feature, us
                 <Separator />
                 <div className="space-y-4">
                     <h4 className="font-semibold flex items-center gap-2 text-sm"><MessageCircle /> Avis &amp; Réponses</h4>
-                    <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
+                    <div className="space-y-4 max-h-60 overflow-y-auto pr-2 scroll-hover">
                         {feature.feedback?.map(fb => (
                             <div key={fb.id} className="text-sm">
-                                <p className="font-semibold text-foreground">{fb.authorEmail}</p>
-                                <p className="text-muted-foreground">{fb.text}</p>
+                                <div className="flex justify-between items-start gap-2">
+                                    <div className="flex-grow">
+                                        <p className="font-semibold text-foreground">{fb.authorEmail}</p>
+                                        <p className="text-muted-foreground">{fb.text}</p>
+                                    </div>
+                                    {user && user.uid === fb.authorId && (
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                 <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                                                    <Trash2 className="h-3 w-3 text-destructive" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Supprimer votre avis ?</AlertDialogTitle>
+                                                    <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => onFeedbackDelete(feature.id, fb)}>Supprimer</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    )}
+                                </div>
                                 {fb.adminReply && (
                                      <div className="mt-2 ml-4 p-2 border-l-2 border-primary bg-primary/10 rounded-r-md">
                                         <p className="font-bold text-primary text-xs">Réponse de l'admin</p>
@@ -101,7 +124,6 @@ function FeatureCard({ feature, user, onFeedbackSubmit }: { feature: Feature, us
 export default function ProfilePage() {
   const { user, signOutUser, loading } = useAuth();
   const { features, loading: loadingFeatures } = useFeatures();
-  const setFeatures = useSetFeatures();
   const { toast } = useToast();
 
   const handleFeedbackSubmit = async (featureId: string, newFeedback: FeatureFeedback) => {
@@ -110,12 +132,25 @@ export default function ProfilePage() {
         await updateDoc(featureRef, {
             feedback: arrayUnion(newFeedback)
         });
-
         toast({ title: "Avis envoyé !", description: "Merci pour votre contribution." });
     } catch (error) {
         console.error("Failed to submit feedback", error);
         toast({ variant: 'destructive', title: "Erreur", description: "Impossible d'envoyer l'avis." });
-        throw error; // Re-throw to be caught by the caller
+        throw error;
+    }
+  };
+
+  const handleFeedbackDelete = async (featureId: string, feedbackToDelete: FeatureFeedback) => {
+    try {
+        const featureRef = doc(db, 'features', featureId);
+        await updateDoc(featureRef, {
+            feedback: arrayRemove(feedbackToDelete)
+        });
+        toast({ title: "Avis supprimé !" });
+    } catch (error) {
+        console.error("Failed to delete feedback", error);
+        toast({ variant: 'destructive', title: "Erreur", description: "Impossible de supprimer l'avis." });
+        throw error;
     }
   };
 
@@ -196,7 +231,7 @@ export default function ProfilePage() {
                      <div className="flex justify-center"><Loader2 className="animate-spin" /></div>
                 ) : features.length > 0 ? (
                     features.map(feature => (
-                        <FeatureCard key={feature.id} feature={feature} user={user} onFeedbackSubmit={handleFeedbackSubmit} />
+                        <FeatureCard key={feature.id} feature={feature} user={user} onFeedbackSubmit={handleFeedbackSubmit} onFeedbackDelete={handleFeedbackDelete} />
                     ))
                 ) : (
                     <p className="text-center text-muted-foreground">Aucune annonce pour le moment.</p>

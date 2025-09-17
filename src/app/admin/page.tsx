@@ -16,7 +16,7 @@ import type { PaymentDetails, PaymentMethod } from '@/lib/payment';
 import type { AboutContent, FAQItem } from '@/lib/about';
 import type { Feature, FeatureFeedback } from '@/lib/features';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, writeBatch, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, increment, arrayUnion } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import { useCategoryStore } from '@/lib/data';
@@ -664,14 +664,14 @@ function AdminContent() {
 
         const featureRef = doc(db, 'features', featureId);
         
-        // Find the specific feature and feedback to update
         const feature = features.find(f => f.id === featureId);
         if (!feature) return;
 
         const feedbackIndex = feature.feedback.findIndex(fb => fb.id === feedbackId);
         if (feedbackIndex === -1) return;
 
-        const updatedFeedback = produce(feature.feedback, draft => {
+        // Create a new feedback array with the updated reply
+        const updatedFeedbackArray = produce(feature.feedback, draft => {
             draft[feedbackIndex].adminReply = {
                 text: adminReplyText,
                 createdAt: Timestamp.now(),
@@ -679,15 +679,16 @@ function AdminContent() {
         });
 
         try {
-            await updateDoc(featureRef, { feedback: updatedFeedback });
+            // Update only the feedback array in Firestore
+            await updateDoc(featureRef, { feedback: updatedFeedbackArray });
             
-            // This hook now only contains the setter function
-            setFeatures(produce(features, draft => {
-                const featureToUpdate = draft.find(f => f.id === featureId);
-                if (featureToUpdate) {
-                    featureToUpdate.feedback = updatedFeedback;
-                }
-            }));
+            // Update local state - useFeatures hook handles server updates automatically
+            // but we can trigger a local update for immediate UI response.
+            setFeatures(prevFeatures => 
+                prevFeatures.map(f => 
+                    f.id === featureId ? { ...f, feedback: updatedFeedbackArray } : f
+                )
+            );
 
             setReplyingTo(null);
             setAdminReplyText('');
@@ -695,6 +696,19 @@ function AdminContent() {
         } catch (error) {
             console.error("Failed to submit reply", error);
             toast({ variant: 'destructive', title: "Erreur", description: "Impossible d'envoyer la réponse." });
+        }
+    };
+    
+    const handleDeleteFeedback = async (featureId: string, feedbackToDelete: FeatureFeedback) => {
+        const featureRef = doc(db, 'features', featureId);
+        try {
+            await updateDoc(featureRef, {
+                feedback: arrayRemove(feedbackToDelete)
+            });
+            toast({ title: "Avis supprimé" });
+        } catch (error) {
+            console.error("Failed to delete feedback", error);
+            toast({ variant: 'destructive', title: "Erreur", description: "Impossible de supprimer l'avis." });
         }
     };
 
@@ -931,7 +945,7 @@ setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
     const CommentsViewer = ({ comments }: { comments: Comment[] }) => (
         <div className="mt-4 space-y-3">
             <h4 className="font-semibold flex items-center gap-2 text-sm"><MessageCircle className="h-4 w-4" /> Commentaires ({comments.length})</h4>
-            <div className="max-h-60 overflow-y-auto space-y-2 rounded-md border p-3 bg-muted/20">
+            <div className="max-h-60 overflow-y-auto space-y-2 rounded-md border p-3 bg-muted/20 scroll-hover">
                 {comments.length > 0 ? (
                     comments.map(comment => (
                         <div key={comment.id} className="text-xs p-2 rounded bg-background">
@@ -986,7 +1000,7 @@ setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
                     </SidebarFooter>
                 </Sidebar>
 
-                <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+                <main className="flex-1 p-4 md:p-8 overflow-y-auto scroll-hover">
                     <div className="md:hidden pb-4">
                         <SidebarTrigger />
                     </div>
@@ -1423,12 +1437,33 @@ setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
 
                                             <div className="mt-4 space-y-3">
                                                 <h4 className="font-semibold flex items-center gap-2 text-sm"><MessageCircle className="h-4 w-4" /> Avis ({feature.feedback.length})</h4>
-                                                <div className="max-h-96 overflow-y-auto space-y-3 rounded-md border p-3 bg-muted/20">
+                                                <div className="max-h-96 overflow-y-auto space-y-3 rounded-md border p-3 bg-muted/20 scroll-hover">
                                                     {feature.feedback.length > 0 ? (
                                                         feature.feedback.map(fb => (
                                                             <div key={fb.id} className="text-xs p-2 rounded bg-background">
-                                                                <p className="font-bold">{fb.authorEmail}</p>
-                                                                <p className="text-muted-foreground">{fb.text}</p>
+                                                                <div className="flex justify-between items-start">
+                                                                    <div>
+                                                                        <p className="font-bold">{fb.authorEmail}</p>
+                                                                        <p className="text-muted-foreground">{fb.text}</p>
+                                                                    </div>
+                                                                     <AlertDialog>
+                                                                        <AlertDialogTrigger asChild>
+                                                                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                                                                                <Trash2 className="h-3 w-3 text-destructive" />
+                                                                            </Button>
+                                                                        </AlertDialogTrigger>
+                                                                        <AlertDialogContent>
+                                                                            <AlertDialogHeader>
+                                                                                <AlertDialogTitle>Supprimer cet avis ?</AlertDialogTitle>
+                                                                                <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+                                                                            </AlertDialogHeader>
+                                                                            <AlertDialogFooter>
+                                                                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                                                                <AlertDialogAction onClick={() => handleDeleteFeedback(feature.id, fb)}>Supprimer</AlertDialogAction>
+                                                                            </AlertDialogFooter>
+                                                                        </AlertDialogContent>
+                                                                    </AlertDialog>
+                                                                </div>
                                                                 <p className="text-muted-foreground/60 text-right">{fb.createdAt ? format(new Date((fb.createdAt as Timestamp).seconds * 1000), 'dd/MM/yy HH:mm', { locale: fr }) : ''}</p>
                                                                 
                                                                 {fb.adminReply ? (
