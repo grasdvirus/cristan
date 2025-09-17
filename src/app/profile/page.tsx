@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { LogOut, User, Fingerprint, LogIn, LayoutGrid, Info, Megaphone, Send, Loader2, MessageCircle } from "lucide-react";
 import Link from 'next/link';
-import { useFeatures } from "@/hooks/use-features";
+import { useFeatures, useSetFeatures } from "@/hooks/use-features";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Separator } from "@/components/ui/separator";
@@ -100,7 +100,8 @@ function FeatureCard({ feature, user, onFeedbackSubmit }: { feature: Feature, us
 
 export default function ProfilePage() {
   const { user, signOutUser, loading } = useAuth();
-  const { features, setFeatures, loading: loadingFeatures } = useFeatures();
+  const { features, loading: loadingFeatures } = useFeatures();
+  const setFeatures = useSetFeatures();
   const { toast } = useToast();
 
   const handleFeedbackSubmit = async (featureId: string, newFeedback: FeatureFeedback) => {
@@ -109,23 +110,6 @@ export default function ProfilePage() {
         await updateDoc(featureRef, {
             feedback: arrayUnion(newFeedback)
         });
-
-        // Update the state with the feedback, converting Timestamp to a plain object for state
-        setFeatures(produce(draft => {
-            const feature = draft.find(f => f.id === featureId);
-            if (feature) {
-                if (!feature.feedback) feature.feedback = [];
-                // Create a serializable version of feedback to avoid non-serializable data in state error
-                const serializableFeedback = {
-                    ...newFeedback,
-                    createdAt: {
-                        seconds: newFeedback.createdAt.seconds,
-                        nanoseconds: newFeedback.createdAt.nanoseconds,
-                    }
-                };
-                feature.feedback.push(serializableFeedback);
-            }
-        }));
 
         toast({ title: "Avis envoyé !", description: "Merci pour votre contribution." });
     } catch (error) {

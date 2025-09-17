@@ -6,6 +6,7 @@ import type { Feature } from '@/lib/features';
 import { db } from '@/lib/firebase';
 import { onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 
+// Hook to get the features data and loading state
 export function useFeatures() {
   const [features, setFeatures] = useState<Feature[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -31,9 +32,17 @@ export function useFeatures() {
     return () => unsubscribe();
   }, []);
 
+  return { features, loading, error };
+}
+
+// Separate hook to get only the setter function
+// This avoids re-rendering components that only need to set the state
+export function useSetFeatures() {
+  const [_, setFeatures] = useState<Feature[]>([]);
+  
   const manualSetFeatures = useCallback((newFeatures: Feature[] | ((prev: Feature[]) => Feature[])) => {
     setFeatures(newFeatures);
   }, []);
 
-  return { features, loading, error, setFeatures: manualSetFeatures };
+  return manualSetFeatures;
 }
