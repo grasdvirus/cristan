@@ -27,7 +27,7 @@ function formatCount(num: number) {
     return num.toString();
 }
 
-function getYouTubeEmbedUrl(url: string, autoplay = false) {
+function getYouTubeEmbedUrl(url: string, autoplay = false, mute = false) {
     let videoId = null;
     try {
         const urlObj = new URL(url);
@@ -49,6 +49,9 @@ function getYouTubeEmbedUrl(url: string, autoplay = false) {
     });
     if (autoplay) {
         params.set('autoplay', '1');
+    }
+     if (mute) {
+        params.set('mute', '1');
     }
 
     return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
@@ -172,7 +175,7 @@ export default function VideoDetailPage() {
   }
   
   const uploadDate = video.uploadDate ? format(new Date(video.uploadDate), "d MMM yyyy", { locale: fr }) : 'Date inconnue';
-  const youtubeEmbedUrlAutoplay = getYouTubeEmbedUrl(video.src, true);
+  const youtubeEmbedUrlAutoplay = getYouTubeEmbedUrl(video.src, true, true);
 
   const handleLike = async () => {
     if (isLiked) return;
@@ -255,10 +258,11 @@ export default function VideoDetailPage() {
              </div>
           )
       }
-      return (
-        <div className="overflow-hidden bg-black aspect-video relative">
-            {showVideo ? (
-                 youtubeEmbedUrlAutoplay ? (
+      
+       const PlayerContent = () => {
+        if (showVideo) {
+            if (youtubeEmbedUrlAutoplay) {
+                return (
                     <iframe
                         src={youtubeEmbedUrlAutoplay}
                         title={video.title}
@@ -266,37 +270,46 @@ export default function VideoDetailPage() {
                         allow="autoplay; encrypted-media; picture-in-picture"
                         allowFullScreen
                         sandbox="allow-scripts allow-same-origin"
-                        className="w-full h-full"
+                        className="w-full h-full absolute inset-0"
                     />
-                ) : video.src ? (
+                );
+            }
+            if (video.src) {
+                return (
                     <video
                         src={video.src}
                         controls
                         autoPlay
                         playsInline
                         loop
-                        className="w-full h-full"
+                        className="w-full h-full absolute inset-0"
                     />
-                ) : null
-            ) : (
-                <div className="w-full h-full cursor-pointer relative group" onClick={() => setShowVideo(true)}>
-                    {video.imageUrl ? (
-                        <Image
-                            src={video.imageUrl}
-                            alt={video.title}
-                            fill
-                            className="object-cover"
-                            data-ai-hint={video.dataAiHint}
-                            priority
-                        />
-                    ) : null}
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity">
-                        <div className="bg-black/50 rounded-full p-4">
-                           <Play className="h-16 w-16 text-white" />
-                        </div>
+                );
+            }
+        }
+        return null;
+    };
+      
+      return (
+        <div className="overflow-hidden bg-black aspect-video relative" onClick={() => setShowVideo(true)}>
+             {video.imageUrl && (
+                <Image
+                    src={video.imageUrl}
+                    alt={video.title}
+                    fill
+                    className="object-cover"
+                    data-ai-hint={video.dataAiHint}
+                    priority
+                />
+            )}
+             {!showVideo && (
+                <div className="w-full h-full cursor-pointer absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity">
+                    <div className="bg-black/50 rounded-full p-4">
+                       <Play className="h-16 w-16 text-white" />
                     </div>
                 </div>
             )}
+            <PlayerContent />
         </div>
       );
   }
@@ -361,4 +374,5 @@ export default function VideoDetailPage() {
     </div>
   );
 }
+
 
