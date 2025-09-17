@@ -39,8 +39,6 @@
       ".indexOn": "createdAt",
       ".read": "true",
       "$featureId": {
-        // Admin can write/delete the entire feature document.
-        // Any authenticated user can update a document, but only the 'feedback' field.
         ".write": "(request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback'])) || (auth != null && auth.token.email == 'christianvirus77@gmail.com')"
       }
     },
