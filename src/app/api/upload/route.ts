@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { storage } from '@/lib/firebase';
 
 export async function POST(req: NextRequest) {
   const data = await req.formData();
@@ -14,15 +14,22 @@ export async function POST(req: NextRequest) {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
-  const filename = `${Date.now()}-${file.name.replace(/\s/g, '_')}`;
-  const path = join(process.cwd(), 'public/uploads', filename);
+  const filename = `uploads/${Date.now()}-${file.name.replace(/\s/g, '_')}`;
+  const storageRef = ref(storage, filename);
   
   try {
-    await writeFile(path, buffer);
-    console.log(`File saved to ${path}`);
-    return NextResponse.json({ success: true, url: `/uploads/${filename}` });
+    // Upload file to Firebase Storage
+    await uploadBytes(storageRef, buffer, {
+      contentType: file.type,
+    });
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(storageRef);
+    
+    console.log(`File uploaded to Firebase Storage: ${downloadURL}`);
+    return NextResponse.json({ success: true, url: downloadURL });
   } catch (error) {
-    console.error('Error saving file:', error);
-    return NextResponse.json({ success: false, error: 'Failed to save file' }, { status: 500 });
+    console.error('Error uploading file to Firebase Storage:', error);
+    return NextResponse.json({ success: false, error: 'Failed to upload file' }, { status: 500 });
   }
 }

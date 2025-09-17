@@ -21,13 +21,13 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
-  },
-  // Exclude the uploads directory from serverless function bundles
-  experimental: {
-    outputFileTracingExcludes: {
-      '/api/upload': ['./public/uploads/**/*'],
-    },
   },
 };
 

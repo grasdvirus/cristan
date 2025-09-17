@@ -37,8 +37,7 @@ import { useContracts } from '@/hooks/use-contracts';
 import { useVideos } from '@/hooks/use-videos';
 import { useOrders } from '@/hooks/use-orders';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
-import { useFeatures } from '@/hooks/use-features';
-import { useSetFeatures } from '@/hooks/use-features';
+import { useFeatures, useSetFeatures } from '@/hooks/use-features';
 import Link from 'next/link';
 import { Progress } from "@/components/ui/progress";
 import { produce } from 'immer';
@@ -270,6 +269,7 @@ function FileUpload({ value, onChange, label, acceptedFileTypes, mediaType = 'im
 
     const isUploading = uploadProgress !== null;
     const canShowPreview = value && !isUploading;
+    const isFirebaseUrl = typeof value === 'string' && value.includes('firebasestorage.googleapis.com');
 
     return (
         <div className="space-y-2">
@@ -700,8 +700,14 @@ function AdminContent() {
         }
     };
     
-    const handleDeleteFeedback = async (featureId: string, feedbackToDelete: FeatureFeedback) => {
+    const handleDeleteFeedback = async (featureId: string, feedbackId: string) => {
         const featureRef = doc(db, 'features', featureId);
+        const feature = features.find(f => f.id === featureId);
+        if (!feature) return;
+
+        const feedbackToDelete = feature.feedback.find(fb => fb.id === feedbackId);
+        if (!feedbackToDelete) return;
+        
         try {
             await updateDoc(featureRef, {
                 feedback: arrayRemove(feedbackToDelete)
@@ -740,7 +746,7 @@ function AdminContent() {
         try {
             const contractRef = doc(db, 'contracts', contractId);
             await updateDoc(contractRef, { status });
-            setContracts(prevContracts => prevContracts.map(c => c.id === contractId ? { ...c, status } : o));
+            setContracts(prevContracts => prevContracts.map(c => c.id === contractId ? { ...c, status } : c));
             toast({ title: "Statut mis à jour", description: `Le contrat a été marqué comme ${status === 'completed' ? 'vu' : 'en attente'}.` });
         } catch (error) {
             console.error("Failed to update contract status", error);
@@ -751,7 +757,7 @@ function AdminContent() {
     const handleDeleteContract = async (contractId: string) => {
         try {
             await deleteDoc(doc(db, 'contracts', contractId));
-setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
+            setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
             toast({ title: "Contrat supprimé", description: "Le contrat a été supprimé avec succès." });
         } catch (error) {
             console.error("Failed to delete contract", error);
@@ -1340,7 +1346,7 @@ setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <FileUpload label="Miniature (Image)" value={video.imageUrl} onChange={(url) => updateVideo(video.id, 'imageUrl', url)} acceptedFileTypes="image/*" mediaType="image"/>
                                                 <FileUpload label="Vidéo de couverture (courte)" value={video.shortPreviewUrl || ''} onChange={(url) => updateVideo(video.id, 'shortPreviewUrl', url)} acceptedFileTypes="video/mp4" mediaType="video"/>
-                                                <FileUpload label="Fichier Vidéo Complet" value={video.src.startsWith('/uploads/') ? video.src : ''} onChange={(url) => updateVideo(video.id, 'src', url)} acceptedFileTypes="video/*" mediaType="video"/>
+                                                <FileUpload label="Fichier Vidéo Complet" value={video.src.startsWith('https://firebasestorage.googleapis.com') ? video.src : ''} onChange={(url) => updateVideo(video.id, 'src', url)} acceptedFileTypes="video/*" mediaType="video"/>
                                             </div>
                                             <div>
                                                 <Label htmlFor={`video-ai-hint-${video.id}`}>Indice IA pour la miniature</Label>
@@ -1460,7 +1466,7 @@ setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
                                                                             </AlertDialogHeader>
                                                                             <AlertDialogFooter>
                                                                                 <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                                                                <AlertDialogAction onClick={() => handleDeleteFeedback(feature.id, fb)}>Supprimer</AlertDialogAction>
+                                                                                <AlertDialogAction onClick={() => handleDeleteFeedback(feature.id, fb.id)}>Supprimer</AlertDialogAction>
                                                                             </AlertDialogFooter>
                                                                         </AlertDialogContent>
                                                                     </AlertDialog>
@@ -1957,11 +1963,3 @@ setContracts(prevContracts => prevContracts.filter(c => c.id !== contractId));
 export default function AdminPageWrapper() {
     return <AdminContent />;
 }
-
-    
-
-    
-
-    
-
-    
