@@ -13,17 +13,20 @@ export default function ProjectsGrid() {
 
   return (
     <section id="projects" className="w-full">
-        <div className="mb-12">
-            <div className="flex justify-center gap-12 text-center text-muted-foreground font-headline">
-                <Link href="#projects" className="group">
-                    <span className="text-lg">site web</span>
-                    <Separator className="mt-2 h-0.5 w-full bg-primary transition-all duration-300 group-hover:bg-primary/70"/>
-                </Link>
-                <Link href="#videos" className="group">
-                    <span className="text-lg">vidéo</span>
-                    <Separator className="mt-2 h-0.5 w-full bg-border transition-all duration-300 group-hover:bg-primary/70"/>
-                </Link>
-            </div>
+      <h2 className="text-3xl font-bold font-headline mb-8 text-center">
+        Mes Projets
+      </h2>
+      <div className="mb-12">
+        <div className="flex justify-center gap-12 text-center text-muted-foreground font-headline">
+          <Link href="#projects" className="group">
+            <span className="text-lg">site web</span>
+            <Separator className="mt-2 h-0.5 w-full bg-primary transition-all duration-300 group-hover:bg-primary/70" />
+          </Link>
+          <Link href="#videos" className="group">
+            <span className="text-lg">vidéo</span>
+            <Separator className="mt-2 h-0.5 w-full bg-border transition-all duration-300 group-hover:bg-primary/70" />
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -39,7 +42,9 @@ export default function ProjectsGrid() {
                 data-ai-hint={project.imageHint}
               />
             </div>
-            <CardTitle className="font-headline text-lg">Projet {index + 1}</CardTitle>
+            <CardTitle className="font-headline text-lg">
+              Projet {index + 1}
+            </CardTitle>
           </NeumorphicCard>
         ))}
       </div>
