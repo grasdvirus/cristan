@@ -1,7 +1,6 @@
 "use client";
 
 import Image from 'next/image';
-import Link from 'next/link';
 import Autoplay from 'embla-carousel-autoplay';
 
 import {
@@ -27,22 +26,20 @@ export default function HeroSection() {
       >
         <CarouselContent className="h-full">
           {heroImages.map((image, index) => (
-            <CarouselItem key={index} className="h-full">
-               <div className="w-full h-full relative">
-                <Image
-                  src={image.imageUrl}
-                  alt={image.description}
-                  fill
-                  className="object-cover"
-                  data-ai-hint={image.imageHint}
-                  priority={index === 0}
-                />
-                <div className="absolute inset-0 bg-black/40" />
-                <div className="absolute inset-0 flex items-center justify-center text-center text-white p-4">
-                  <h2 className="text-4xl md:text-6xl font-bold font-headline tracking-tight drop-shadow-lg">
-                    {image.description}
-                  </h2>
-                </div>
+            <CarouselItem key={index} className="h-full relative">
+              <Image
+                src={image.imageUrl}
+                alt={image.description}
+                fill
+                className="object-cover"
+                data-ai-hint={image.imageHint}
+                priority={index === 0}
+              />
+              <div className="absolute inset-0 bg-black/40" />
+              <div className="absolute inset-0 flex items-center justify-center text-center text-white p-4">
+                <h2 className="text-4xl md:text-6xl font-bold font-headline tracking-tight drop-shadow-lg">
+                  {image.description}
+                </h2>
               </div>
             </CarouselItem>
           ))}
