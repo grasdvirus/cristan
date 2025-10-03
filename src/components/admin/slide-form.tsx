@@ -16,10 +16,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { Slide } from '@/app/admin/page';
+import { ImageUpload } from './image-upload';
 
 const formSchema = z.object({
   description: z.string().min(1, 'La description est requise.'),
-  imageUrl: z.string().url('Veuillez entrer une URL valide.'),
+  imageUrl: z.string().min(1, "L'image est requise."),
   imageHint: z.string().optional(),
 });
 
@@ -42,12 +43,16 @@ export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProp
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="description"
+          name="imageUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Image</FormLabel>
               <FormControl>
-                <Textarea placeholder="Texte affiché sur le slide" {...field} />
+                <ImageUpload 
+                  value={field.value} 
+                  onChange={field.onChange} 
+                  disabled={isSubmitting}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -55,12 +60,12 @@ export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProp
         />
         <FormField
           control={form.control}
-          name="imageUrl"
+          name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>URL de l'image</FormLabel>
+              <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input placeholder="https://exemple.com/image.jpg" {...field} />
+                <Textarea placeholder="Texte affiché sur le slide" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

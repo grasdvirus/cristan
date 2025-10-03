@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { Video } from '@/app/admin/page';
+import { ImageUpload } from './image-upload';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Le titre est requis.'),
@@ -23,7 +24,7 @@ const formSchema = z.object({
   uploadDate: z.string().min(1, 'La date est requise.'),
   views: z.string().min(1, 'Le nombre de vues est requis.'),
   videoUrl: z.string().url('URL invalide'),
-  thumbnailUrl: z.string().url('URL d\'image invalide.'),
+  thumbnailUrl: z.string().min(1, 'La miniature est requise.'),
   thumbnailHint: z.string().optional(),
 });
 
@@ -51,7 +52,24 @@ export function VideoForm({ initialData, onSubmit, isSubmitting }: VideoFormProp
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
+        <FormField
+          control={form.control}
+          name="thumbnailUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Miniature de la vidéo</FormLabel>
+              <FormControl>
+                <ImageUpload 
+                  value={field.value} 
+                  onChange={field.onChange} 
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="title"
@@ -112,19 +130,6 @@ export function VideoForm({ initialData, onSubmit, isSubmitting }: VideoFormProp
               <FormLabel>URL de la vidéo (embed)</FormLabel>
               <FormControl>
                 <Input placeholder="https://www.youtube.com/embed/..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="thumbnailUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>URL de la miniature</FormLabel>
-              <FormControl>
-                <Input placeholder="https://exemple.com/image.jpg" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

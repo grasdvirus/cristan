@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { Project } from '@/app/admin/page';
+import { ImageUpload } from './image-upload';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Le titre est requis.'),
@@ -24,7 +25,7 @@ const formSchema = z.object({
   price: z.string().min(1, 'Le prix est requis.'),
   technologies: z.string().min(1, 'Les technologies sont requises.'),
   liveUrl: z.string().url('URL invalide').optional().or(z.literal('')),
-  imageUrl: z.string().url('URL d\'image invalide.'),
+  imageUrl: z.string().min(1, "L'image est requise."),
   imageHint: z.string().optional(),
 });
 
@@ -56,7 +57,24 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
+        <FormField
+          control={form.control}
+          name="imageUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Image du Projet</FormLabel>
+              <FormControl>
+                <ImageUpload 
+                  value={field.value} 
+                  onChange={field.onChange} 
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="title"
@@ -131,19 +149,6 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
               <FormLabel>URL du site en ligne</FormLabel>
               <FormControl>
                 <Input placeholder="https://projet-en-ligne.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="imageUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>URL de l'image</FormLabel>
-              <FormControl>
-                <Input placeholder="https://exemple.com/image.jpg" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
