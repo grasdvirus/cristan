@@ -9,7 +9,7 @@ import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProjectDetailsPage() {
@@ -103,14 +103,22 @@ export default function ProjectDetailsPage() {
             </div>
 
             <div className="mt-auto pt-8">
-                 <div className="flex items-center justify-between gap-4 p-4 rounded-lg neumorphic-card-inset-light dark:neumorphic-card-inset-dark">
+                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-lg neumorphic-card-inset-light dark:neumorphic-card-inset-dark">
                     <p className="text-2xl font-bold font-headline text-primary">{project.price}</p>
-                    <Button asChild size="lg" className="btn-neumorphic-light dark:btn-neumorphic-dark">
-                      <Link href={`/contract?projectId=${project.id}`}>
-                        <ShoppingCart className="mr-2 h-5 w-5"/>
-                        Commander
-                      </Link>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button asChild size="lg" variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                            <Link href={project.liveUrl || '#'} target="_blank">
+                                <ExternalLink className="mr-2 h-5 w-5"/>
+                                Visiter le site
+                            </Link>
+                        </Button>
+                        <Button asChild size="lg" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                          <Link href={`/contract?projectId=${project.id}`}>
+                            <ShoppingCart className="mr-2 h-5 w-5"/>
+                            Commander
+                          </Link>
+                        </Button>
+                    </div>
                 </div>
             </div>
 
