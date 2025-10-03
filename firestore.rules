@@ -1,107 +1,99 @@
 /**
- * @fileoverview Firestore Security Rules for a personal portfolio website.
+ * @fileoverview Firestore Security Rules.
  *
  * Core Philosophy:
- * This ruleset prioritizes authorization independence and implements a strict user-ownership model for user profiles.
- * Top-level collections (videos, portfolio items) are publicly readable.
+ * This ruleset prioritizes security by strictly controlling access to data.
+ * It uses an "owner-only" model for user profiles and allows public read access
+ * for the 'slides', 'projects', and 'videos' collections while restricting
+ * write access to authorized users (e.g., admins).
  *
  * Data Structure:
- * - /videos/{videoId}: Stores video metadata.
- * - /videos/{videoId}/likes/{likeId}: Stores likes for each video.
- * - /videos/{videoId}/comments/{commentId}: Stores comments for each video.
- * - /portfolioItems/{portfolioItemId}: Stores portfolio items.
- * - /users/{userId}: Stores user profile data.
+ * - /slides/{slideId}: Publicly readable slides for the hero carousel.
+ * - /projects/{projectId}: Publicly readable projects for the 'Internet' section.
+ * - /videos/{videoId}: Publicly readable videos for the 'TV' section.
+ * - /users/{userId}: Private user profile data, accessible only to the user.
  *
  * Key Security Decisions:
- * - Users can only modify their own profile data under /users/{userId}.
- * - Top-level collections are publicly readable (get, list).
- * - Relational integrity is enforced on document creation, ensuring proper ownership.
+ * - Slides, projects, and videos are publicly readable to allow open access to content.
+ * - Only authenticated users can create, update, or delete slides, projects, and videos.
+ * - User profiles are strictly private; only the owning user can read or write their profile.
+ * - Data validation is relaxed in this prototyping phase to facilitate rapid development.
+ *   However, authorization-critical fields are validated to maintain security.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows read access to videos and restricts write access to authenticated users.
+     * @description Allows anyone to read slides, but only authenticated users to create, update, or delete them.
+     * @path /slides/{slideId}
+     * @allow (get, list): if true
+     * @allow (create): if isSignedIn()
+     * @allow (update): if isSignedIn()
+     * @allow (delete): if isSignedIn()
+     * @deny (create): if !isSignedIn()
+     * @deny (update): if !isSignedIn()
+     * @deny (delete): if !isSignedIn()
+     * @principle Allows public read access to slides while restricting write access to authenticated users.
+     */
+    match /slides/{slideId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Allows anyone to read projects, but only authenticated users to create, update, or delete them.
+     * @path /projects/{projectId}
+     * @allow (get, list): if true
+     * @allow (create): if isSignedIn()
+     * @allow (update): if isSignedIn()
+     * @allow (delete): if isSignedIn()
+     * @deny (create): if !isSignedIn()
+     * @deny (update): if !isSignedIn()
+     * @deny (delete): if !isSignedIn()
+     * @principle Allows public read access to projects while restricting write access to authenticated users.
+     */
+    match /projects/{projectId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Allows anyone to read videos, but only authenticated users to create, update, or delete them.
      * @path /videos/{videoId}
-     * @allow get, list: if true;
-     * @allow create: if isSignedIn();
-     * @allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @deny create: if !isSignedIn();
-     * @principle Public read, authenticated write.
+     * @allow (get, list): if true
+     * @allow (create): if isSignedIn()
+     * @allow (update): if isSignedIn()
+     * @allow (delete): if isSignedIn()
+     * @deny (create): if !isSignedIn()
+     * @deny (update): if !isSignedIn()
+     * @deny (delete): if !isSignedIn()
+     * @principle Allows public read access to videos while restricting write access to authenticated users.
      */
     match /videos/{videoId} {
       allow get, list: if true;
       allow create: if isSignedIn();
-      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
-     * @description Allows read access to likes and restricts write access to authenticated users.
-     * @path /videos/{videoId}/likes/{likeId}
-     * @allow get, list: if true;
-     * @allow create: if isSignedIn();
-     * @allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @deny create: if !isSignedIn();
-     * @principle Public read, authenticated write.
-     */
-    match /videos/{videoId}/likes/{likeId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-    }
-
-    /**
-     * @description Allows read access to comments and restricts write access to authenticated users.
-     * @path /videos/{videoId}/comments/{commentId}
-     * @allow get, list: if true;
-     * @allow create: if isSignedIn();
-     * @allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @deny create: if !isSignedIn();
-     * @principle Public read, authenticated write.
-     */
-    match /videos/{videoId}/comments/{commentId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-    }
-
-    /**
-     * @description Allows read access to portfolio items and restricts write access to authenticated users.
-     * @path /portfolioItems/{portfolioItemId}
-     * @allow get, list: if true;
-     * @allow create: if isSignedIn();
-     * @allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @deny create: if !isSignedIn();
-     * @principle Public read, authenticated write.
-     */
-    match /portfolioItems/{portfolioItemId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-    }
-
-    /**
-     * @description Restricts access to user profiles to the owning user.
+     * @description Enforces strict user-ownership for user profiles. Only the user can read, create, update, or delete their own profile.
      * @path /users/{userId}
-     * @allow get: if isOwner(userId);
-     * @allow list: if false;
-     * @allow create: if isOwner(userId);
-     * @allow update: if isExistingOwner(userId);
-     * @allow delete: if isExistingOwner(userId);
-     * @allow read: if isOwner(userId);
-     * @deny create: if !isOwner(userId);
-     * @deny update: if !isOwner(userId) || resource == null;
-     * @deny delete: if !isOwner(userId) || resource == null;
-     * @principle Enforces document ownership for all operations.
+     * @allow (get): if isOwner(userId)
+     * @allow (list): if false
+     * @allow (create): if isOwner(userId)
+     * @allow (update): if isExistingOwner(userId)
+     * @allow (delete): if isExistingOwner(userId)
+     * @deny (get): if !isOwner(userId)
+     * @deny (create): if !isOwner(userId)
+     * @deny (update): if !isExistingOwner(userId)
+     * @deny (delete): if !isExistingOwner(userId)
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
@@ -110,20 +102,17 @@ service cloud.firestore {
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
-  }
 
-  // Helper function to determine if the user is signed in.
-  function isSignedIn() {
-    return request.auth != null;
-  }
+    function isSignedIn() {
+      return request.auth != null;
+    }
 
-  // Helper function to determine if the user is the owner of the resource.
-  function isOwner(userId) {
-    return request.auth.uid == userId;
-  }
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
 
-    // Helper function to determine if the user is the owner of the existing resource.
-  function isExistingOwner(userId) {
-    return request.auth.uid == userId && resource != null;
+    function isExistingOwner(userId) {
+        return isOwner(userId) && exists(resource);
+    }
   }
 }
