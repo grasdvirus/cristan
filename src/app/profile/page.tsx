@@ -2,7 +2,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Mail, LogOut, KeyRound } from 'lucide-react';
+import { Mail, LogOut, KeyRound, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { sendPasswordResetEmail } from 'firebase/auth';
 
@@ -59,7 +59,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-16 sm:py-24">
+    <div className="container mx-auto px-4 py-16 sm:py-24 space-y-8">
       <NeumorphicCard className="max-w-4xl mx-auto relative">
         {user && (
             <Button
@@ -101,6 +101,19 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
+        </div>
+      </NeumorphicCard>
+
+      <NeumorphicCard className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between">
+            <div>
+                <h2 className="text-xl font-bold font-headline">Informations</h2>
+                <p className="text-muted-foreground text-sm mt-1">En savoir plus sur notre projet.</p>
+            </div>
+            <Button variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                <Info className="mr-2 h-4 w-4" />
+                À propos de cristan
+            </Button>
         </div>
       </NeumorphicCard>
     </div>
