@@ -10,10 +10,10 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import heroImagesData from '@/lib/placeholder-images.json';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function HeroSection() {
-  const heroImages = heroImagesData.placeholderImages.filter((img) =>
+  const heroImages = PlaceHolderImages.filter((img) =>
     img.id.startsWith('hero-')
   );
 
