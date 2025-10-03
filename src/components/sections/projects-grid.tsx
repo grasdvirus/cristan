@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -11,19 +12,19 @@ const projectsData = [
     id: 'project-1',
     title: 'Site Vitrine Moderne',
     description: 'Un site élégant pour présenter votre entreprise, optimisé pour le SEO et les mobiles.',
-    price: 'À partir de 785 000 FCFA',
+    price: 'Prix: 785 000 FCFA',
   },
   {
     id: 'project-2',
     title: 'Application Web E-commerce',
     description: 'Une plateforme de vente en ligne complète avec gestion des stocks et paiement sécurisé.',
-    price: 'À partir de 2 300 000 FCFA',
+    price: 'Prix: 2 300 000 FCFA',
   },
   {
     id: 'project-3',
     title: 'Portfolio pour Créatifs',
     description: 'Mettez en valeur vos créations avec ce portfolio au design minimaliste et percutant.',
-    price: 'À partir de 525 000 FCFA',
+    price: 'Prix: 525 000 FCFA',
   },
   {
     id: 'project-4',
