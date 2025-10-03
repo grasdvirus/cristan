@@ -28,7 +28,6 @@ export default function ProfilePage() {
   const profileImage = PlaceHolderImages.find(
     (img) => img.id === 'profile-avatar'
   );
-  const skills = ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Node.js', 'Firebase', 'UI/UX Design', 'Neumorphism'];
   
   const getInitials = (name?: string | null) => {
     if (!name) return '??';
@@ -84,19 +83,6 @@ export default function ProfilePage() {
                 <span>Paris, France</span>
               </div>
             </div>
-          </div>
-        </div>
-
-        <Separator className="my-8" />
-
-        <div>
-          <h2 className="text-2xl font-bold font-headline mb-4">Compétences</h2>
-          <div className="flex flex-wrap gap-3">
-            {skills.map(skill => (
-                <Badge key={skill} variant="secondary" className="text-sm py-1 px-3 neumorphic-card-light dark:neumorphic-card-dark">
-                    {skill}
-                </Badge>
-            ))}
           </div>
         </div>
       </NeumorphicCard>
