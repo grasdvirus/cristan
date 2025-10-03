@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 export const metadata: Metadata = {
   title: 'Mon Portfolio Personnel',
   description: 'Un portfolio personnel moderne avec un style neumorphique.',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
 };
 
 export default function RootLayout({
