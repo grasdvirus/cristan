@@ -16,7 +16,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-16 sm:py-24">
           <div className="flex flex-col items-center mb-12">
               <h2 className="text-3xl font-bold font-headline mb-8 text-center">
-                Mes Créations
+                À découvrir
               </h2>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
                   <TabsList className="bg-transparent p-0">
