@@ -3,25 +3,26 @@ import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { CardDescription, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
 
 const projectsData = [
   {
     id: 'project-1',
     title: 'Site Vitrine Moderne',
     description: 'Un site élégant pour présenter votre entreprise, optimisé pour le SEO et les mobiles.',
-    price: 'À partir de 1200€',
+    price: 'À partir de 785 000 FCFA',
   },
   {
     id: 'project-2',
     title: 'Application Web E-commerce',
     description: 'Une plateforme de vente en ligne complète avec gestion des stocks et paiement sécurisé.',
-    price: 'À partir de 3500€',
+    price: 'À partir de 2 300 000 FCFA',
   },
   {
     id: 'project-3',
     title: 'Portfolio pour Créatifs',
     description: 'Mettez en valeur vos créations avec ce portfolio au design minimaliste et percutant.',
-    price: 'À partir de 800€',
+    price: 'À partir de 525 000 FCFA',
   },
   {
     id: 'project-4',
@@ -65,6 +66,7 @@ export default function ProjectsGrid() {
                         <CardDescription className="mt-2 text-sm text-muted-foreground flex-grow">{project.description}</CardDescription>
                         <p className='text-lg font-bold font-headline text-primary mt-4'>{project.price}</p>
                     </div>
+                     <Button className="w-full mt-4 btn-neumorphic-light dark:btn-neumorphic-dark">Commander</Button>
                     </NeumorphicCard>
                 </div>
             )
