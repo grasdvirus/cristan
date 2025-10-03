@@ -15,11 +15,17 @@ export default function Home() {
       <div className="container mx-auto px-4 py-16 sm:py-24">
         <div className="flex justify-center mb-12">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
-            <TabsList className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark p-2">
-              <TabsTrigger value="sites" className="text-lg data-[state=active]:neumorphic-card-light dark:data-[state=active]:neumorphic-card-dark">
+            <TabsList className="bg-transparent p-0">
+              <TabsTrigger 
+                value="sites" 
+                className="text-lg bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
+              >
                 Sites Web
               </TabsTrigger>
-              <TabsTrigger value="videos" className="text-lg data-[state=active]:neumorphic-card-light dark:data-[state=active]:neumorphic-card-dark">
+              <TabsTrigger 
+                value="videos" 
+                className="text-lg bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
+              >
                 Vidéos
               </TabsTrigger>
             </TabsList>
