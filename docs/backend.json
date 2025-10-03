@@ -1,130 +1,107 @@
 {
   "entities": {
+    "Slide": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Slide",
+      "type": "object",
+      "description": "Represents a slide in the hero carousel.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the slide."
+        },
+        "description": {
+          "type": "string",
+          "description": "The main text/title displayed on the slide."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the background image for the slide.",
+          "format": "uri"
+        },
+        "imageHint": {
+          "type": "string",
+          "description": "AI hint for the image."
+        }
+      },
+      "required": ["id", "description", "imageUrl"]
+    },
+    "Project": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Project",
+      "type": "object",
+      "description": "Represents a project in the 'Internet' section.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the project."
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "longDescription": {
+          "type": "string"
+        },
+        "price": {
+          "type": "string"
+        },
+        "technologies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "liveUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "imageUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "imageHint": {
+          "type": "string"
+        }
+      },
+      "required": ["id", "title", "description", "longDescription", "price", "technologies", "imageUrl"]
+    },
     "Video": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Video",
       "type": "object",
-      "description": "Represents a video embed in the portfolio.",
+      "description": "Represents a video in the 'TV' section.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the video."
+          "type": "string"
         },
         "title": {
-          "type": "string",
-          "description": "Title of the video."
+          "type": "string"
+        },
+        "uploadDate": {
+          "type": "string"
+        },
+        "views": {
+          "type": "string"
         },
         "description": {
-          "type": "string",
-          "description": "Description of the video."
+          "type": "string"
         },
-        "embedUrl": {
+        "videoUrl": {
           "type": "string",
-          "description": "URL for embedding the video.",
           "format": "uri"
         },
-        "likeIds": {
-          "type": "array",
-          "description": "References to Likes. (Relationship: Video 1:N Like)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "commentIds": {
-          "type": "array",
-          "description": "References to Comments. (Relationship: Video 1:N Comment)",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "title",
-        "description",
-        "embedUrl"
-      ]
-    },
-    "Like": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Like",
-      "type": "object",
-      "description": "Represents a like on a video.",
-      "properties": {
-        "id": {
+        "thumbnailUrl": {
           "type": "string",
-          "description": "Unique identifier for the like."
-        },
-        "videoId": {
-          "type": "string",
-          "description": "Reference to Video. (Relationship: Video 1:N Like)"
-        }
-      },
-      "required": [
-        "id",
-        "videoId"
-      ]
-    },
-    "Comment": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Comment",
-      "type": "object",
-      "description": "Represents a comment on a video.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the comment."
-        },
-        "videoId": {
-          "type": "string",
-          "description": "Reference to Video. (Relationship: Video 1:N Comment)"
-        },
-        "text": {
-          "type": "string",
-          "description": "Text content of the comment."
-        },
-        "author": {
-          "type": "string",
-          "description": "Author of the comment."
-        }
-      },
-      "required": [
-        "id",
-        "videoId",
-        "text",
-        "author"
-      ]
-    },
-    "PortfolioItem": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "PortfolioItem",
-      "type": "object",
-      "description": "Represents an item displayed in the portfolio grid.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the portfolio item."
-        },
-        "title": {
-          "type": "string",
-          "description": "Title of the portfolio item."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the portfolio item."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the image for the portfolio item.",
           "format": "uri"
+        },
+        "thumbnailHint": {
+          "type": "string"
         }
       },
-      "required": [
-        "id",
-        "title",
-        "description",
-        "imageUrl"
-      ]
+      "required": ["id", "title", "uploadDate", "views", "description", "videoUrl", "thumbnailUrl"]
     },
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -132,10 +109,6 @@
       "type": "object",
       "description": "Represents a user's profile.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user profile."
-        },
         "bio": {
           "type": "string",
           "description": "User's biography."
@@ -152,12 +125,7 @@
           "description": "User's contact information."
         }
       },
-      "required": [
-        "id",
-        "bio",
-        "skills",
-        "contactInfo"
-      ]
+      "required": ["bio", "skills", "contactInfo"]
     }
   },
   "auth": {
@@ -169,13 +137,42 @@
   "firestore": {
     "structure": [
       {
+        "path": "/slides/{slideId}",
+        "definition": {
+          "schema": {
+            "$ref": "#/entities/Slide"
+          },
+          "description": "Stores hero carousel slides.",
+          "params": [
+            {
+              "name": "slideId",
+              "description": "Unique identifier for the slide."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}",
+        "definition": {
+          "schema": {
+            "$ref": "#/entities/Project"
+          },
+          "description": "Stores internet projects.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "Unique identifier for the project."
+            }
+          ]
+        }
+      },
+      {
         "path": "/videos/{videoId}",
         "definition": {
-          "entityName": "Video",
           "schema": {
-            "$ref": "#/backend/entities/Video"
+            "$ref": "#/entities/Video"
           },
-          "description": "Stores video items, including title, description, and embed URL.",
+          "description": "Stores TV videos.",
           "params": [
             {
               "name": "videoId",
@@ -185,69 +182,12 @@
         }
       },
       {
-        "path": "/videos/{videoId}/likes/{likeId}",
-        "definition": {
-          "entityName": "Like",
-          "schema": {
-            "$ref": "#/backend/entities/Like"
-          },
-          "description": "Stores likes associated with a video.",
-          "params": [
-            {
-              "name": "videoId",
-              "description": "The ID of the video being liked."
-            },
-            {
-              "name": "likeId",
-              "description": "Unique identifier for the like."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/videos/{videoId}/comments/{commentId}",
-        "definition": {
-          "entityName": "Comment",
-          "schema": {
-            "$ref": "#/backend/entities/Comment"
-          },
-          "description": "Stores comments associated with a video.",
-          "params": [
-            {
-              "name": "videoId",
-              "description": "The ID of the video being commented on."
-            },
-            {
-              "name": "commentId",
-              "description": "Unique identifier for the comment."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/portfolioItems/{portfolioItemId}",
-        "definition": {
-          "entityName": "PortfolioItem",
-          "schema": {
-            "$ref": "#/backend/entities/PortfolioItem"
-          },
-          "description": "Stores portfolio items with details such as title, description, and image URL.",
-          "params": [
-            {
-              "name": "portfolioItemId",
-              "description": "Unique identifier for the portfolio item."
-            }
-          ]
-        }
-      },
-      {
         "path": "/users/{userId}",
         "definition": {
-          "entityName": "UserProfile",
           "schema": {
-            "$ref": "#/backend/entities/UserProfile"
+            "$ref": "#/entities/UserProfile"
           },
-          "description": "Stores user profile information. This collection is path-based owned, ensuring only the authenticated user can modify their own profile.",
+          "description": "Stores user profile information.",
           "params": [
             {
               "name": "userId",
@@ -256,7 +196,6 @@
           ]
         }
       }
-    ],
-    "reasoning": "The Firestore data structure is designed to support a personal portfolio website with videos, likes, comments, and a profile page. It prioritizes authorization independence by avoiding hierarchical `get()` calls and ensures clear intent for debugging. The structure segregates data based on access needs and uses consistent access modeling patterns.\n\nVideos, likes and comments are stored at the top level for simple list queries. User profiles are stored under a `/users/{userId}` collection. \n\nAuthorization Independence: There's no reliance on parent document data for authorization. For instance, comments do not need to check the video document to validate the user's ability to create a comment.\n\nQAPs:\n*   List operation is enabled on each top-level collection by making sure the security rules only validate the content of the documents, without requiring reads to other documents.\n*   The structure facilitates listing videos, comments, and likes independently which is efficient for querying and displaying data.\n"
+    ]
   }
 }

@@ -4,20 +4,74 @@
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { videosData, Video } from '@/lib/videos-data';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Calendar, Eye } from 'lucide-react';
+import { useCollection, useDoc, useFirebase, useMemoFirebase } from '@/firebase';
+import { collection, doc, query } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
+
+export type Video = {
+    id: string;
+    title: string;
+    uploadDate: string;
+    views: string;
+    description: string;
+    videoUrl: string;
+    thumbnailUrl: string;
+    thumbnailHint: string;
+};
+
 
 export default function VideoDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { id } = params;
+  const { firestore } = useFirebase();
 
-  const video = videosData.find((v) => v.id === id) as (Omit<Video, 'views'> & { views: string | number });
-  const otherVideos = videosData.filter((v) => v.id !== id);
+  const videoRef = useMemoFirebase(() => {
+    if (!firestore || !id) return null;
+    return doc(firestore, 'videos', id as string);
+  }, [firestore, id]);
+  const { data: video, isLoading: isVideoLoading } = useDoc<Video>(videoRef);
+
+  const otherVideosQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'videos'));
+  }, [firestore]);
+  const { data: allVideos, isLoading: areVideosLoading } = useCollection<Video>(otherVideosQuery);
+
+  const otherVideos = allVideos?.filter(v => v.id !== id);
+
+  if (isVideoLoading) {
+    return (
+      <div className="container mx-auto px-4 py-16 sm:py-24">
+        <Skeleton className="h-10 w-32 mb-8" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+          <div className="lg:col-span-2">
+            <Skeleton className="aspect-video w-full rounded-2xl" />
+            <NeumorphicCard className="w-full mt-8 p-6">
+                <Skeleton className="h-8 w-3/4 mb-4" />
+                <Skeleton className="h-4 w-1/2 mb-6" />
+                <Skeleton className="h-20 w-full" />
+            </NeumorphicCard>
+          </div>
+          <div className="lg:col-span-1">
+            <NeumorphicCard className="p-6">
+                <Skeleton className="h-8 w-1/2 mb-4" />
+                <div className="flex flex-col gap-4">
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                </div>
+            </NeumorphicCard>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   if (!video) {
     return (
@@ -91,27 +145,31 @@ export default function VideoDetailsPage() {
           <NeumorphicCard>
             <h2 className="text-2xl font-bold font-headline mb-4">À suivre</h2>
             <div className="flex flex-col gap-4">
-              {otherVideos.map((suggVideo) => {
-                const thumbnail = PlaceHolderImages.find(img => img.id === suggVideo.thumbnailId);
+              {areVideosLoading && (
+                  <>
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                  </>
+              )}
+              {otherVideos?.map((suggVideo) => {
                 return (
                   <Link href={`/videos/${suggVideo.id}`} key={suggVideo.id} className="group">
                     <NeumorphicCard 
                         className="p-3 flex items-start gap-4 hover:scale-[1.02] transition-transform duration-200"
                     >
-                      {thumbnail && (
                         <div className="w-2/5 shrink-0">
                             <NeumorphicCard inset className="overflow-hidden">
                                 <Image
-                                    src={thumbnail.imageUrl}
-                                    alt={thumbnail.description}
+                                    src={suggVideo.thumbnailUrl}
+                                    alt={suggVideo.title}
                                     width={160}
                                     height={90}
                                     className="w-full h-auto object-cover"
-                                    data-ai-hint={thumbnail.imageHint}
+                                    data-ai-hint={suggVideo.thumbnailHint}
                                 />
                             </NeumorphicCard>
                         </div>
-                      )}
                       <div className="w-3/5">
                         <h3 className="font-semibold text-sm leading-tight group-hover:text-primary transition-colors">
                           {suggVideo.title}

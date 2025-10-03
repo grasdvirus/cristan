@@ -3,23 +3,54 @@
 
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { projectsData, Project } from '@/lib/projects-data';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, ShoppingCart, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
+
+export type Project = {
+    id: string;
+    title: string;
+    description: string;
+    longDescription: string;
+    price: string;
+    technologies: string[];
+    liveUrl?: string;
+    imageUrl: string;
+    imageHint: string;
+};
 
 export default function ProjectDetailsPage() {
   const params = useParams();
   const { id } = params;
+  const { firestore } = useFirebase();
 
-  const project: Project | undefined = projectsData.find((p) => p.id === id);
-  const projectImage = PlaceHolderImages.find((img) => img.id === id);
+  const projectRef = useMemoFirebase(() => {
+    if (!firestore || !id) return null;
+    return doc(firestore, 'projects', id as string);
+  }, [firestore, id]);
 
-  if (!project || !projectImage) {
+  const { data: project, isLoading } = useDoc<Project>(projectRef);
+  
+  if (isLoading) {
+    return (
+        <div className="container mx-auto px-4 py-16 sm:py-24">
+            <NeumorphicCard className="max-w-5xl mx-auto p-8">
+                <Skeleton className="h-96 w-full mb-8" />
+                <Skeleton className="h-10 w-3/4 mb-4" />
+                <Skeleton className="h-6 w-1/2 mb-8" />
+                <Skeleton className="h-24 w-full" />
+            </NeumorphicCard>
+        </div>
+    );
+  }
+
+  if (!project) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold">Projet non trouvé</h1>
@@ -44,28 +75,15 @@ export default function ProjectDetailsPage() {
           <div className="flex flex-col gap-4">
             <div className="overflow-hidden rounded-2xl">
                 <Image
-                    src={projectImage.imageUrl}
+                    src={project.imageUrl}
                     alt={project.title}
                     width={800}
                     height={600}
                     className="w-full h-auto object-cover"
-                    data-ai-hint={projectImage.imageHint}
+                    data-ai-hint={project.imageHint}
                 />
             </div>
-             <div className="hidden md:grid grid-cols-3 gap-4">
-                {PlaceHolderImages.slice(1, 4).map(thumb => (
-                     <div key={thumb.id} className="overflow-hidden rounded-lg">
-                        <Image
-                            src={thumb.imageUrl}
-                            alt={thumb.description}
-                            width={200}
-                            height={150}
-                            className="w-full h-auto object-cover"
-                            data-ai-hint={thumb.imageHint}
-                        />
-                    </div>
-                ))}
-            </div>
+            
           </div>
 
           {/* Details Column */}

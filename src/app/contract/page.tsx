@@ -3,17 +3,30 @@
 
 import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { projectsData } from '@/lib/projects-data';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { ContractForm } from '@/components/contract-form';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+
+type Project = {
+    id: string;
+    title: string;
+    price: string;
+}
 
 function ContractPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const projectId = searchParams.get('projectId');
-  const project = projectsData.find((p) => p.id === projectId);
+  
+  const { firestore } = useFirebase();
+  const projectRef = useMemoFirebase(() => {
+    if (!firestore || !projectId) return null;
+    return doc(firestore, 'projects', projectId);
+  }, [firestore, projectId]);
+  const { data: project, isLoading } = useDoc<Project>(projectRef);
 
   return (
     <div className="container mx-auto px-4 py-16 sm:py-24">
@@ -40,6 +53,12 @@ function ContractPageContent() {
                 <p className='text-muted-foreground mt-1'>Prix : {project.price}</p>
             </NeumorphicCard>
         )}
+         {isLoading && (
+             <NeumorphicCard inset className="mt-8 p-4 text-center">
+                 <div className="h-6 bg-muted rounded w-3/4 mx-auto"></div>
+                 <div className="h-4 bg-muted rounded w-1/4 mx-auto mt-2"></div>
+             </NeumorphicCard>
+         )}
 
         <div className="mt-8">
             <ContractForm />
