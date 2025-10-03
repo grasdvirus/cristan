@@ -9,8 +9,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm">
       <div className={cn('container flex h-20 items-center')}>
-        <div className="flex-1">
-          {/* Espace réservé pour l'alignement */}
+        <div className="flex flex-1 items-center justify-start">
+          <ThemeToggleButton />
         </div>
         <div className="flex-1 text-center">
           <Link href="/" className="flex items-center justify-center gap-2">
@@ -46,7 +46,6 @@ export default function Header() {
               <User className="h-[1.2rem] w-[1.2rem]" />
             </Button>
           </Link>
-          <ThemeToggleButton />
         </nav>
       </div>
     </header>
