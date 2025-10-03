@@ -2,20 +2,32 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { projectsData } from '@/lib/projects-data';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { ContractForm } from '@/components/contract-form';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 function ContractPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const projectId = searchParams.get('projectId');
   const project = projectsData.find((p) => p.id === projectId);
 
   return (
     <div className="container mx-auto px-4 py-16 sm:py-24">
       <NeumorphicCard className="max-w-4xl mx-auto">
-        <div className="text-center">
+        <div className="relative text-center">
+            <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => router.back()} 
+                className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+                aria-label="Retour"
+            >
+                <ArrowLeft className="h-5 w-5" />
+            </Button>
             <h1 className="text-4xl font-bold font-headline">Formulaire de Commande</h1>
             <p className="text-muted-foreground mt-2">
                 Veuillez remplir les informations ci-dessous pour démarrer votre projet.
