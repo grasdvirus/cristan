@@ -19,8 +19,8 @@ import { Label } from '@/components/ui/label';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import { Chrome } from 'lucide-react';
+import Link from 'next/link';
 
 const loginSchema = z.object({
   email: z.string().email('Adresse e-mail invalide'),
@@ -34,29 +34,33 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
 
-  const handleEmailPasswordAction = async (values: LoginFormValues, action: 'signIn' | 'signUp') => {
+  const handleEmailPasswordAction = async (values: LoginFormValues) => {
     if (!auth) return;
     setIsSubmitting(true);
     setError(null);
     try {
-      if (action === 'signIn') {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
-      } else {
+      if (isSignUp) {
         await createUserWithEmailAndPassword(auth, values.email, values.password);
+      } else {
+        await signInWithEmailAndPassword(auth, values.email, values.password);
       }
       router.push('/');
     } catch (err: any) {
-      setError(err.message);
+      const friendlyMessage = err.code === 'auth/invalid-credential' 
+        ? 'Email ou mot de passe incorrect.' 
+        : err.message;
+      setError(friendlyMessage);
       toast({
         variant: 'destructive',
         title: 'Erreur d\'authentification',
-        description: err.message,
+        description: friendlyMessage,
       });
     } finally {
       setIsSubmitting(false);
@@ -83,13 +87,20 @@ export default function LoginPage() {
     }
   };
 
+  const toggleFormMode = () => {
+    setIsSignUp(!isSignUp);
+    setError(null);
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <NeumorphicCard className="w-full max-w-md">
-        <h1 className="text-3xl font-bold font-headline text-center mb-2">Bienvenue</h1>
-        <p className="text-muted-foreground text-center mb-6">Connectez-vous pour continuer</p>
+      <NeumorphicCard className="w-full max-w-sm">
+        <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold font-headline">{isSignUp ? 'Créer un compte' : 'Bienvenue'}</h1>
+            <p className="text-muted-foreground mt-2">{isSignUp ? 'Remplissez les champs pour vous inscrire.' : 'Connectez-vous pour continuer'}</p>
+        </div>
         
-        <form className="space-y-4">
+        <form onSubmit={handleSubmit(handleEmailPasswordAction)} className="space-y-4">
           <div>
             <Label htmlFor="email">Email</Label>
             <Input 
@@ -112,28 +123,26 @@ export default function LoginPage() {
             />
             {errors.password && <p className="text-sm text-destructive mt-1">{errors.password.message}</p>}
           </div>
-          {error && <p className="text-sm text-destructive text-center">{error}</p>}
+          {error && <p className="text-sm text-destructive text-center mt-2">{error}</p>}
 
-          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+          <div className="pt-4">
             <Button 
-              type="button"
-              onClick={handleSubmit(vals => handleEmailPasswordAction(vals, 'signIn'))} 
+              type="submit"
               disabled={isSubmitting}
               className="w-full btn-neumorphic-light dark:btn-neumorphic-dark"
+              size="lg"
             >
-              {isSubmitting ? 'Connexion...' : 'Se connecter'}
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSubmit(vals => handleEmailPasswordAction(vals, 'signUp'))} 
-              disabled={isSubmitting}
-              variant="secondary"
-              className="w-full btn-neumorphic-light dark:btn-neumorphic-dark"
-            >
-              {isSubmitting ? 'Inscription...' : 'S\'inscrire'}
+              {isSubmitting ? 'Chargement...' : (isSignUp ? 'S\'inscrire' : 'Se connecter')}
             </Button>
           </div>
         </form>
+
+        <p className="text-center text-sm text-muted-foreground mt-6">
+            {isSignUp ? 'Vous avez déjà un compte ?' : 'Pas encore de compte ?'}{' '}
+            <button onClick={toggleFormMode} className="font-semibold text-primary hover:underline focus:outline-none">
+                {isSignUp ? 'Se connecter' : 'S\'inscrire'}
+            </button>
+        </p>
 
         <div className="my-6 flex items-center">
             <Separator className="flex-grow" />
