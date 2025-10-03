@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -30,7 +31,7 @@ export default function Home() {
                       value="videos" 
                       className="text-lg bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
                   >
-                      Vidéos
+                      TV
                   </TabsTrigger>
                   </TabsList>
               </Tabs>
