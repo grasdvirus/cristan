@@ -51,9 +51,8 @@ export default function VideoDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
         {/* Main Content */}
         <div className="lg:col-span-2">
-          <NeumorphicCard className="w-full">
             {/* Video Player */}
-            <NeumorphicCard inset className="aspect-video overflow-hidden">
+             <div className="aspect-video overflow-hidden rounded-2xl neumorphic-card-inset-light dark:neumorphic-card-inset-dark">
               <iframe
                 src={video.videoUrl}
                 title={video.title}
@@ -62,10 +61,11 @@ export default function VideoDetailsPage() {
                 allowFullScreen
                 className="w-full h-full"
               ></iframe>
-            </NeumorphicCard>
+            </div>
 
             {/* Video Info */}
-            <div className="mt-6">
+            <NeumorphicCard className="w-full mt-8">
+            <div className="">
               <h1 className="text-3xl font-bold font-headline">{video.title}</h1>
               <div className="flex items-center text-sm text-muted-foreground mt-2 gap-4">
                   <div className='flex items-center gap-2'>
