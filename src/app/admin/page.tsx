@@ -66,9 +66,18 @@ function SlidesManager() {
         if (!firestore) return;
         setIsSubmitting(true);
 
-        const promise = editingSlide
-            ? updateDocumentNonBlocking(doc(firestore, 'slides', editingSlide.id), values)
-            : addDocumentNonBlocking(collection(firestore, 'slides'), values);
+        const promise = new Promise<void>((resolve, reject) => {
+            try {
+                if (editingSlide) {
+                    updateDocumentNonBlocking(doc(firestore, 'slides', editingSlide.id), values);
+                    resolve();
+                } else {
+                    addDocumentNonBlocking(collection(firestore, 'slides'), values).then(() => resolve()).catch(reject);
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
 
         promise.then(() => {
             toast({ title: `Slide ${editingSlide ? 'modifié' : 'ajouté'} avec succès.` });
@@ -178,9 +187,18 @@ function ProjectsManager() {
             technologies: values.technologies.split(',').map(tech => tech.trim()),
         };
 
-        const promise = editingProject
-            ? updateDocumentNonBlocking(doc(firestore, 'projects', editingProject.id), dataToSave)
-            : addDocumentNonBlocking(collection(firestore, 'projects'), dataToSave);
+        const promise = new Promise<void>((resolve, reject) => {
+            try {
+                if (editingProject) {
+                    updateDocumentNonBlocking(doc(firestore, 'projects', editingProject.id), dataToSave);
+                    resolve();
+                } else {
+                    addDocumentNonBlocking(collection(firestore, 'projects'), dataToSave).then(() => resolve()).catch(reject);
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
 
         promise.then(() => {
             toast({ title: `Projet ${editingProject ? 'modifié' : 'ajouté'} avec succès.` });
@@ -285,9 +303,18 @@ function VideosManager() {
     const handleFormSubmit = (values: VideoFormValues) => {
         if (!firestore) return;
         setIsSubmitting(true);
-        const promise = editingVideo
-            ? updateDocumentNonBlocking(doc(firestore, 'videos', editingVideo.id), values)
-            : addDocumentNonBlocking(collection(firestore, 'videos'), values);
+        const promise = new Promise<void>((resolve, reject) => {
+            try {
+                if (editingVideo) {
+                    updateDocumentNonBlocking(doc(firestore, 'videos', editingVideo.id), values);
+                    resolve();
+                } else {
+                    addDocumentNonBlocking(collection(firestore, 'videos'), values).then(() => resolve()).catch(reject);
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
         
         promise.then(() => {
             toast({ title: `Vidéo ${editingVideo ? 'modifiée' : 'ajoutée'} avec succès.` });
@@ -415,3 +442,5 @@ export default function AdminPage() {
         </div>
     );
 }
+
+    
