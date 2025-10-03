@@ -2,8 +2,9 @@
 'use client';
 
 import Image from 'next/image';
-import { Mail, MapPin, Phone, LogOut } from 'lucide-react';
+import { Mail, LogOut, KeyRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 import { useFirebase } from '@/firebase';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -13,15 +14,34 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ProfilePage() {
   const { auth, user } = useFirebase();
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleSignOut = async () => {
     if (auth) {
       await auth.signOut();
       router.push('/login');
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!auth || !user?.email) return;
+    try {
+      await sendPasswordResetEmail(auth, user.email);
+      toast({
+        title: 'E-mail envoyé',
+        description: 'Un lien pour réinitialiser votre mot de passe a été envoyé à votre adresse e-mail.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: error.message,
+      });
     }
   };
 
@@ -66,13 +86,19 @@ export default function ProfilePage() {
                 </Avatar>
             </NeumorphicCard>
           </div>
-          <div className="text-center sm:text-left">
+          <div className="text-center sm:text-left w-full">
             <h1 className="text-4xl font-bold font-headline">{ user?.displayName || 'Jean Dupont' }</h1>
-            <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-4 text-sm text-muted-foreground">
+            <div className="mt-4 flex flex-col items-center sm:items-start gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
                 <span>{ user?.email || 'jean.dupont@email.com' }</span>
               </div>
+               {user?.providerData.some(p => p.providerId === 'password') && (
+                <Button onClick={handlePasswordReset} variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  Réinitialiser le mot de passe
+                </Button>
+              )}
             </div>
           </div>
         </div>
