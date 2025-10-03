@@ -1,0 +1,184 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user profile with personal information and preferences.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user profile."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "bio": {
+          "type": "string",
+          "description": "A short biography of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "profileImageUrl": {
+          "type": "string",
+          "description": "URL to the user's profile image.",
+          "format": "uri"
+        },
+        "skills": {
+          "type": "array",
+          "description": "An array of skills possessed by the user.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email"
+      ]
+    },
+    "Video": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Video",
+      "type": "object",
+      "description": "Represents an embedded video with its associated details and interactions.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the video."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the video."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the video."
+        },
+        "embedUrl": {
+          "type": "string",
+          "description": "The URL for embedding the video.",
+          "format": "uri"
+        },
+        "likeCount": {
+          "type": "number",
+          "description": "The number of likes the video has received."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "embedUrl"
+      ]
+    },
+    "Comment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Comment",
+      "type": "object",
+      "description": "Represents a comment on a video.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the comment."
+        },
+        "videoId": {
+          "type": "string",
+          "description": "Reference to Video. (Relationship: Video 1:N Comment)"
+        },
+        "userProfileId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Comment)"
+        },
+        "text": {
+          "type": "string",
+          "description": "The text content of the comment."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time when the comment was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "videoId",
+        "userProfileId",
+        "text",
+        "createdAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}/profile",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile data. The 'userId' parameter corresponds to the Firebase Auth UID, ensuring only the authenticated user can access their profile.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/videos/{videoId}",
+        "definition": {
+          "entityName": "Video",
+          "schema": {
+            "$ref": "#/backend/entities/Video"
+          },
+          "description": "Stores video metadata.",
+          "params": [
+            {
+              "name": "videoId",
+              "description": "The unique identifier of the video."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/videos/{videoId}/comments/{commentId}",
+        "definition": {
+          "entityName": "Comment",
+          "schema": {
+            "$ref": "#/backend/entities/Comment"
+          },
+          "description": "Stores comments associated with a video. Includes denormalized 'userProfileId' for authorization independence.",
+          "params": [
+            {
+              "name": "videoId",
+              "description": "The unique identifier of the video."
+            },
+            {
+              "name": "commentId",
+              "description": "The unique identifier of the comment."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure secure data access and efficient querying while adhering to the principles of Authorization Independence and Structural Segregation. User profiles are stored in a path-based structure under `/users/{userId}/profile` to ensure that profile data is directly associated with the authenticated user, simplifying security rules and enabling atomic operations. Videos are stored in `/videos/{videoId}`, allowing easy listing and retrieval. Comments are nested under videos at `/videos/{videoId}/comments/{commentId}`. To achieve Authorization Independence, each comment denormalizes the `userProfileId` which represents the author, this will allow efficient filtering of comments by the user. This approach avoids complex `get()` calls in security rules, improving performance and security, and supports straightforward `list` operations without compromising data integrity."
+  }
+}

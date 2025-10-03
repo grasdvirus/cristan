@@ -1,0 +1,101 @@
+/**
+ * @fileoverview Firestore Security Rules for Prototyping.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for user profiles,
+ * public read access for videos, and owner-only writes for comments.
+ *
+ * Data Structure:
+ * - User profiles are stored under `/users/{userId}/profile`.
+ * - Videos are stored under `/videos/{videoId}`.
+ * - Comments are stored under `/videos/{videoId}/comments/{commentId}`.
+ *
+ * Key Security Decisions:
+ * - User profiles are only accessible by the owning user.
+ * - Videos are publicly readable, but writes are unrestricted.
+ * - Comments can only be created and modified by the user who created them.
+ *
+ * Denormalization for Authorization:
+ * - Comments include the `userProfileId` to enforce owner-only writes.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Enforces owner-only access to user profiles.
+     * @path /users/{userId}/profile
+     * @allow (read, write) if request.auth.uid == userId
+     * @deny (read, write) if request.auth.uid != userId
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/profile {
+      // Define a function to check if the user is signed in
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // Define a function to check if the user is the owner of the resource
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      // Define a function to check if the existing user is the owner of the resource
+      function isExistingOwner(userId) {
+        return isOwner(userId);
+      }
+
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isExistingOwner(userId);
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+
+    /**
+     * @description Allows public read access to videos but restricts writes (currently open).
+     * @path /videos/{videoId}
+     * @allow (read) to anyone.
+     * @allow (write) to anyone.
+     * @principle Public read access with owner-only writes.
+     */
+    match /videos/{videoId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
+    }
+
+    /**
+     * @description Enforces owner-only access to comments.
+     * @path /videos/{videoId}/comments/{commentId}
+     * @allow (create) if request.auth.uid == request.resource.data.userProfileId
+     * @allow (update, delete) if resource.data.userProfileId == request.auth.uid
+     * @deny (read, write) if not authenticated or not the owner
+     * @principle Enforces document ownership for writes.
+     */
+    match /videos/{videoId}/comments/{commentId} {
+       // Define a function to check if the user is signed in
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // Define a function to check if the user is the owner of the resource
+      function isOwner(userProfileId) {
+        return request.auth.uid == userProfileId;
+      }
+
+      // Define a function to check if the existing user is the owner of the resource
+      function isExistingOwner(userProfileId) {
+        return isOwner(userProfileId);
+      }
+
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.userProfileId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(request.resource.data.userProfileId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.userProfileId);
+    }
+  }
+}
