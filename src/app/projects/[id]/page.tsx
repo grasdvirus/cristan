@@ -53,7 +53,7 @@ export default function ProjectDetailsPage() {
                 />
             </div>
              <div className="hidden md:grid grid-cols-3 gap-4">
-                {PlaceHolderImages.slice(0, 3).map(thumb => (
+                {PlaceHolderImages.slice(1, 4).map(thumb => (
                      <div key={thumb.id} className="overflow-hidden rounded-lg">
                         <Image
                             src={thumb.imageUrl}
