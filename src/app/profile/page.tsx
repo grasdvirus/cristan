@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function ProfilePage() {
   const { auth, user } = useFirebase();
@@ -28,6 +29,15 @@ export default function ProfilePage() {
     (img) => img.id === 'profile-avatar'
   );
   const skills = ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Node.js', 'Firebase', 'UI/UX Design', 'Neumorphism'];
+  
+  const getInitials = (name?: string | null) => {
+    if (!name) return '??';
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
 
   return (
     <div className="container mx-auto px-4 py-16 sm:py-24">
@@ -47,20 +57,16 @@ export default function ProfilePage() {
             </Button>
         )}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
-          {profileImage && (
-            <div className="relative w-32 h-32 sm:w-40 sm:h-40 shrink-0">
-               <NeumorphicCard className="w-full h-full rounded-full p-2">
-                <Image
-                  src={profileImage.imageUrl}
-                  alt={profileImage.description}
-                  width={160}
-                  height={160}
-                  className="rounded-full object-cover"
-                  data-ai-hint={profileImage.imageHint}
-                />
-              </NeumorphicCard>
-            </div>
-          )}
+          <div className="relative w-32 h-32 sm:w-40 sm:h-40 shrink-0">
+             <NeumorphicCard className="w-full h-full rounded-full p-2">
+                <Avatar className='w-full h-full text-4xl'>
+                    <AvatarImage src={user?.photoURL || profileImage?.imageUrl || ''} alt={user?.displayName || 'Avatar'} />
+                    <AvatarFallback className='bg-muted'>
+                        {getInitials(user?.displayName)}
+                    </AvatarFallback>
+                </Avatar>
+            </NeumorphicCard>
+          </div>
           <div className="text-center sm:text-left">
             <h1 className="text-4xl font-bold font-headline">{ user?.displayName || 'Jean Dupont' }</h1>
             <p className="text-xl text-primary font-medium mt-1">Développeur Full-Stack & Designer UI</p>
