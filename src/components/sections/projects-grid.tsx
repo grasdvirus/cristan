@@ -1,7 +1,10 @@
 import Image from 'next/image';
+import Link from 'next/link';
+
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { CardTitle } from '../ui/card';
+import { Separator } from '@/components/ui/separator';
 
 export default function ProjectsGrid() {
   const projectImages = PlaceHolderImages.filter((img) =>
@@ -10,7 +13,19 @@ export default function ProjectsGrid() {
 
   return (
     <section id="projects" className="w-full">
-      <h2 className="text-3xl font-bold font-headline mb-8 text-center lg:text-left">Mes Projets</h2>
+        <div className="mb-12">
+            <div className="flex justify-center gap-12 text-center text-muted-foreground font-headline">
+                <Link href="#projects" className="group">
+                    <span className="text-lg">site web</span>
+                    <Separator className="mt-2 h-0.5 w-full bg-primary transition-all duration-300 group-hover:bg-primary/70"/>
+                </Link>
+                <Link href="#videos" className="group">
+                    <span className="text-lg">vidéo</span>
+                    <Separator className="mt-2 h-0.5 w-full bg-border transition-all duration-300 group-hover:bg-primary/70"/>
+                </Link>
+            </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
         {projectImages.map((project, index) => (
           <NeumorphicCard key={project.id} className="group overflow-hidden">
