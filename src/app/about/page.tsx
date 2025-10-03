@@ -12,7 +12,7 @@ import { BookOpen, HelpCircle, Zap } from 'lucide-react';
 export default function AboutPage() {
   return (
     <div className="container mx-auto px-4 py-16 sm:py-24">
-      <NeumorphicCard>
+      <NeumorphicCard className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold font-headline">À Propos de Cristan</h1>
           <p className="text-muted-foreground mt-2">
