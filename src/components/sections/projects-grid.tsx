@@ -1,38 +1,13 @@
 
 import Image from 'next/image';
+import Link from 'next/link';
 
+import { projectsData } from '@/lib/projects-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { CardDescription, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Plus } from 'lucide-react';
-
-const projectsData = [
-  {
-    id: 'project-1',
-    title: 'Site Vitrine Moderne',
-    description: 'Un site élégant pour présenter votre entreprise, optimisé pour le SEO et les mobiles.',
-    price: 'Prix: 785 000 FCFA',
-  },
-  {
-    id: 'project-2',
-    title: 'Application Web E-commerce',
-    description: 'Une plateforme de vente en ligne complète avec gestion des stocks et paiement sécurisé.',
-    price: 'Prix: 2 300 000 FCFA',
-  },
-  {
-    id: 'project-3',
-    title: 'Portfolio pour Créatifs',
-    description: 'Mettez en valeur vos créations avec ce portfolio au design minimaliste et percutant.',
-    price: 'Prix: 525 000 FCFA',
-  },
-  {
-    id: 'project-4',
-    title: 'Tableau de Bord Analytique',
-    description: 'Visualisez vos données clés avec un tableau de bord interactif et personnalisable.',
-    price: 'Sur devis',
-  },
-];
 
 export default function ProjectsGrid() {
   const projectImages = PlaceHolderImages.filter((img) =>
@@ -68,10 +43,14 @@ export default function ProjectsGrid() {
                         <CardDescription className="mt-2 text-sm text-muted-foreground flex-grow">{project.description}</CardDescription>
                         <p className='text-lg font-bold font-headline text-primary mt-4'>{project.price}</p>
                     </div>
-                     <Button size="icon" className="rounded-full absolute bottom-4 right-4 btn-neumorphic-light dark:btn-neumorphic-dark">
-                        <Plus className="h-4 w-4" />
-                        <span className="sr-only">Commander</span>
-                     </Button>
+                     <Link href={`/projects/${project.id}`} passHref>
+                        <Button asChild size="icon" className="rounded-full absolute bottom-4 right-4 btn-neumorphic-light dark:btn-neumorphic-dark">
+                            <a>
+                                <Plus className="h-4 w-4" />
+                                <span className="sr-only">Détails</span>
+                            </a>
+                        </Button>
+                     </Link>
                     </NeumorphicCard>
                 </div>
             )
