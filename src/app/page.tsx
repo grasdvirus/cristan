@@ -25,7 +25,7 @@ export default function Home() {
                       value="sites" 
                       className="text-lg bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
                   >
-                      Sites Web
+                      internet
                   </TabsTrigger>
                   <TabsTrigger 
                       value="videos" 
