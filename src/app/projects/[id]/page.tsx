@@ -42,7 +42,7 @@ export default function ProjectDetailsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
           {/* Image Column */}
           <div className="flex flex-col gap-4">
-            <NeumorphicCard inset className="overflow-hidden">
+            <div className="overflow-hidden rounded-2xl">
                 <Image
                     src={projectImage.imageUrl}
                     alt={project.title}
@@ -51,19 +51,19 @@ export default function ProjectDetailsPage() {
                     className="w-full h-auto object-cover"
                     data-ai-hint={projectImage.imageHint}
                 />
-            </NeumorphicCard>
+            </div>
              <div className="hidden md:grid grid-cols-3 gap-4">
                 {PlaceHolderImages.slice(0, 3).map(thumb => (
-                     <NeumorphicCard key={thumb.id} className="overflow-hidden p-1">
+                     <div key={thumb.id} className="overflow-hidden rounded-lg">
                         <Image
                             src={thumb.imageUrl}
                             alt={thumb.description}
                             width={200}
                             height={150}
-                            className="w-full h-auto object-cover rounded-md"
+                            className="w-full h-auto object-cover"
                             data-ai-hint={thumb.imageHint}
                         />
-                    </NeumorphicCard>
+                    </div>
                 ))}
             </div>
           </div>
