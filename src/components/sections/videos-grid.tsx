@@ -13,10 +13,6 @@ export default function VideosGrid() {
 
   return (
     <section id="videos" className="w-full">
-      <h2 className="text-3xl font-bold font-headline mb-12 text-center">
-        Mes Vidéos
-      </h2>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
         {videoThumbnails.map((video, index) => (
           <NeumorphicCard key={video.id} className="group overflow-hidden cursor-pointer">
