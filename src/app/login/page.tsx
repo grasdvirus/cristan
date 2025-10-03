@@ -171,7 +171,7 @@ export default function LoginPage() {
               className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark mt-1 pr-10"
               {...register('password')}
             />
-             <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-6 h-7 w-7" onClick={() => setShowPassword(!showPassword)}>
+             <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" style={{top: 'calc(50% + 0.5rem)'}} onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
             {errors.password && <p className="text-sm text-destructive mt-1">{(errors.password as any).message}</p>}
@@ -186,7 +186,7 @@ export default function LoginPage() {
                 className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark mt-1 pr-10"
                 {...register('confirmPassword')}
                 />
-                 <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-6 h-7 w-7" onClick={() => setShowPassword(!showPassword)}>
+                 <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" style={{top: 'calc(50% + 0.5rem)'}} onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
                 {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{(errors.confirmPassword as any).message}</p>}
@@ -218,7 +218,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center">
-              <span className="bg-background px-2 text-xs text-muted-foreground">OU</span>
+              <span className="bg-background px-2 text-xs uppercase text-muted-foreground">Ou</span>
           </div>
         </div>
 
@@ -235,5 +235,7 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
 
     
