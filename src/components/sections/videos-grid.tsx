@@ -16,7 +16,7 @@ export default function VideosGrid() {
 
   return (
     <section id="videos" className="w-full">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {videosData.map((video) => {
           const thumbnail = getVideoThumbnail(video.thumbnailId);
           if (!thumbnail) return null;
