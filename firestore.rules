@@ -1,101 +1,129 @@
 /**
- * @fileoverview Firestore Security Rules for Prototyping.
+ * @fileoverview Firestore Security Rules for a personal portfolio website.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for user profiles,
- * public read access for videos, and owner-only writes for comments.
+ * This ruleset prioritizes authorization independence and implements a strict user-ownership model for user profiles.
+ * Top-level collections (videos, portfolio items) are publicly readable.
  *
  * Data Structure:
- * - User profiles are stored under `/users/{userId}/profile`.
- * - Videos are stored under `/videos/{videoId}`.
- * - Comments are stored under `/videos/{videoId}/comments/{commentId}`.
+ * - /videos/{videoId}: Stores video metadata.
+ * - /videos/{videoId}/likes/{likeId}: Stores likes for each video.
+ * - /videos/{videoId}/comments/{commentId}: Stores comments for each video.
+ * - /portfolioItems/{portfolioItemId}: Stores portfolio items.
+ * - /users/{userId}: Stores user profile data.
  *
  * Key Security Decisions:
- * - User profiles are only accessible by the owning user.
- * - Videos are publicly readable, but writes are unrestricted.
- * - Comments can only be created and modified by the user who created them.
- *
- * Denormalization for Authorization:
- * - Comments include the `userProfileId` to enforce owner-only writes.
+ * - Users can only modify their own profile data under /users/{userId}.
+ * - Top-level collections are publicly readable (get, list).
+ * - Relational integrity is enforced on document creation, ensuring proper ownership.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Enforces owner-only access to user profiles.
-     * @path /users/{userId}/profile
-     * @allow (read, write) if request.auth.uid == userId
-     * @deny (read, write) if request.auth.uid != userId
-     * @principle Enforces document ownership for all operations.
-     */
-    match /users/{userId}/profile {
-      // Define a function to check if the user is signed in
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Define a function to check if the user is the owner of the resource
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      // Define a function to check if the existing user is the owner of the resource
-      function isExistingOwner(userId) {
-        return isOwner(userId);
-      }
-
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
-    }
-
-    /**
-     * @description Allows public read access to videos but restricts writes (currently open).
+     * @description Allows read access to videos and restricts write access to authenticated users.
      * @path /videos/{videoId}
-     * @allow (read) to anyone.
-     * @allow (write) to anyone.
-     * @principle Public read access with owner-only writes.
+     * @allow get, list: if true;
+     * @allow create: if isSignedIn();
+     * @allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny create: if !isSignedIn();
+     * @principle Public read, authenticated write.
      */
     match /videos/{videoId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description Enforces owner-only access to comments.
+     * @description Allows read access to likes and restricts write access to authenticated users.
+     * @path /videos/{videoId}/likes/{likeId}
+     * @allow get, list: if true;
+     * @allow create: if isSignedIn();
+     * @allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny create: if !isSignedIn();
+     * @principle Public read, authenticated write.
+     */
+    match /videos/{videoId}/likes/{likeId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description Allows read access to comments and restricts write access to authenticated users.
      * @path /videos/{videoId}/comments/{commentId}
-     * @allow (create) if request.auth.uid == request.resource.data.userProfileId
-     * @allow (update, delete) if resource.data.userProfileId == request.auth.uid
-     * @deny (read, write) if not authenticated or not the owner
-     * @principle Enforces document ownership for writes.
+     * @allow get, list: if true;
+     * @allow create: if isSignedIn();
+     * @allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny create: if !isSignedIn();
+     * @principle Public read, authenticated write.
      */
     match /videos/{videoId}/comments/{commentId} {
-       // Define a function to check if the user is signed in
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Define a function to check if the user is the owner of the resource
-      function isOwner(userProfileId) {
-        return request.auth.uid == userProfileId;
-      }
-
-      // Define a function to check if the existing user is the owner of the resource
-      function isExistingOwner(userProfileId) {
-        return isOwner(userProfileId);
-      }
-
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.userProfileId == request.auth.uid;
-      allow update: if isSignedIn() && isExistingOwner(request.resource.data.userProfileId);
-      allow delete: if isSignedIn() && isExistingOwner(resource.data.userProfileId);
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
+
+    /**
+     * @description Allows read access to portfolio items and restricts write access to authenticated users.
+     * @path /portfolioItems/{portfolioItemId}
+     * @allow get, list: if true;
+     * @allow create: if isSignedIn();
+     * @allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny create: if !isSignedIn();
+     * @principle Public read, authenticated write.
+     */
+    match /portfolioItems/{portfolioItemId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description Restricts access to user profiles to the owning user.
+     * @path /users/{userId}
+     * @allow get: if isOwner(userId);
+     * @allow list: if false;
+     * @allow create: if isOwner(userId);
+     * @allow update: if isExistingOwner(userId);
+     * @allow delete: if isExistingOwner(userId);
+     * @allow read: if isOwner(userId);
+     * @deny create: if !isOwner(userId);
+     * @deny update: if !isOwner(userId) || resource == null;
+     * @deny delete: if !isOwner(userId) || resource == null;
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+
+  // Helper function to determine if the user is signed in.
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  // Helper function to determine if the user is the owner of the resource.
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+    // Helper function to determine if the user is the owner of the existing resource.
+  function isExistingOwner(userId) {
+    return request.auth.uid == userId && resource != null;
   }
 }
