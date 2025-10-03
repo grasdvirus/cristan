@@ -144,11 +144,15 @@ export default function LoginPage() {
             </button>
         </p>
 
-        <div className="my-6 flex items-center">
-            <Separator className="flex-grow" />
-            <span className="mx-4 text-xs text-muted-foreground">OU</span>
-            <Separator className="flex-grow" />
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+              <Separator />
+          </div>
+          <div className="relative flex justify-center">
+              <span className="bg-background px-2 text-xs text-muted-foreground">OU</span>
+          </div>
         </div>
+
 
         <Button 
             onClick={handleGoogleSignIn}
