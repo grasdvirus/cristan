@@ -16,7 +16,7 @@ export default function HeroSection() {
     (img) => img.id.startsWith('hero-')
   );
   const plugin = React.useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
+    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: false })
   );
 
   if (!heroImages.length) {
@@ -32,8 +32,6 @@ export default function HeroSection() {
       <Carousel
         className="w-full h-full"
         plugins={[plugin.current, Fade()]}
-        onMouseEnter={plugin.current.stop}
-        onMouseLeave={plugin.current.play}
         opts={{
           loop: true,
         }}
