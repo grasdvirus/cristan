@@ -52,14 +52,14 @@ export default function VideoDetailsPage() {
         {/* Main Content */}
         <div className="lg:col-span-2">
             {/* Video Player */}
-             <div className="aspect-video overflow-hidden rounded-2xl neumorphic-card-inset-light dark:neumorphic-card-inset-dark">
+             <div className="aspect-video w-full">
               <iframe
                 src={video.videoUrl}
                 title={video.title}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                className="w-full h-full"
+                className="w-full h-full rounded-2xl neumorphic-card-inset-light dark:neumorphic-card-inset-dark"
               ></iframe>
             </div>
 
