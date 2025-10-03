@@ -15,7 +15,7 @@ export default function HeroSection() {
   const heroImages = PlaceHolderImages.filter(
     (img) => img.id.startsWith('hero-')
   );
-  const plugin = React.useRef(
+  const autoplay = React.useRef(
     Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: false })
   );
 
@@ -31,14 +31,14 @@ export default function HeroSection() {
     <section className="sticky top-0 w-full h-[60vh] md:h-[80vh] bg-background overflow-hidden -z-10">
       <Carousel
         className="w-full h-full"
-        plugins={[plugin.current, Fade()]}
+        plugins={[autoplay.current, Fade()]}
         opts={{
           loop: true,
         }}
       >
-        <CarouselContent>
-          {heroImages.map((heroImage) => (
-            <CarouselItem key={heroImage.id}>
+        <CarouselContent className="h-full">
+          {heroImages.map((heroImage, index) => (
+            <CarouselItem key={heroImage.id} className="h-full">
               <div className="w-full h-full relative">
                 <Image
                   src={heroImage.imageUrl}
@@ -46,7 +46,7 @@ export default function HeroSection() {
                   fill
                   className="object-cover"
                   data-ai-hint={heroImage.imageHint}
-                  priority={heroImage.id === 'hero-1'}
+                  priority={index === 0}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 <div className="absolute inset-0 flex items-end justify-start text-white">
