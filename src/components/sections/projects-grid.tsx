@@ -43,14 +43,12 @@ export default function ProjectsGrid() {
                         <CardDescription className="mt-2 text-sm text-muted-foreground flex-grow">{project.description}</CardDescription>
                         <p className='text-lg font-bold font-headline text-primary mt-4'>{project.price}</p>
                     </div>
-                     <Link href={`/projects/${project.id}`} passHref>
-                        <Button asChild size="icon" className="rounded-full absolute bottom-4 right-4 btn-neumorphic-light dark:btn-neumorphic-dark">
-                            <a>
-                                <Plus className="h-4 w-4" />
-                                <span className="sr-only">Détails</span>
-                            </a>
-                        </Button>
-                     </Link>
+                     <Button asChild size="icon" className="rounded-full absolute bottom-4 right-4 btn-neumorphic-light dark:btn-neumorphic-dark">
+                        <Link href={`/projects/${project.id}`}>
+                            <Plus className="h-4 w-4" />
+                            <span className="sr-only">Détails</span>
+                        </Link>
+                     </Button>
                     </NeumorphicCard>
                 </div>
             )
