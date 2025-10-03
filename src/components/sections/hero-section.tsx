@@ -28,7 +28,7 @@ export default function HeroSection() {
   }
 
   return (
-    <section className="relative w-full h-[60vh] md:h-[80vh] bg-background overflow-hidden">
+    <section className="sticky top-0 w-full h-screen bg-background overflow-hidden -z-10">
       <Carousel
         className="w-full h-full"
         plugins={[plugin.current, Fade()]}
@@ -39,7 +39,7 @@ export default function HeroSection() {
         <CarouselContent>
           {heroImages.map((heroImage) => (
             <CarouselItem key={heroImage.id}>
-              <div className="w-full h-[60vh] md:h-[80vh] relative">
+              <div className="w-full h-full relative">
                 <Image
                   src={heroImage.imageUrl}
                   alt={heroImage.description}
