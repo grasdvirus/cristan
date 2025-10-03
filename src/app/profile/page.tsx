@@ -68,7 +68,6 @@ export default function ProfilePage() {
           </div>
           <div className="text-center sm:text-left">
             <h1 className="text-4xl font-bold font-headline">{ user?.displayName || 'Jean Dupont' }</h1>
-            <p className="text-xl text-primary font-medium mt-1">Développeur Full-Stack & Designer UI</p>
             <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
