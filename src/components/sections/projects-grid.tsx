@@ -4,6 +4,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { CardDescription, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
+import { Plus } from 'lucide-react';
 
 const projectsData = [
   {
@@ -50,7 +51,7 @@ export default function ProjectsGrid() {
 
             return (
                 <div key={project.id} className="break-inside-avoid">
-                    <NeumorphicCard className="group overflow-hidden flex flex-col h-full">
+                    <NeumorphicCard className="group overflow-hidden flex flex-col h-full relative pb-12">
                     <div className="overflow-hidden rounded-lg mb-4">
                         <Image
                         src={image.imageUrl}
@@ -66,7 +67,10 @@ export default function ProjectsGrid() {
                         <CardDescription className="mt-2 text-sm text-muted-foreground flex-grow">{project.description}</CardDescription>
                         <p className='text-lg font-bold font-headline text-primary mt-4'>{project.price}</p>
                     </div>
-                     <Button className="w-full mt-4 btn-neumorphic-light dark:btn-neumorphic-dark">Commander</Button>
+                     <Button size="icon" className="rounded-full absolute bottom-4 right-4 btn-neumorphic-light dark:btn-neumorphic-dark">
+                        <Plus className="h-4 w-4" />
+                        <span className="sr-only">Commander</span>
+                     </Button>
                     </NeumorphicCard>
                 </div>
             )
