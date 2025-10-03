@@ -1,14 +1,13 @@
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-
   return (
     <footer className="border-t border-border/50">
       <div className={cn("container flex items-center justify-center py-6")}>
-        <p className="text-sm text-muted-foreground">
-          © {currentYear} Mon Portfolio Personnel. Tous droits réservés.
-        </p>
+        <Link href="/about" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+          À propos de cristan
+        </Link>
       </div>
     </footer>
   );
