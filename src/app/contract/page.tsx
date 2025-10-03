@@ -18,12 +18,12 @@ function ContractPageContent() {
   return (
     <div className="container mx-auto px-4 py-16 sm:py-24">
       <NeumorphicCard className="max-w-4xl mx-auto">
-        <div className="relative text-center">
+        <div className="relative text-center mb-8">
             <Button 
                 variant="ghost" 
                 size="icon"
                 onClick={() => router.back()} 
-                className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+                className="absolute left-0 top-0 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                 aria-label="Retour"
             >
                 <ArrowLeft className="h-5 w-5" />
