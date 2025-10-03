@@ -74,14 +74,6 @@ export default function ProfilePage() {
                 <Mail className="w-4 h-4" />
                 <span>{ user?.email || 'jean.dupont@email.com' }</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
-                <span>+33 6 12 34 56 78</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                <span>Paris, France</span>
-              </div>
             </div>
           </div>
         </div>
