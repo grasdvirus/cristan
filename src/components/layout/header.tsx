@@ -1,10 +1,24 @@
+
+'use client';
+
 import Link from 'next/link';
 import { ThemeToggleButton } from '@/components/theme-toggle-button';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
-import { Home, User } from 'lucide-react';
+import { Home, User, LogOut } from 'lucide-react';
+import { useFirebase } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 export default function Header() {
+  const { auth, user } = useFirebase();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    if (auth) {
+      await auth.signOut();
+      router.push('/login');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm">
@@ -46,6 +60,20 @@ export default function Header() {
               <User className="h-[1.2rem] w-[1.2rem]" />
             </Button>
           </Link>
+          {user && (
+             <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              className={cn(
+                'rounded-full transition-all duration-300',
+                'dark:btn-neumorphic-dark btn-neumorphic-light'
+              )}
+              aria-label="Déconnexion"
+            >
+              <LogOut className="h-[1.2rem] w-[1.2rem]" />
+            </Button>
+          )}
         </nav>
       </div>
     </header>
