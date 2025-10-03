@@ -2,7 +2,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Mail, LogOut, KeyRound, Info, MessageSquare, Send } from 'lucide-react';
+import { Mail, LogOut, KeyRound, Info, MessageSquare, Send, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { sendPasswordResetEmail } from 'firebase/auth';
 
@@ -57,6 +57,8 @@ export default function ProfilePage() {
     return name[0].toUpperCase();
   }
 
+  const isAdmin = user?.email === 'grasdvirus@gmail.com';
+
   return (
     <div className="container mx-auto px-4 py-16 sm:py-24 space-y-8">
       <NeumorphicCard className="max-w-4xl mx-auto relative">
@@ -102,6 +104,23 @@ export default function ProfilePage() {
           </div>
         </div>
       </NeumorphicCard>
+
+      {isAdmin && (
+        <NeumorphicCard className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-xl font-bold font-headline">Administration</h2>
+                    <p className="text-muted-foreground text-sm mt-1">Accéder au panneau d'administration.</p>
+                </div>
+                <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                    <Link href="/admin">
+                        <Shield className="mr-2 h-4 w-4" />
+                        Panneau d'administration
+                    </Link>
+                </Button>
+            </div>
+        </NeumorphicCard>
+      )}
 
       <NeumorphicCard className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between">
