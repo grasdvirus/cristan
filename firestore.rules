@@ -1,10 +1,94 @@
-
+/**
+ * @fileOverview
+ * This ruleset enforces a public read-only model for 'slides', 'projects', and 'videos',
+ * allowing any user to read the data while restricting write access. For the 'users' collection,
+ * it enforces strict user-ownership where each user can only access their own profile data.
+ *
+ * Data Structure:
+ * - /slides/{slideId}: Publicly readable slide data.
+ * - /projects/{projectId}: Publicly readable project data.
+ * - /videos/{videoId}: Publicly readable video data.
+ * - /users/{userId}: User-specific profile data, accessible only by the owning user.
+ *
+ * Key Security Decisions:
+ * - Public read access is granted for 'slides', 'projects', and 'videos' collections to allow open access to content.
+ * - Strict user-ownership is enforced for the 'users' collection to protect user profile data.
+ * - Listing of users is not explicitly denied but is implicitly restricted by the ownership model, as listing requires read access.
+ * - The ruleset does not enforce specific data validation beyond authorization, allowing flexibility in data shapes during prototyping.
+ * - All write operations on 'slides', 'projects', and 'videos' are currently denied to prevent unauthorized modifications.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read and write access for all authenticated users
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+
+    /**
+     * @description Allows anyone to read slides, but restricts write access.
+     * @path /slides/{slideId}
+     * @allow (get, list) User can retrieve or list slides.
+     * @deny (create, update, delete) User cannot create, update, or delete slides.
+     * @principle Grants public read access while restricting write access.
+     */
+    match /slides/{slideId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
+
+    /**
+     * @description Allows anyone to read projects, but restricts write access.
+     * @path /projects/{projectId}
+     * @allow (get, list) User can retrieve or list projects.
+     * @deny (create, update, delete) User cannot create, update, or delete projects.
+     * @principle Grants public read access while restricting write access.
+     */
+    match /projects/{projectId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read videos, but restricts write access.
+     * @path /videos/{videoId}
+     * @allow (get, list) User can retrieve or list videos.
+     * @deny (create, update, delete) User cannot create, update, or delete videos.
+     * @principle Grants public read access while restricting write access.
+     */
+    match /videos/{videoId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Allows a user to read, create, update, and delete their own profile.
+     * @path /users/{userId}
+     * @allow (get, list) Authenticated user can retrieve or list their own profile.
+     * @allow (create) Authenticated user can create their own profile if the user ID matches.
+     * @allow (update, delete) Authenticated user can update or delete their own profile if the user ID matches and the document exists.
+     * @deny (get, list) Authenticated user cannot retrieve or list other user profiles.
+     * @deny (create) Authenticated user cannot create a profile for another user.
+     * @deny (update, delete) Authenticated user cannot update or delete another user's profile.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+
+  // Helper function to determine if the user is signed in.
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  // Helper function to determine if the request is made by the owner of the document.
+  function isOwner(userId) {
+    return isSignedIn() && request.auth.uid == userId;
+  }
+
+    // Helper function to determine if the request is made by the existing owner of the document.
+  function isExistingOwner(userId) {
+    return isOwner(userId) && resource != null;
   }
 }
