@@ -41,7 +41,7 @@ export default function VideoDetailsPage() {
        <div className="mb-8">
             <Button 
                 variant="ghost" 
-                onClick={() => router.back()} 
+                onClick={() => router.push('/#videos')} 
                 className="btn-neumorphic-light dark:btn-neumorphic-dark"
             >
                 <ArrowLeft className="mr-2 h-4 w-4" />
