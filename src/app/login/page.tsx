@@ -11,6 +11,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   updateProfile,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { useFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -18,7 +19,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NeumorphicCard } from '@/components/neumorphic-card';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Chrome, Eye, EyeOff } from 'lucide-react';
 
@@ -121,6 +121,37 @@ export default function LoginPage() {
     }
   };
 
+  const handlePasswordReset = async () => {
+    if (!auth) return;
+    const email = form.getValues('email');
+    if (!email) {
+      form.setError('email', { type: 'manual', message: 'Veuillez entrer votre email pour réinitialiser le mot de passe.' });
+      return;
+    }
+    
+    // Validate email format before sending
+    const emailSchema = z.string().email('Adresse e-mail invalide');
+    const validation = emailSchema.safeParse(email);
+    if(!validation.success) {
+      form.setError('email', { type: 'manual', message: validation.error.errors[0].message });
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast({
+        title: 'E-mail envoyé',
+        description: 'Un lien pour réinitialiser votre mot de passe a été envoyé à votre adresse e-mail.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: error.message,
+      });
+    }
+  }
+
   const toggleFormMode = () => {
     setIsSignUp(!isSignUp);
     setError(null);
@@ -193,6 +224,14 @@ export default function LoginPage() {
             </div>
           )}
           {error && <p className="text-sm text-destructive text-center mt-2">{error}</p>}
+          
+          {!isSignUp && (
+            <div className="text-right">
+              <Button type="button" variant="link" size="sm" onClick={handlePasswordReset} className="p-0 h-auto text-xs text-muted-foreground hover:text-primary">
+                Mot de passe oublié ?
+              </Button>
+            </div>
+          )}
 
           <div className="pt-4">
             <Button 
@@ -235,3 +274,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
