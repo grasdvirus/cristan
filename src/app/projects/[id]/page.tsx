@@ -105,9 +105,11 @@ export default function ProjectDetailsPage() {
             <div className="mt-auto pt-8">
                  <div className="flex items-center justify-between gap-4 p-4 rounded-lg neumorphic-card-inset-light dark:neumorphic-card-inset-dark">
                     <p className="text-2xl font-bold font-headline text-primary">{project.price}</p>
-                     <Button size="lg" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                    <Button asChild size="lg" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                      <Link href={`/contract?projectId=${project.id}`}>
                         <ShoppingCart className="mr-2 h-5 w-5"/>
                         Commander
+                      </Link>
                     </Button>
                 </div>
             </div>
@@ -118,4 +120,3 @@ export default function ProjectDetailsPage() {
     </div>
   );
 }
-
