@@ -2,20 +2,20 @@
   "placeholderImages": [
     {
       "id": "hero-1",
-      "description": "Abstract architecture",
-      "imageUrl": "https://images.unsplash.com/photo-1575330734740-21b22ac7bf5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxhYnN0cmFjdCUyMGFyY2hpdGVjdHVyZXxlbnwwfHx8fDE3NTk0NjQwNzJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "description": "Architecture abstraite",
+      "imageUrl": "https://images.unsplash.com/photo-1531591022136-eb8b0da1e6d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGFyY2hpdGVjdHVyZXxlbnwwfHx8fDE3NTk0NjQwNzJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "abstract architecture"
     },
     {
       "id": "hero-2",
-      "description": "Minimalist interior",
-      "imageUrl": "https://images.unsplash.com/photo-1617326021886-53d6be1d7154?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtaW5pbWFsaXN0JTIwaW50ZXJpb3J8ZW58MHx8fHwxNzU5NDAxNjA0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "description": "Intérieur minimaliste",
+      "imageUrl": "https://images.unsplash.com/photo-1583329550487-0fa300a4cd1a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtaW5pbWFsaXN0JTIwaW50ZXJpb3J8ZW58MHx8fHwxNzU5NDAxNjA0fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "minimalist interior"
     },
     {
       "id": "hero-3",
-      "description": "Geometric patterns",
-      "imageUrl": "https://images.unsplash.com/photo-1572756317709-fe9c15ced298?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxnZW9tZXRyaWMlMjBwYXR0ZXJuc3xlbnwwfHx8fDE3NTk0NjgxMTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "description": "Motifs géométriques",
+      "imageUrl": "https://images.unsplash.com/photo-1620093056176-7acaf3012a97?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxnZW9tZXRyaWMlMjBwYXR0ZXJuc3xlbnwwfHx8fDE3NTk0NjgxMTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "geometric patterns"
     },
     {
