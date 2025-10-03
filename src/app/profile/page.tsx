@@ -90,15 +90,6 @@ export default function ProfilePage() {
         <Separator className="my-8" />
 
         <div>
-          <h2 className="text-2xl font-bold font-headline mb-4">À propos de moi</h2>
-          <p className="text-muted-foreground leading-relaxed">
-            Passionné par la création d'expériences numériques intuitives et esthétiques, je me spécialise dans le développement d'applications web modernes avec React et Next.js. Mon approche est centrée sur l'utilisateur, en combinant des compétences techniques solides avec un œil pour le design. J'aime expérimenter avec de nouveaux styles visuels comme le neumorphisme pour repousser les limites de l'interface utilisateur.
-          </p>
-        </div>
-
-        <Separator className="my-8" />
-
-        <div>
           <h2 className="text-2xl font-bold font-headline mb-4">Compétences</h2>
           <div className="flex flex-wrap gap-3">
             {skills.map(skill => (
