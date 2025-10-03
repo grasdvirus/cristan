@@ -23,13 +23,13 @@ export default function Home() {
                   <TabsList className="bg-transparent p-0">
                   <TabsTrigger 
                       value="sites" 
-                      className="text-lg bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
+                      className="text-lg font-bold bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
                   >
                       internet
                   </TabsTrigger>
                   <TabsTrigger 
                       value="videos" 
-                      className="text-lg bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
+                      className="text-lg font-bold bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
                   >
                       TV
                   </TabsTrigger>
