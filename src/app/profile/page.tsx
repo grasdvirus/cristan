@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const { auth, user } = useFirebase();
@@ -112,9 +113,11 @@ export default function ProfilePage() {
                 <h2 className="text-xl font-bold font-headline">Informations</h2>
                 <p className="text-muted-foreground text-sm mt-1">En savoir plus sur notre projet.</p>
             </div>
-            <Button variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
-                <Info className="mr-2 h-4 w-4" />
-                À propos de cristan
+            <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                <Link href="/about">
+                    <Info className="mr-2 h-4 w-4" />
+                    À propos de cristan
+                </Link>
             </Button>
         </div>
       </NeumorphicCard>
