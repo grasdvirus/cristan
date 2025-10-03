@@ -10,6 +10,7 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  updateProfile,
 } from 'firebase/auth';
 import { useFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -19,14 +20,24 @@ import { Label } from '@/components/ui/label';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Chrome } from 'lucide-react';
-import Link from 'next/link';
+import { Chrome, Eye, EyeOff } from 'lucide-react';
+
+const signUpSchema = z.object({
+  name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
+  email: z.string().email('Adresse e-mail invalide'),
+  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
+  confirmPassword: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
+}).refine(data => data.password === data.confirmPassword, {
+  message: 'Les mots de passe ne correspondent pas',
+  path: ['confirmPassword'],
+});
 
 const loginSchema = z.object({
   email: z.string().email('Adresse e-mail invalide'),
-  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
+  password: z.string().min(1, 'Le mot de passe est requis'),
 });
 
+type SignUpFormValues = z.infer<typeof signUpSchema>;
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
@@ -36,26 +47,49 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const [showPassword, setShowPassword] = useState(false);
+
+  const form = useForm<SignUpFormValues | LoginFormValues>({
+    resolver: zodResolver(isSignUp ? signUpSchema : loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      ...(isSignUp && { name: '', confirmPassword: '' }),
+    },
   });
 
-  const handleEmailPasswordAction = async (values: LoginFormValues) => {
+  const handleEmailPasswordAction = async (values: SignUpFormValues | LoginFormValues) => {
     if (!auth) return;
     setIsSubmitting(true);
     setError(null);
+    
     try {
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, values.email, values.password);
+        const signUpValues = values as SignUpFormValues;
+        const userCredential = await createUserWithEmailAndPassword(auth, signUpValues.email, signUpValues.password);
+        await updateProfile(userCredential.user, {
+            displayName: signUpValues.name
+        });
       } else {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
+        const loginValues = values as LoginFormValues;
+        await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
       }
       router.push('/');
     } catch (err: any) {
-      const friendlyMessage = err.code === 'auth/invalid-credential' 
-        ? 'Email ou mot de passe incorrect.' 
-        : err.message;
+      let friendlyMessage = 'Une erreur est survenue.';
+      switch(err.code) {
+        case 'auth/invalid-credential':
+          friendlyMessage = 'Email ou mot de passe incorrect.';
+          break;
+        case 'auth/email-already-in-use':
+            friendlyMessage = 'Cette adresse e-mail est déjà utilisée.';
+            break;
+        case 'auth/weak-password':
+            friendlyMessage = 'Le mot de passe est trop faible.';
+            break;
+        default:
+            friendlyMessage = err.message;
+      }
       setError(friendlyMessage);
       toast({
         variant: 'destructive',
@@ -90,7 +124,10 @@ export default function LoginPage() {
   const toggleFormMode = () => {
     setIsSignUp(!isSignUp);
     setError(null);
+    form.reset();
   }
+  
+  const { register, handleSubmit, formState: { errors } } = form;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -101,6 +138,19 @@ export default function LoginPage() {
         </div>
         
         <form onSubmit={handleSubmit(handleEmailPasswordAction)} className="space-y-4">
+          {isSignUp && (
+             <div>
+                <Label htmlFor="name">Nom</Label>
+                <Input 
+                  id="name" 
+                  type="text" 
+                  placeholder="Jean Dupont"
+                  className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark mt-1"
+                  {...register('name')}
+                />
+                {errors.name && <p className="text-sm text-destructive mt-1">{(errors.name as any).message}</p>}
+            </div>
+          )}
           <div>
             <Label htmlFor="email">Email</Label>
             <Input 
@@ -110,19 +160,38 @@ export default function LoginPage() {
               className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark mt-1"
               {...register('email')}
             />
-            {errors.email && <p className="text-sm text-destructive mt-1">{errors.email.message}</p>}
+            {errors.email && <p className="text-sm text-destructive mt-1">{(errors.email as any).message}</p>}
           </div>
-          <div>
+          <div className="relative">
             <Label htmlFor="password">Mot de passe</Label>
             <Input 
               id="password" 
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder="********"
-              className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark mt-1"
+              className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark mt-1 pr-10"
               {...register('password')}
             />
-            {errors.password && <p className="text-sm text-destructive mt-1">{errors.password.message}</p>}
+             <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-6 h-7 w-7" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+            {errors.password && <p className="text-sm text-destructive mt-1">{(errors.password as any).message}</p>}
           </div>
+           {isSignUp && (
+            <div className="relative">
+                <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+                <Input 
+                id="confirmPassword" 
+                type={showPassword ? 'text' : 'password'}
+                placeholder="********"
+                className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark mt-1 pr-10"
+                {...register('confirmPassword')}
+                />
+                 <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-6 h-7 w-7" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+                {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{(errors.confirmPassword as any).message}</p>}
+            </div>
+          )}
           {error && <p className="text-sm text-destructive text-center mt-2">{error}</p>}
 
           <div className="pt-4">
@@ -146,13 +215,12 @@ export default function LoginPage() {
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
-              <Separator />
+              <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center">
               <span className="bg-background px-2 text-xs text-muted-foreground">OU</span>
           </div>
         </div>
-
 
         <Button 
             onClick={handleGoogleSignIn}
@@ -167,3 +235,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
