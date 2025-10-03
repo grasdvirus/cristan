@@ -8,7 +8,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm">
-      <div className={cn('container flex h-20 items-center')}>
+      <div className={cn('container flex h-16 items-center')}>
         <div className="flex flex-1 items-center justify-start">
           <ThemeToggleButton />
         </div>
