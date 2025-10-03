@@ -40,10 +40,10 @@ interface ProjectFormProps {
 export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectFormProps) {
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
         ...initialData,
-        technologies: initialData?.technologies?.join(', ') || '',
-    } || {
+        technologies: initialData.technologies?.join(', ') || '',
+    } : {
       title: '',
       description: '',
       longDescription: '',
