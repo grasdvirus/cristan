@@ -28,7 +28,7 @@ export default function HeroSection() {
   }
 
   return (
-    <section className="sticky top-0 w-full h-screen bg-background overflow-hidden -z-10">
+    <section className="sticky top-0 w-full h-[60vh] md:h-[80vh] bg-background overflow-hidden -z-10">
       <Carousel
         className="w-full h-full"
         plugins={[plugin.current, Fade()]}

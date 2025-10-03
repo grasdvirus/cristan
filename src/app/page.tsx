@@ -12,32 +12,34 @@ export default function Home() {
   return (
     <div>
       <HeroSection />
-      <div className="relative bg-background z-10">
-        <div className="container mx-auto px-4 py-16 sm:py-24">
-          <div className="flex flex-col items-center mb-12">
-              <h2 className="text-3xl font-bold font-headline mb-8 text-center">
-                Mes Créations
-              </h2>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
-                  <TabsList className="bg-transparent p-0">
-                  <TabsTrigger 
-                      value="sites" 
-                      className="text-lg bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
-                  >
-                      Sites Web
-                  </TabsTrigger>
-                  <TabsTrigger 
-                      value="videos" 
-                      className="text-lg bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
-                  >
-                      Vidéos
-                  </TabsTrigger>
-                  </TabsList>
-              </Tabs>
-          </div>
+      <div className="relative bg-background z-10 pt-[60vh] md:pt-[80vh] -mt-[60vh] md:-mt-[80vh]">
+        <div className="bg-background">
+          <div className="container mx-auto px-4 py-16 sm:py-24">
+            <div className="flex flex-col items-center mb-12">
+                <h2 className="text-3xl font-bold font-headline mb-8 text-center">
+                  Mes Créations
+                </h2>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+                    <TabsList className="bg-transparent p-0">
+                    <TabsTrigger 
+                        value="sites" 
+                        className="text-lg bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
+                    >
+                        Sites Web
+                    </TabsTrigger>
+                    <TabsTrigger 
+                        value="videos" 
+                        className="text-lg bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
+                    >
+                        Vidéos
+                    </TabsTrigger>
+                    </TabsList>
+                </Tabs>
+            </div>
 
-          {activeTab === 'sites' && <ProjectsGrid />}
-          {activeTab === 'videos' && <VideosGrid />}
+            {activeTab === 'sites' && <ProjectsGrid />}
+            {activeTab === 'videos' && <VideosGrid />}
+          </div>
         </div>
       </div>
     </div>
