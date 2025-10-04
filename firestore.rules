@@ -1,132 +1,108 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset defines access control for the Firestore database, balancing security with ease of iteration.
- *
- * Core Philosophy:
- * The security model emphasizes strict data ownership and role-based access control where appropriate.
- *  - Users can only read and write their own profiles.
- *  - Slides, Projects, and Videos collections are publicly readable but only writable by authenticated users who set the correct author.
- *  - Submissions should be restricted to authenticated users.
+ * @description This ruleset enforces a strict user-ownership model for user profiles
+ * and allows public read-only access to slides, projects, and videos. Contract submissions
+ * are publicly readable but only writeable by authenticated users.
  *
  * Data Structure:
- * - /slides/{slideId}: Stores slide data (public read, owner-only write).
- * - /projects/{projectId}: Stores project data (public read, owner-only write).
- * - /videos/{videoId}: Stores video data (public read, owner-only write).
- * - /users/{userId}: Stores user profiles (owner-only access).
- * - /submissions/{submissionId}: Stores contract submissions (authenticated users only).
+ * - /slides/{slideId}: Publicly readable slides for the hero carousel.
+ * - /projects/{projectId}: Publicly readable internet projects.
+ * - /videos/{videoId}: Publicly readable TV videos.
+ * - /users/{userId}: User profile information, accessible only to the owner.
+ * - /submissions/{submissionId}: Contract submissions. Publicly readable, but create and update operations are only available to authenticated users.
  *
  * Key Security Decisions:
- * - User listing is explicitly denied to protect user privacy.
- * - The rules are designed to be permissive regarding data shapes to facilitate rapid prototyping. Data validation beyond ownership and relational integrity checks is omitted.
- *
- * Denormalization for Authorization:
- * - Slides, Projects, and Videos will require an `ownerId` or `authorId` field to enforce owner-only writes.
+ * - Slides, projects, and videos are publicly readable (get, list).
+ * - User profiles are strictly owned; only the authenticated user can read/write their own profile.
+ * - Contract submissions are publicly readable but only writeable by authenticated users.
+ * - No user listing is allowed.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the request is authenticated.
-     * @return {boolean} True if the user is signed in, false otherwise.
+     * @description Grants public read access to slides and restricts write access.
+     * @path /slides/{slideId}
+     * @allow (get, list): Any user can read slide data.
+     * @deny (create, update, delete): No user can create, update, or delete slides.
+     * @principle Public read, owner-only writes (not applicable here as writes are denied).
      */
+    match /slides/{slideId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Grants public read access to projects and restricts write access.
+     * @path /projects/{projectId}
+     * @allow (get, list): Any user can read project data.
+     * @deny (create, update, delete): No user can create, update, or delete projects.
+     * @principle Public read, owner-only writes (not applicable here as writes are denied).
+     */
+    match /projects/{projectId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Grants public read access to videos and restricts write access.
+     * @path /videos/{videoId}
+     * @allow (get, list): Any user can read video data.
+     * @deny (create, update, delete): No user can create, update, or delete videos.
+     * @principle Public read, owner-only writes (not applicable here as writes are denied).
+     */
+    match /videos/{videoId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Manages user profile access, allowing only the owner to read and write their own profile.
+     * @path /users/{userId}
+     * @allow (get, list): Only the user with matching userId can read.
+     * @allow (create, update, delete): Only the user with matching userId can create, update, or delete.
+     * @deny create: if request.auth.uid != userId;
+     * @deny update: if request.auth.uid != userId;
+     * @deny delete: if request.auth.uid != userId;
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId} {
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId) && resource != null;
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+   /**
+     * @description Grants public read access to submissions but restricts write access to authenticated users.
+     * @path /submissions/{submissionId}
+     * @allow (get, list): Any user can read submission data.
+     * @allow (create): Authenticated users can create submissions. Requires request.auth.uid.
+     * @allow (update, delete): No user can update or delete submissions.
+     * @deny create: if !isSignedIn();
+     * @deny update: if true;
+     * @deny delete: if true;
+     * @principle Public read, authenticated user writes.
+     */
+    match /submissions/{submissionId} {
+        allow get, list: if true;
+        allow create: if isSignedIn();
+        allow update: if false;
+        allow delete: if false;
+    }
+
+
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the authenticated user is the owner of the resource.
-     * @param {string} userId - The user ID to compare against the authenticated user's ID.
-     * @return {boolean} True if the user is the owner, false otherwise.
-     */
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return request.auth.uid == userId;
     }
 
-    /**
-     * @description Checks if the authenticated user is the owner of the existing resource.
-     * @param {string} userId - The user ID to compare against the authenticated user's ID.
-     * @return {boolean} True if the user is the owner and the resource exists, false otherwise.
-     */
     function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * @description Rules for the /slides collection.
-     * @path /slides/{slideId}
-     * @allow (get, list): Anyone can read slides.
-     * @allow (create): Authenticated user can create a slide if they set the 'authorId' field to their own UID.
-     * @allow (update, delete): Only the author can update or delete a slide, and only if it exists.
-     * @deny (create): If the 'authorId' field does not match the authenticated user's UID.
-     * @deny (update, delete): If the slide does not exist.
-     * @principle Allows public read access, but restricts write access to the owner.
-     */
-    match /slides/{slideId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.id == slideId;
-      allow update: if isExistingOwner(resource.data.id);
-      allow delete: if isExistingOwner(resource.data.id);
-    }
-
-    /**
-     * @description Rules for the /projects collection.
-     * @path /projects/{projectId}
-     * @allow (get, list): Anyone can read projects.
-     * @allow (create): Authenticated user can create a project if they set the 'authorId' field to their own UID.
-     * @allow (update, delete): Only the author can update or delete a project, and only if it exists.
-     * @deny (create): If the 'authorId' field does not match the authenticated user's UID.
-     * @deny (update, delete): If the project does not exist.
-     * @principle Allows public read access, but restricts write access to the owner.
-     */
-    match /projects/{projectId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.id == projectId;
-      allow update: if isExistingOwner(resource.data.id);
-      allow delete: if isExistingOwner(resource.data.id);
-    }
-
-    /**
-     * @description Rules for the /videos collection.
-     * @path /videos/{videoId}
-     * @allow (get, list): Anyone can read videos.
-     * @allow (create): Authenticated user can create a video if they set the 'authorId' field to their own UID.
-     * @allow (update, delete): Only the author can update or delete a video, and only if it exists.
-     * @deny (create): If the 'authorId' field does not match the authenticated user's UID.
-     * @deny (update, delete): If the video does not exist.
-     * @principle Allows public read access, but restricts write access to the owner.
-     */
-    match /videos/{videoId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.id == videoId;
-      allow update: if isExistingOwner(resource.data.id);
-      allow delete: if isExistingOwner(resource.data.id);
-    }
-
-    /**
-     * @description Rules for the /users collection.
-     * @path /users/{userId}
-     * @allow (create): A user can create their own profile if the userId matches their auth.uid.
-     * @allow (get, update, delete): A user can only access and modify their own profile.
-     * @deny (list): User listing is not allowed.
-     * @principle Enforces strict user-ownership for profile data.
-     */
-    match /users/{userId} {
-      allow get, update, delete: if isExistingOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow list: if false;
-    }
-
-    /**
-     * @description Rules for the /submissions collection.
-     * @path /submissions/{submissionId}
-     * @allow (get, list, create): Any authenticated user can list, get, and create submissions.
-     * @deny (update, delete): Submissions cannot be updated or deleted.
-     * @principle Allows authenticated users to submit contract information.
-     */
-    match /submissions/{submissionId} {
-      allow get, list, create: if isSignedIn();
-      allow update, delete: if false;
+        return isSignedIn() && isOwner(userId) && resource != null;
     }
   }
 }
