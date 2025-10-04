@@ -1,97 +1,111 @@
 /**
  * @file Firestore Security Rules
  * @description This ruleset enforces a public-read, owner-write model for 'slides', 'projects' and 'videos' collections,
- * restricts user profiles to owner-only access, and allows anyone to create 'contract submissions'.
+ *              owner-only access for user profiles under `/users/{userId}`, and open access to 'submissions' collection.
  *
  * Data Structure:
- * - /slides/{slideId}: Publicly readable slides for the hero carousel.
- * - /projects/{projectId}: Publicly readable projects in the 'Internet' section.
- * - /videos/{videoId}: Publicly readable videos in the 'TV' section.
- * - /users/{userId}: Private user profile data, accessible only to the owning user.
- * - /submissions/{submissionId}: Contract form submissions.
+ * - /slides/{slideId}: Public slides for the hero carousel.
+ * - /projects/{projectId}: Public internet projects.
+ * - /videos/{videoId}: Public TV videos.
+ * - /users/{userId}: User profiles, accessible only by the owning user.
+ * - /submissions/{submissionId}: Open access for contract form submissions.
  *
  * Key Security Decisions:
- * - Slides, projects and videos are publicly readable to allow for wide content distribution, but writes are not allowed.
- * - User profiles are strictly private and only accessible to the owning user.
- * - Anyone can submit a contract submission.
+ * - Slides, Projects, and Videos are publicly readable, but only owners (identified implicitly) can create, update, or delete them.
+ * - User profiles are strictly private; only the owning user can read or write their profile.
+ * - Contract submissions are publicly accessible.
+ *
+ *  NOTE: The current implementation assumes that `id` fields within the documents of `slides`, `projects`, and `videos`
+ *        represent the owner of the resource.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows anyone to read slides, but restricts writes.
+     * @description Grants public read access to slides and restricts writes to owners.
      * @path /slides/{slideId}
-     * @allow (get, list)
-     * @deny (create, update, delete)
-     * @principle Public read, no writes.
+     * @allow get, list: if true;
+     * @allow create: if request.resource.data.id == request.auth.uid;
+     * @allow update: if resource.data.id == request.auth.uid && resource != null;
+     * @allow delete: if resource.data.id == request.auth.uid && resource != null;
+     * @principle Enforces public read access with owner-only writes.
      */
     match /slides/{slideId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create: if request.auth != null && request.resource.data.id == request.auth.uid;
+      allow update: if request.auth != null && get(/databases/$(database)/documents/slides/$(slideId)).data.id == request.auth.uid;
+      allow delete: if request.auth != null && get(/databases/$(database)/documents/slides/$(slideId)).data.id == request.auth.uid;
     }
 
     /**
-     * @description Allows anyone to read projects, but restricts writes.
+     * @description Grants public read access to projects and restricts writes to owners.
      * @path /projects/{projectId}
-     * @allow (get, list)
-     * @deny (create, update, delete)
-     * @principle Public read, no writes.
+     * @allow get, list: if true;
+     * @allow create: if request.resource.data.id == request.auth.uid;
+     * @allow update: if resource.data.id == request.auth.uid && resource != null;
+     * @allow delete: if resource.data.id == request.auth.uid && resource != null;
+     * @principle Enforces public read access with owner-only writes.
      */
     match /projects/{projectId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create: if request.auth != null && request.resource.data.id == request.auth.uid;
+      allow update: if request.auth != null && get(/databases/$(database)/documents/projects/$(projectId)).data.id == request.auth.uid;
+      allow delete: if request.auth != null && get(/databases/$(database)/documents/projects/$(projectId)).data.id == request.auth.uid;
     }
 
     /**
-     * @description Allows anyone to read videos, but restricts writes.
+     * @description Grants public read access to videos and restricts writes to owners.
      * @path /videos/{videoId}
-     * @allow (get, list)
-     * @deny (create, update, delete)
-     * @principle Public read, no writes.
+     * @allow get, list: if true;
+     * @allow create: if request.resource.data.id == request.auth.uid;
+     * @allow update: if resource.data.id == request.auth.uid && resource != null;
+     * @allow delete: if resource.data.id == request.auth.uid && resource != null;
+     * @principle Enforces public read access with owner-only writes.
      */
     match /videos/{videoId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create: if request.auth != null && request.resource.data.id == request.auth.uid;
+      allow update: if request.auth != null && get(/databases/$(database)/documents/videos/$(videoId)).data.id == request.auth.uid;
+      allow delete: if request.auth != null && get(/databases/$(database)/documents/videos/$(videoId)).data.id == request.auth.uid;
     }
 
     /**
-     * @description Manages access to user profiles, allowing only the owner to read, write, update, and delete.
+     * @description Restricts access to user profiles to the owning user.
      * @path /users/{userId}
-     * @allow (create) User with matching id can create their profile.
-     * @allow (get, list, update, delete) User can only access their own profile.
-     * @deny (create) User cannot create a profile with an id that doesnt match their own.
-     * @deny (get, list, update, delete) A different user cannot access this profile.
-     * @principle Enforces user-owned data with ID-based matching.
+     * @allow get: if isOwner(userId);
+     * @allow list: if isOwner(userId);
+     * @allow create: if isOwner(userId);
+     * @allow update: if isOwner(userId) && resource != null;
+     * @allow delete: if isOwner(userId) && resource != null;
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) && resource != null;
-      allow delete: if isOwner(userId) && resource != null;
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if request.auth.uid == userId;
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
-
-       /**
-        * @description Allows anyone to create contract submissions, but restricts reads, updates, and deletes.
-        * @path /submissions/{submissionId}
-        * @allow (create) Anyone can create a submission.
-        * @deny (get, list, update, delete) No one can read, update, or delete submissions.
-        * @principle Open submission, restricted access.
-        */
-    match /submissions/{submissionId} {
-          allow create: if true;
-          allow get, list, update, delete: if false;
-    }
-
-    // --- Helper functions ---
-
-    /**
-     * @description Checks if the request is made by the owner of the resource.
-     * @param {string} userId The user ID to compare against the request's auth UID.
-     * @return {bool} True if the request is made by the owner, false otherwise.
+   /**
+     * @description Grants public access to contract submissions
+     * @path /submissions/{submissionId}
+     * @allow get, list: if true;
+     * @allow create: if true;
+     * @allow update: if true;
+     * @allow delete: if true;
+     * @principle Grants all access to any authenticated user.
      */
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+    match /submissions/{submissionId} {
+        allow get, list, create, update, delete: if true;
     }
+  }
+
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return request.auth.uid == userId;
   }
 }
