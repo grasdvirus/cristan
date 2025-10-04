@@ -56,14 +56,16 @@ export default function ProjectsGrid() {
                 <div key={project.id} className="break-inside-avoid">
                     <NeumorphicCard className="group overflow-hidden flex flex-col h-full relative pb-12">
                     <div className="overflow-hidden rounded-lg mb-4">
-                        <Image
-                        src={project.imageUrl}
-                        alt={project.title}
-                        width={500}
-                        height={350}
-                        className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
-                        data-ai-hint={project.imageHint}
-                        />
+                        {project.imageUrl && (
+                            <Image
+                            src={project.imageUrl}
+                            alt={project.title}
+                            width={500}
+                            height={350}
+                            className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+                            data-ai-hint={project.imageHint}
+                            />
+                        )}
                     </div>
                     <div className='flex flex-col flex-grow p-0'>
                         <CardTitle className="font-headline text-lg">{project.title}</CardTitle>
