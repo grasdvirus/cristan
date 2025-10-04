@@ -20,7 +20,7 @@ import { ImageUpload } from './image-upload';
 
 const formSchema = z.object({
   description: z.string().min(1, 'La description est requise.'),
-  imageUrl: z.string().min(1, "L'image est requise."),
+  imageUrl: z.string().min(1, "L'URL de l'image est requise."),
   imageHint: z.string().optional(),
 });
 

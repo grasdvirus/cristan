@@ -24,7 +24,7 @@ const formSchema = z.object({
   uploadDate: z.string().min(1, 'La date est requise.'),
   views: z.string().min(1, 'Le nombre de vues est requis.'),
   videoUrl: z.string().url('URL invalide'),
-  thumbnailUrl: z.string().min(1, 'La miniature est requise.'),
+  thumbnailUrl: z.string().min(1, "L'URL de la miniature est requise."),
   thumbnailHint: z.string().optional(),
 });
 

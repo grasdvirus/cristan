@@ -25,7 +25,7 @@ const formSchema = z.object({
   price: z.string().min(1, 'Le prix est requis.'),
   technologies: z.string().min(1, 'Les technologies sont requises.'),
   liveUrl: z.string().url('URL invalide').optional().or(z.literal('')),
-  imageUrl: z.string().min(1, "L'image est requise."),
+  imageUrl: z.string().min(1, "L'URL de l'image est requise."),
   imageHint: z.string().optional(),
 });
 
