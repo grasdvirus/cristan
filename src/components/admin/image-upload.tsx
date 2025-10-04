@@ -1,11 +1,13 @@
-
 'use client';
 
-import { Image as ImageIcon, Link } from 'lucide-react';
+import { useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { Image as ImageIcon, UploadCloud, X } from 'lucide-react';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 import { NeumorphicCard } from '../neumorphic-card';
-import { Input } from '../ui/input';
+import { Progress } from '../ui/progress';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface ImageUploadProps {
   value: string;
@@ -14,44 +16,96 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
-  const isValidUrl = value && (value.startsWith('http://') || value.startsWith('https://'));
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const { toast } = useToast();
+
+  const onDrop = async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        onChange(result.url);
+        toast({ title: 'Téléversement réussi!' });
+      } else {
+        throw new Error(result.error || 'Unknown upload error');
+      }
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: 'Erreur de téléversement',
+        description: error.message || 'Impossible de téléverser le fichier.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'image/*': [] },
+    disabled: disabled || isUploading,
+  });
+
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange('');
+  };
 
   return (
     <div>
-      {isValidUrl ? (
-        <NeumorphicCard inset className="relative w-full h-48 rounded-lg overflow-hidden p-2">
-          <Image
-            src={value}
-            alt="Aperçu de l'image"
-            fill
-            className="object-contain rounded-md"
-          />
-        </NeumorphicCard>
-      ) : (
-        <NeumorphicCard
-          inset
-          className={cn(
-            'w-full h-48 flex items-center justify-center text-center border-2 border-dashed border-muted-foreground/30 transition-colors',
-            disabled ? 'cursor-not-allowed opacity-50' : ''
-          )}
-        >
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <ImageIcon className="w-10 h-10" />
-             <p className="text-sm">Aucune image</p>
-             <p className="text-xs">Collez une URL ci-dessous.</p>
+      <NeumorphicCard
+        inset
+        {...getRootProps()}
+        className={cn(
+          'w-full h-48 flex items-center justify-center text-center border-2 border-dashed border-muted-foreground/30 transition-colors cursor-pointer',
+          isDragActive && 'border-primary',
+          (disabled || isUploading) && 'cursor-not-allowed opacity-50'
+        )}
+      >
+        <input {...getInputProps()} />
+        {value && !isUploading ? (
+          <div className="relative w-full h-full">
+            <Image src={value} alt="Aperçu de l'image" layout="fill" className="object-contain rounded-md" />
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="absolute top-1 right-1 bg-background/50 rounded-full p-1 text-destructive hover:bg-background"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-        </NeumorphicCard>
-      )}
-       <Input 
-        placeholder="https://exemple.com/image.png" 
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-        className="mt-2"
-      />
-      <p className="text-xs text-muted-foreground mt-2">
-        Utilisez un service comme <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer" className="underline">Imgur</a> pour héberger vos images.
-      </p>
+        ) : isUploading ? (
+          <div className="flex flex-col items-center gap-2 w-full px-4">
+             <p className="text-sm text-muted-foreground">Téléversement...</p>
+             <Progress value={uploadProgress} className="w-full" />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+            <UploadCloud className="w-10 h-10" />
+            <p className="text-sm">Glissez-déposez ou cliquez pour téléverser</p>
+            <p className="text-xs">Taille max : 4MB</p>
+          </div>
+        )}
+      </NeumorphicCard>
     </div>
   );
 }

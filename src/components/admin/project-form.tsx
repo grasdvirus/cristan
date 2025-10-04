@@ -43,6 +43,7 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
     defaultValues: initialData ? {
         ...initialData,
         technologies: initialData.technologies?.join(', ') || '',
+        liveUrl: initialData.liveUrl || '',
     } : {
       title: '',
       description: '',
