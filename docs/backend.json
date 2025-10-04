@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Slide": {
@@ -101,7 +102,7 @@
           "type": "string"
         }
       },
-      "required": ["id", "title", "uploadDate", "views", "description", "videoUrl", "thumbnailUrl"]
+      "required": ["id", "title", "description", "videoUrl", "thumbnailUrl"]
     },
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",

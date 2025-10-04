@@ -6,6 +6,7 @@ import { collection, query, doc } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
@@ -46,8 +47,8 @@ export type Project = {
 export type Video = {
     id: string;
     title: string;
-    uploadDate: string;
-    views: string;
+    uploadDate?: string;
+    views?: string;
     description: string;
     videoUrl: string;
     thumbnailUrl: string;
@@ -324,6 +325,8 @@ function VideosManager() {
         const dataToSave = {
             ...values,
             videoUrl: convertToEmbedUrl(values.videoUrl),
+            uploadDate: values.uploadDate || format(new Date(), 'dd MMMM yyyy'),
+            views: values.views || '0 vues',
         };
         const promise = new Promise<void>((resolve, reject) => {
             try {

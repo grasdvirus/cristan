@@ -21,8 +21,8 @@ import { ImageUpload } from './image-upload';
 const formSchema = z.object({
   title: z.string().min(1, 'Le titre est requis.'),
   description: z.string().min(1, 'La description est requise.'),
-  uploadDate: z.string().min(1, 'La date est requise.'),
-  views: z.string().min(1, 'Le nombre de vues est requis.'),
+  uploadDate: z.string().optional(),
+  views: z.string().optional(),
   videoUrl: z.string().url('URL invalide'),
   thumbnailUrl: z.string().min(1, "L'URL de la miniature est requise."),
   thumbnailHint: z.string().optional(),
@@ -101,7 +101,7 @@ export function VideoForm({ initialData, onSubmit, isSubmitting }: VideoFormProp
           name="uploadDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date de publication</FormLabel>
+              <FormLabel>Date de publication (Optionnel)</FormLabel>
               <FormControl>
                 <Input placeholder="ex: 12 mai 2024" {...field} />
               </FormControl>
@@ -114,7 +114,7 @@ export function VideoForm({ initialData, onSubmit, isSubmitting }: VideoFormProp
           name="views"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vues</FormLabel>
+              <FormLabel>Vues (Optionnel)</FormLabel>
               <FormControl>
                 <Input placeholder="ex: 12k vues" {...field} />
               </FormControl>
