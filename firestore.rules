@@ -1,103 +1,119 @@
 /**
- * @fileoverview Firestore Security Rules for the application.
+ * @fileoverview Firestore Security Rules.
  *
  * Core Philosophy:
- * This ruleset prioritizes security by enforcing strict access control.
- * - Users can only read/write their own profile data.
- * - Public read access is granted for specific collections such as 'slides', 'projects', and 'videos',
- *   but write access to these collections is forbidden until owner validation is added (requires schema update).
- * - Submissions collection will have strict read and write rules to authenticated users.
+ * This ruleset prioritizes secure access to user-specific data while allowing public read access to certain collections.
+ * User authentication is enforced for all write operations and for accessing user-specific data.
  *
  * Data Structure:
- * - /slides/{slideId}: Stores publicly visible slide data.
- * - /projects/{projectId}: Stores publicly visible project data.
- * - /videos/{videoId}: Stores publicly visible video data.
- * - /users/{userId}: Stores private user profile data.
- * - /submissions/{submissionId}: Stores contract form submissions data.
+ * - /slides/{slideId}: Publicly readable collection for hero carousel slides.  Write access is not granted.
+ * - /projects/{projectId}: Publicly readable collection for internet projects. Write access is not granted.
+ * - /videos/{videoId}: Publicly readable collection for TV videos. Write access is not granted.
+ * - /users/{userId}: Stores individual user profiles. Access is restricted to the owning user.
+ * - /submissions/{submissionId}: Stores contact form submissions. Write access is not granted.
  *
  * Key Security Decisions:
- * - Public listing of users is disallowed.
- * - Write access to public collections ('slides', 'projects', 'videos') is restricted until owner validation is implemented.
+ * - Public Read Access: Slides, Projects, and Videos are publicly readable.
+ * - User Ownership: User profiles under /users/{userId} are strictly owned by the authenticated user.
+ * - No Listing of Users: Listing the /users collection is not permitted.
+ * - Flexible Data Shapes: The rules do not enforce strict schema validation beyond authorization checks.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Grants public read access to slides.
+     * @description Allows read access to slides; write access is denied.
      * @path /slides/{slideId}
-     * @allow (get, list): Any user can read slide data.
-     * @deny (create, update, delete): No user can create, update, or delete slides without owner validation.
-     * @principle Allows public read access with restricted writes.
+     * @allow (get, list): Any user can read slides.
+     * @deny (create, update, delete): No user can create, update, or delete slides.
+     * @principle Public read access, no write access.
      */
     match /slides/{slideId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Grants public read access to projects.
+     * @description Allows read access to projects; write access is denied.
      * @path /projects/{projectId}
-     * @allow (get, list): Any user can read project data.
-     * @deny (create, update, delete): No user can create, update, or delete projects without owner validation.
-     * @principle Allows public read access with restricted writes.
+     * @allow (get, list): Any user can read projects.
+     * @deny (create, update, delete): No user can create, update, or delete projects.
+     * @principle Public read access, no write access.
      */
     match /projects/{projectId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Grants public read access to videos.
+     * @description Allows read access to videos; write access is denied.
      * @path /videos/{videoId}
-     * @allow (get, list): Any user can read video data.
-     * @deny (create, update, delete): No user can create, update, or delete videos without owner validation.
-     * @principle Allows public read access with restricted writes.
+     * @allow (get, list): Any user can read videos.
+     * @deny (create, update, delete): No user can create, update, or delete videos.
+     * @principle Public read access, no write access.
      */
     match /videos/{videoId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Restricts access to user profiles to the owner.
+     * @description Allows a user to read, create, update, and delete their own profile.
      * @path /users/{userId}
-     * @allow (create): The user can create their own profile if the userId matches their auth UID.
-     * @allow (get, list, update, delete): The user can only read, update, and delete their own profile.
-     * @deny: Any other operation is denied.
-     * @principle Enforces document ownership for user profiles.
+     * @allow (get, list): The user can read/list their own profile.
+     * @allow (create): The user can create their own profile.
+     * @allow (update, delete): The user can update/delete their own profile.
+     * @deny: Other users cannot access this data.
+     * @principle Enforces document ownership.
      */
     match /users/{userId} {
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.keys().hasOnly(['bio', 'skills', 'contactInfo']);
-      allow get, list: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.keys().hasOnly(['bio', 'skills', 'contactInfo']);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
-     /**
-     * @description Restricts access to contract submissions.
-     * @path /submissions/{submissionId}
-     * @allow (create): Authenticated user can create.
-     * @allow (get, list, update, delete): The user can only read, update, and delete their own submission.
-     * @deny: Any other operation is denied.
+      /**
+       * @description Allows read access to submissions; write access is denied.
+       * @path /submissions/{submissionId}
+       * @allow (get, list): Any user can read submissions.
+       * @deny (create, update, delete): No user can create, update, or delete submissions.
+       * @principle Public read access, no write access.
+       */
+      match /submissions/{submissionId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+      }
+
+    // ------ Helper Functions ------
+
+    /**
+     * @description Checks if the current user is signed in.
+     * @return {bool} True if the user is signed in, false otherwise.
      */
-    match /submissions/{submissionId} {
-       allow create: if isSignedIn() && request.resource.data.keys().hasOnly(['fullName', 'email', 'phone', 'companyName', 'projectDetails', 'projectId', 'createdAt']);
-       allow get, list: if isSignedIn();
-       allow update: if false;
-       allow delete: if false;
-    }
-
     function isSignedIn() {
       return request.auth != null;
     }
 
+    /**
+     * @description Checks if the current user is the owner of the document.
+     * @param {string} userId The user ID to check against.
+     * @return {bool} True if the user is the owner, false otherwise.
+     * @example: allow read: if isOwner("user123");
+     */
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
     }
 
+    /**
+     * @description Checks if the current user is the owner of the document and if the document exists.
+     * @param {string} userId The user ID to check against.
+     * @return {bool} True if the user is the owner and the document exists, false otherwise.
+     */
     function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      return isOwner(userId) && resource != null;
     }
   }
 }
