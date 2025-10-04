@@ -127,9 +127,9 @@ export function VideoForm({ initialData, onSubmit, isSubmitting }: VideoFormProp
           name="videoUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>URL de la vidéo (embed)</FormLabel>
+              <FormLabel>URL de la vidéo (YouTube)</FormLabel>
               <FormControl>
-                <Input placeholder="https://www.youtube.com/embed/..." {...field} />
+                <Input placeholder="https://www.youtube.com/watch?v=..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

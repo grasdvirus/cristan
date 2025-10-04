@@ -21,6 +21,7 @@ import { SlideForm } from '@/components/admin/slide-form';
 import { ProjectForm, type ProjectFormValues } from '@/components/admin/project-form';
 import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
+import { convertToEmbedUrl } from '@/lib/utils';
 
 // Define types based on backend.json
 export type Slide = {
@@ -320,13 +321,17 @@ function VideosManager() {
     const handleFormSubmit = (values: VideoFormValues) => {
         if (!firestore) return;
         setIsSubmitting(true);
+        const dataToSave = {
+            ...values,
+            videoUrl: convertToEmbedUrl(values.videoUrl),
+        };
         const promise = new Promise<void>((resolve, reject) => {
             try {
                 if (editingVideo) {
-                    updateDocumentNonBlocking(doc(firestore, 'videos', editingVideo.id), values);
+                    updateDocumentNonBlocking(doc(firestore, 'videos', editingVideo.id), dataToSave);
                     resolve();
                 } else {
-                    addDocumentNonBlocking(collection(firestore, 'videos'), values).then(() => resolve()).catch(reject);
+                    addDocumentNonBlocking(collection(firestore, 'videos'), dataToSave).then(() => resolve()).catch(reject);
                 }
             } catch (error) {
                 reject(error);
