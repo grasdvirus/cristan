@@ -2,20 +2,22 @@
  * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset prioritizes security by enforcing strict ownership and role-based access control.
- * It defaults to denying access unless explicitly granted, ensuring that only authorized users can read or modify data.
+ * This ruleset prioritizes administrative control. Authenticated administrators have full access to all data.
+ * Non-admin users are restricted to managing their own user profiles.
  *
  * Data Structure:
- * - Slides: Stored in the `/slides/{slideId}` collection. Intended for public read but only manageable by admins.
- * - Projects: Stored in the `/projects/{projectId}` collection. Intended for public read but only manageable by admins.
- * - Videos: Stored in the `/videos/{videoId}` collection. Intended for public read but only manageable by admins.
- * - User Profiles: Stored in the `/users/{userId}` collection. Only the authenticated user should be able to read/write their own profile.
+ * - /slides/{slideId}: Stores data for the hero carousel.
+ * - /projects/{projectId}: Stores data for internet projects.
+ * - /videos/{videoId}: Stores data for TV videos.
+ * - /users/{userId}: Stores user profile data, accessible only to the user themselves.
  *
  * Key Security Decisions:
- * - Public Read Access: Slides, Projects and Videos collections are designed for public consumption, thus allowing read access for all users.
- * - Owner-Only Access for User Profiles: User profiles are private; only the authenticated user can read and write their profile.
- * - Administrative Control: Write access (create, update, delete) for Slides, Projects, and Videos is not explicitly defined but assumed to be managed by administrators (this is not yet implemented).
- * - No User Listing: The ruleset prevents listing all users in the database to protect user privacy.
+ * - Administrators (defined by the `isAdmin()` function) bypass all other security checks.
+ * - Non-administrators can only read and write their own user profiles under `/users/{userId}`.
+ * - Listing of users is disallowed.
+ *
+ * Denormalization for Authorization:
+ * - An `isAdmin` claim on the user's auth token is used to grant administrative privileges.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -23,85 +25,101 @@ service cloud.firestore {
 
     /**
      * @description Checks if the user is signed in.
-     * @returns {boolean} True if the user is signed in, false otherwise.
+     * @return {bool} True if the user is signed in, false otherwise.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
+     * @description Checks if the user is an admin based on a custom claim.
+     * @return {bool} True if the user is an admin, false otherwise.
+     */
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.isAdmin == true;
+    }
+
+    /**
      * @description Checks if the authenticated user ID matches the provided user ID.
-     * @param {string} userId - The user ID to compare against the authenticated user's ID.
-     * @returns {boolean} True if the user ID matches the authenticated user's ID, false otherwise.
+     * @param {string} userId The user ID to compare against.
+     * @return {bool} True if the user is the owner, false otherwise.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of an existing document.
-     * @param {string} userId - The user ID that should own the document.
-     * @returns {boolean} True if the user is the owner and the document exists, false otherwise.
+     * @description Checks if the authenticated user is the existing owner of the document.
+     * @param {string} userId The user ID to compare against.
+     * @return {bool} True if the user is the owner and the document exists.
      */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
 
     /**
-     * @description Rules for the /slides collection.
+     * @description Rules for the /slides collection. Allows admins full control.
      * @path /slides/{slideId}
-     * @allow (get, list): Any user can read all slides.
-     * @allow (create, update, delete): No user can modify slides (admin only).
-     * @deny (create): Any unauthenticated user.
-     * @principle Allows public read, restricts writes to admins (not yet implemented).
+     * @allow (create) If the user is an admin.
+     * @deny (create) If the user is not an admin.
+     * @allow (get) If the user is an admin.
+     * @deny (get) If the user is not an admin.
+     * @principle Allows admin to fully manage the slides collection.
      */
     match /slides/{slideId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin role validation.
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description Rules for the /projects collection.
+     * @description Rules for the /projects collection. Allows admins full control.
      * @path /projects/{projectId}
-     * @allow (get, list): Any user can read all projects.
-     * @allow (create, update, delete): No user can modify projects (admin only).
-     * @deny (create): Any unauthenticated user.
-     * @principle Allows public read, restricts writes to admins (not yet implemented).
+     * @allow (create) If the user is an admin.
+     * @deny (create) If the user is not an admin.
+     * @allow (get) If the user is an admin.
+     * @deny (get) If the user is not an admin.
+     * @principle Allows admin to fully manage the projects collection.
      */
     match /projects/{projectId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin role validation.
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description Rules for the /videos collection.
+     * @description Rules for the /videos collection. Allows admins full control.
      * @path /videos/{videoId}
-     * @allow (get, list): Any user can read all videos.
-     * @allow (create, update, delete): No user can modify videos (admin only).
-     * @deny (create): Any unauthenticated user.
-     * @principle Allows public read, restricts writes to admins (not yet implemented).
+     * @allow (create) If the user is an admin.
+     * @deny (create) If the user is not an admin.
+     * @allow (get) If the user is an admin.
+     * @deny (get) If the user is not an admin.
+     * @principle Allows admin to fully manage the videos collection.
      */
     match /videos/{videoId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin role validation.
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description Rules for the /users collection.
+     * @description Rules for the /users collection. Allows a user to manage their own profile, and admins to have full access.
      * @path /users/{userId}
-     * @allow (get): Only the user can read their own profile.
-     * @allow (create): Only the user can create their profile, only if the uid matches the document id.
-     * @allow (update, delete): Only the user can update or delete their own profile, if it exists.
-     * @deny (get): Any other user trying to read this user's profile.
-     * @deny (list): No one can list all users.
-     * @principle Enforces document ownership for reads and writes.
+     * @allow (create) If the user is creating their own profile.
+     * @deny (create) If the user is not creating their own profile.
+     * @allow (get) If the user is an admin or the user is getting their own profile.
+     * @deny (get) If the user is not an admin or getting their own profile.
+     * @principle Allows a user to manage their own profile.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get: if isAdmin() || isOwner(userId);
       allow list: if false;
       allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow update: if isAdmin() || isExistingOwner(userId);
+      allow delete: if isAdmin() || isExistingOwner(userId);
     }
   }
 }
