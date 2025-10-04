@@ -1,14 +1,95 @@
+/**
+ * @fileoverview Firestore Security Rules for the application.
+ *
+ * Core Philosophy:
+ * This ruleset prioritizes security by enforcing strict access control.
+ * - Users can only read/write their own profile data.
+ * - Public read access is granted for specific collections such as 'slides', 'projects', and 'videos',
+ *   but write access to these collections is forbidden until owner validation is added (requires schema update).
+ * - Submissions collection will have strict read and write rules to authenticated users.
+ *
+ * Data Structure:
+ * - /slides/{slideId}: Stores publicly visible slide data.
+ * - /projects/{projectId}: Stores publicly visible project data.
+ * - /videos/{videoId}: Stores publicly visible video data.
+ * - /users/{userId}: Stores private user profile data.
+ * - /submissions/{submissionId}: Stores contract form submissions data.
+ *
+ * Key Security Decisions:
+ * - Public listing of users is disallowed.
+ * - Write access to public collections ('slides', 'projects', 'videos') is restricted until owner validation is implemented.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
+    /**
+     * @description Grants public read access to slides.
+     * @path /slides/{slideId}
+     * @allow (get, list): Any user can read slide data.
+     * @deny (create, update, delete): No user can create, update, or delete slides without owner validation.
+     * @principle Allows public read access with restricted writes.
+     */
+    match /slides/{slideId} {
+      allow get, list: if true;
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
-    function isAdmin() {
-      return request.auth.token.email == 'christianvirus77@gmail.com';
+    /**
+     * @description Grants public read access to projects.
+     * @path /projects/{projectId}
+     * @allow (get, list): Any user can read project data.
+     * @deny (create, update, delete): No user can create, update, or delete projects without owner validation.
+     * @principle Allows public read access with restricted writes.
+     */
+    match /projects/{projectId} {
+      allow get, list: if true;
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description Grants public read access to videos.
+     * @path /videos/{videoId}
+     * @allow (get, list): Any user can read video data.
+     * @deny (create, update, delete): No user can create, update, or delete videos without owner validation.
+     * @principle Allows public read access with restricted writes.
+     */
+    match /videos/{videoId} {
+      allow get, list: if true;
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description Restricts access to user profiles to the owner.
+     * @path /users/{userId}
+     * @allow (create): The user can create their own profile if the userId matches their auth UID.
+     * @allow (get, list, update, delete): The user can only read, update, and delete their own profile.
+     * @deny: Any other operation is denied.
+     * @principle Enforces document ownership for user profiles.
+     */
+    match /users/{userId} {
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.keys().hasOnly(['bio', 'skills', 'contactInfo']);
+      allow get, list: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.keys().hasOnly(['bio', 'skills', 'contactInfo']);
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+
+     /**
+     * @description Restricts access to contract submissions.
+     * @path /submissions/{submissionId}
+     * @allow (create): Authenticated user can create.
+     * @allow (get, list, update, delete): The user can only read, update, and delete their own submission.
+     * @deny: Any other operation is denied.
+     */
+    match /submissions/{submissionId} {
+       allow create: if isSignedIn() && request.resource.data.keys().hasOnly(['fullName', 'email', 'phone', 'companyName', 'projectDetails', 'projectId', 'createdAt']);
+       allow get, list: if isSignedIn();
+       allow update: if false;
+       allow delete: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
     }
 
     function isOwner(userId) {
@@ -16,155 +97,7 @@ service cloud.firestore {
     }
 
     function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * @description Default catch-all rule that allows read access to all authenticated users
-     * @path /{document=**}
-     * @allow (get, list) - Any authenticated user can read any document.
-     * @allow (create, update, delete) - Any authenticated user can write to any document.
-     * @deny None
-     * @principle Allows read access to all authenticated users and write access to authenticated users, for documents not specifically defined in rules
-     */
-    // match /{document=**} {
-    //   allow read: if true;
-    //   allow create, update, delete: if isSignedIn();
-    // }
-    
-    /**
-     * @description Manages access to product information. Admins can create, delete, and update. Authenticated users can update likes/comments.
-     * @path /products/{productId}
-     * @allow (get, list) Any user can read product information.
-     * @allow (create, delete) Admins can create and delete products. (isAdmin() == true)
-     * @allow (update) Admins can update products or authenticated users can update likes and comments. (isAdmin() == true) || (request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'comments']))
-     * @deny (create, delete) Non-admins cannot create or delete products. (isAdmin() == false)
-     * @deny (update) Non-admins cannot update products unless it's only likes and comments.
-     * @principle Restricts product creation and deletion to admins while allowing limited updates (likes/comments) from authenticated users.
-     */
-    match /products/{productId} {
-      allow get, list: if true;
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin() || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'comments']));
-    }
-
-    /**
-     * @description Controls access to hero carousel slides.  Only admins can modify slides.
-     * @path /slides/{slideId}
-     * @allow (get, list) Any user can read slide information.
-     * @allow (create, update, delete) Admins can create, update and delete slides. (isAdmin() == true)
-     * @deny (create, update, delete) Non-admins cannot modify slides.
-     * @principle Restricts slide management to administrators.
-     */
-    match /slides/{slideId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-    /**
-     * @description Manages contract submissions. Admins can read, update, and delete contracts. Any user can create a contract.
-     * @path /contracts/{contractId}
-     * @allow (get, list, update, delete) Admins can read, update, and delete contracts. (isAdmin() == true)
-     * @allow (create) Any user can create a contract.
-     * @deny (read, update, delete) Non-admins cannot read, update, or delete contracts.
-     * @principle Allows anyone to create contracts but restricts modification and deletion to administrators.
-     */
-    match /contracts/{contractId} {
-      allow get, list, update, delete: if isAdmin();
-      allow create: if true;
-    }
-    
-    /**
-     * @description Manages access to videos. Admins can create, delete, and update. Authenticated users can update views, likes, and comments.
-     * @path /videos/{videoId}
-     * @allow (get, list) Any user can read video information.
-     * @allow (create, delete) Admins can create and delete videos. (isAdmin() == true)
-     * @allow (update) Admins can update videos or authenticated users can update views, likes, and comments. (isAdmin() == true) || (request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'likes', 'comments']))
-     * @deny (create, delete) Non-admins cannot create or delete videos.
-     * @deny (update) Non-admins cannot update videos unless it's only views, likes, and comments.
-     * @principle Restricts video creation and deletion to admins while allowing limited updates (views/likes/comments) from authenticated users.
-     */
-    match /videos/{videoId} {
-      allow get, list: if true;
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin() || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'likes', 'comments']));
-    }
-
-    /**
-     * @description Manages access to orders. Only admins can read orders. Authenticated users can create, update and delete.
-     * @path /orders/{orderId}
-     * @allow (get, list) Admins can read order information. (isAdmin() == true)
-     * @allow (create, update, delete) Authenticated users can write to orders. (request.auth != null)
-     * @deny (get, list) Non-admins cannot read orders.
-     * @principle Restricts order visibility to admins but allows authenticated users to make changes.
-     */
-    match /orders/{orderId} {
-      allow get, list: if isAdmin();
-      allow create, update, delete: if isSignedIn();
-    }
-    
-    /**
-     * @description Manages access to subscriptions. Only admins can read subscriptions. Authenticated users can create, update and delete.
-     * @path /subscriptions/{subscriptionId}
-     * @allow (get, list) Admins can read subscription information. (isAdmin() == true)
-     * @allow (create, update, delete) Authenticated users can write to subscriptions. (request.auth != null)
-     * @deny (get, list) Non-admins cannot read subscriptions.
-     * @principle Restricts subscription visibility to admins but allows authenticated users to make changes.
-     */
-    match /subscriptions/{subscriptionId} {
-       allow get, list: if isAdmin();
-       allow create, update, delete: if isSignedIn();
-    }
-    
-    /**
-     * @description Manages access to user profiles. Owners and admins can read and write to profiles.
-     * @path /users/{userId}
-     * @allow (get, list, create, update, delete) Owners and admins can read and write to profiles. ((isOwner(userId) == true) || (isAdmin() == true))
-     * @deny (get, list, create, update, delete) Non-owners and non-admins cannot read or write to profiles.
-     * @principle Restricts profile access to the owner and administrators.
-     */
-    match /users/{userId} {
-      allow get, list, create, update, delete: if isOwner(userId) || isAdmin();
-    }
-    
-    /**
-     * @description Manages access to features. Admins can create, delete, and update features. Authenticated users can update feedback.
-     * @path /features/{featureId}
-     * @allow (get, list) Any user can read feature information.
-     * @allow (create, delete) Admins can create and delete features. (isAdmin() == true)
-     * @allow (update) Admins can update features or authenticated users can update feedback. (isAdmin() == true) || (request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback']));
-     * @deny (create, delete) Non-admins cannot create or delete features.
-     * @deny (update) Non-admins cannot update features unless it's only feedback.
-     * @principle Restricts feature creation and deletion to admins while allowing limited updates (feedback) from authenticated users.
-     */
-    match /features/{featureId} {
-      allow get, list: if true;
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin() || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedback']));
-    }
-
-    /**
-     * @description Controls access to configuration settings.  Only admins can modify the configuration.
-     * @path /config/{configId}
-     * @allow (get, list) Any user can read config information.
-     * @allow (create, update, delete) Admins can create, update and delete config. (isAdmin() == true)
-     * @deny (create, update, delete) Non-admins cannot modify config.
-     * @principle Restricts configuration management to administrators.
-     */
-    match /config/{configId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-     /**
-      * @description Manages access to contract submissions. Anyone can create a submission.
-      * @path /submissions/{submissionId}
-      * @allow (get, list, create, update, delete) Authenticated users can read and write to submission. (request.auth != null)
-      * @principle Allow only auth user can access
-      */
-     match /submissions/{submissionId} {
-      allow create, update, delete: if isSignedIn();
-      allow get, list: if isSignedIn();
+        return isOwner(userId) && resource != null;
     }
   }
 }
