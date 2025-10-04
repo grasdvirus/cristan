@@ -1,86 +1,107 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for user profiles
- * and allows public read-only access to slides, projects, and videos.
+ * @fileoverview Firestore Security Rules for the application.
+ *
+ * Core Philosophy:
+ * This ruleset prioritizes security by enforcing strict ownership and role-based access control.
+ * It defaults to denying access unless explicitly granted, ensuring that only authorized users can read or modify data.
  *
  * Data Structure:
- * - /slides/{slideId}: Publicly readable slides for the hero carousel.
- * - /projects/{projectId}: Publicly readable internet projects.
- * - /videos/{videoId}: Publicly readable TV videos.
- * - /users/{userId}: User profiles, only accessible to the owning user.
+ * - Slides: Stored in the `/slides/{slideId}` collection. Intended for public read but only manageable by admins.
+ * - Projects: Stored in the `/projects/{projectId}` collection. Intended for public read but only manageable by admins.
+ * - Videos: Stored in the `/videos/{videoId}` collection. Intended for public read but only manageable by admins.
+ * - User Profiles: Stored in the `/users/{userId}` collection. Only the authenticated user should be able to read/write their own profile.
  *
  * Key Security Decisions:
- * - Slides, projects, and videos are publicly readable to allow for easy content display. Writes are disallowed to ensure data integrity and prevent unauthorized modifications.
- * - User profiles are strictly controlled; only the owning user can create, read, update, or delete their profile.
- * - Listing of users is disallowed for privacy reasons.
+ * - Public Read Access: Slides, Projects and Videos collections are designed for public consumption, thus allowing read access for all users.
+ * - Owner-Only Access for User Profiles: User profiles are private; only the authenticated user can read and write their profile.
+ * - Administrative Control: Write access (create, update, delete) for Slides, Projects, and Videos is not explicitly defined but assumed to be managed by administrators (this is not yet implemented).
+ * - No User Listing: The ruleset prevents listing all users in the database to protect user privacy.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows public read access to slides, but denies all write operations.
+     * @description Checks if the user is signed in.
+     * @returns {boolean} True if the user is signed in, false otherwise.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user ID matches the provided user ID.
+     * @param {string} userId - The user ID to compare against the authenticated user's ID.
+     * @returns {boolean} True if the user ID matches the authenticated user's ID, false otherwise.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the authenticated user is the owner of an existing document.
+     * @param {string} userId - The user ID that should own the document.
+     * @returns {boolean} True if the user is the owner and the document exists, false otherwise.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Rules for the /slides collection.
      * @path /slides/{slideId}
-     * @allow (get, list) - Any user can read slide data.
-     * @deny (create, update, delete) - No user can modify slide data.
-     * @principle Public read, no writes.
+     * @allow (get, list): Any user can read all slides.
+     * @allow (create, update, delete): No user can modify slides (admin only).
+     * @deny (create): Any unauthenticated user.
+     * @principle Allows public read, restricts writes to admins (not yet implemented).
      */
     match /slides/{slideId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create, update, delete: if false; // TODO: Add admin role validation.
     }
 
     /**
-     * @description Allows public read access to projects, but denies all write operations.
+     * @description Rules for the /projects collection.
      * @path /projects/{projectId}
-     * @allow (get, list) - Any user can read project data.
-     * @deny (create, update, delete) - No user can modify project data.
-     * @principle Public read, no writes.
+     * @allow (get, list): Any user can read all projects.
+     * @allow (create, update, delete): No user can modify projects (admin only).
+     * @deny (create): Any unauthenticated user.
+     * @principle Allows public read, restricts writes to admins (not yet implemented).
      */
     match /projects/{projectId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create, update, delete: if false; // TODO: Add admin role validation.
     }
 
     /**
-     * @description Allows public read access to videos, but denies all write operations.
+     * @description Rules for the /videos collection.
      * @path /videos/{videoId}
-     * @allow (get, list) - Any user can read video data.
-     * @deny (create, update, delete) - No user can modify video data.
-     * @principle Public read, no writes.
+     * @allow (get, list): Any user can read all videos.
+     * @allow (create, update, delete): No user can modify videos (admin only).
+     * @deny (create): Any unauthenticated user.
+     * @principle Allows public read, restricts writes to admins (not yet implemented).
      */
     match /videos/{videoId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create, update, delete: if false; // TODO: Add admin role validation.
     }
 
     /**
-     * @description Manages user profiles, ensuring only the owning user can access their data.
+     * @description Rules for the /users collection.
      * @path /users/{userId}
-     * @allow (create) - A user can create their own profile if the userId matches their auth UID.
-     * @allow (get, update, delete) - Only the user with a matching userId can read, update, or delete their profile.
-     * @deny (list) - Listing users is not allowed.
-     * @deny (create) - A user cannot create a profile with a userId that doesn't match their auth UID.
-     * @principle Enforces document ownership for all operations.
+     * @allow (get): Only the user can read their own profile.
+     * @allow (create): Only the user can create their profile, only if the uid matches the document id.
+     * @allow (update, delete): Only the user can update or delete their own profile, if it exists.
+     * @deny (get): Any other user trying to read this user's profile.
+     * @deny (list): No one can list all users.
+     * @principle Enforces document ownership for reads and writes.
      */
     match /users/{userId} {
-      allow get: if isSignedIn() && isOwner(userId);
+      allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
-  }
-
-  function isSignedIn() {
-    return request.auth != null;
-  }
-
-  function isOwner(userId) {
-    return request.auth.uid == userId;
-  }
-
-    function isExistingOwner(userId) {
-    return isSignedIn() && isOwner(userId) && resource != null;
   }
 }
