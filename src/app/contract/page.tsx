@@ -29,8 +29,8 @@ function ContractPageContent() {
   const { data: project, isLoading } = useDoc<Project>(projectRef);
 
   return (
-    <div className="container mx-auto py-16 sm:py-24">
-      <NeumorphicCard className="max-w-4xl mx-auto sm:p-6 p-4">
+    <div className="container mx-auto px-4 py-16 sm:py-24">
+      <div className="max-w-4xl mx-auto">
         <div className="relative text-center mb-8">
             <Button 
                 variant="ghost" 
@@ -63,7 +63,7 @@ function ContractPageContent() {
         <div className="mt-8">
             <ContractForm />
         </div>
-      </NeumorphicCard>
+      </div>
     </div>
   );
 }
