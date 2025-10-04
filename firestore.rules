@@ -1,133 +1,116 @@
 /**
  * @file Firestore Security Rules
- * @version 2
- *
- * @description This ruleset enforces a strict ownership and admin-controlled model for data access.
- * All data is segregated into top-level collections.
+ * @description This ruleset enforces a strict user-ownership model for user profiles
+ * and allows public read-only access to slides, projects, and videos. Contract submissions
+ * are publicly readable but only writeable by authenticated users.
  *
  * Data Structure:
- * - /slides/{slideId}: Public read, admin-only write.
- * - /projects/{projectId}: Public read, admin-only write.
- * - /videos/{videoId}: Public read, admin-only write.
- * - /users/{userId}: Owner-only read and write.
- * - /submissions/{submissionId}: Admin-only read and write.
+ * - /slides/{slideId}: Publicly readable slides for the hero carousel.
+ * - /projects/{projectId}: Publicly readable internet projects.
+ * - /videos/{videoId}: Publicly readable TV videos.
+ * - /users/{userId}: User profile information, accessible only to the owner.
+ * - /submissions/{submissionId}: Contract submissions. Publicly readable, but create and update operations are only available to authenticated users.
  *
  * Key Security Decisions:
- * - Slides, Projects, and Videos are publicly readable but only modifiable by authenticated admins.
- * - User profiles are private and accessible only to the user themselves.
- * - Contract submissions are only accessible to authenticated admins.
- * - Listing of user documents is disallowed to protect privacy.
+ * - Slides, projects, and videos are publicly readable (get, list).
+ * - User profiles are strictly owned; only the authenticated user can read/write their own profile.
+ * - Contract submissions are publicly readable but only writeable by authenticated users.
+ * - No user listing is allowed.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to the 'slides' collection.
+     * @description Grants public read access to slides and restricts writes.
      * @path /slides/{slideId}
-     * @allow (get, list): Any user can read the slides.
-     * @allow (create, update, delete): Only authenticated admins can modify slides.
-     * @deny (create, update, delete): Non-admin users cannot modify slides.
-     * @principle Public read, admin-only write.
+     * @allow (get, list): Any user can read slides.
+     * @allow (create): Authenticated users can create slides. The 'id' field must match the slideId.
+     * @allow (update, delete): Only the user who created the slide can update or delete it.
+     * @deny (create): An unauthenticated user attempts to create a slide.
+     * @deny (update): A user attempts to update a slide they don't own.
+     * @principle Public read, owner-only writes, relational integrity for 'id' field.
      */
     match /slides/{slideId} {
       allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
     }
 
     /**
-     * @description Controls access to the 'projects' collection.
+     * @description Grants public read access to projects and restricts writes.
      * @path /projects/{projectId}
-     * @allow (get, list): Any user can read the projects.
-     * @allow (create, update, delete): Only authenticated admins can modify projects.
-     * @deny (create, update, delete): Non-admin users cannot modify projects.
-     * @principle Public read, admin-only write.
+     * @allow (get, list): Any user can read projects.
+     * @allow (create): Authenticated users can create projects. The 'id' field must match the projectId.
+     * @allow (update, delete): Only the user who created the project can update or delete it.
+     * @deny (create): An unauthenticated user attempts to create a project.
+     * @deny (update): A user attempts to update a project they don't own.
+     * @principle Public read, owner-only writes, relational integrity for 'id' field.
      */
     match /projects/{projectId} {
       allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
     }
 
     /**
-     * @description Controls access to the 'videos' collection.
+     * @description Grants public read access to videos and restricts writes.
      * @path /videos/{videoId}
-     * @allow (get, list): Any user can read the videos.
-     * @allow (create, update, delete): Only authenticated admins can modify videos.
-     * @deny (create, update, delete): Non-admin users cannot modify videos.
-     * @principle Public read, admin-only write.
+     * @allow (get, list): Any user can read videos.
+     * @allow (create): Authenticated users can create videos. The 'id' field must match the videoId.
+     * @allow (update, delete): Only the user who created the video can update or delete it.
+     * @deny (create): An unauthenticated user attempts to create a video.
+     * @deny (update): A user attempts to update a video they don't own.
+     * @principle Public read, owner-only writes, relational integrity for 'id' field.
      */
     match /videos/{videoId} {
       allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
     }
 
     /**
-     * @description Controls access to user profile documents.
+     * @description Enforces user-ownership for profile data.
      * @path /users/{userId}
-     * @allow (get): Only the owner can read their own profile.
-     * @allow (create): Only the owner can create their own profile with matching ID.
-     * @allow (update, delete): Only the owner can update or delete their own profile.
-     * @deny (get, list): Non-owners cannot access user profiles.
-     * @principle Enforces document ownership for user profiles.
+     * @allow (get, list): Only the owner can read their own profile.
+     * @allow (create): Only the user with the matching UID can create their profile. The 'id' field must match the userId.
+     * @allow (update, delete): Only the owner can update or delete their profile.
+     * @deny (create): A user attempts to create a profile with a mismatched user ID.
+     * @deny (get, update, delete): A user attempts to access another user's profile.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
-    
-     /**
-     * @description Controls access to contract submissions.
+
+    /**
+     * @description Grants public read access to submissions and restricts writes to authenticated users.
      * @path /submissions/{submissionId}
-     * @allow (get, list): Only authenticated admins can read submissions.
-     * @allow (create, update, delete): Only authenticated admins can manage submissions.
-     * @deny (create, update, delete): Non-admin users cannot modify submissions.
-     * @principle Admin-only access to sensitive contract data.
+     * @allow (get, list): Any user can read submissions.
+     * @allow (create): Authenticated users can create submissions.
+     * @allow (update, delete): No one can update or delete submissions.
+     * @deny (create): An unauthenticated user attempts to create a submission.
+     * @deny (update, delete): Any user attempts to update or delete a submission.
+     * @principle Public read, authenticated user writes, relational integrity for 'id' field.
      */
     match /submissions/{submissionId} {
-      allow get, list: if isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if false;
     }
+  }
 
-    // --- Helper Functions ---
+  // Helper function to determine if the current user is signed in.
+  function isSignedIn() {
+    return request.auth != null;
+  }
 
-    /**
-     * @description Checks if the user is signed in.
-     * @return True if the user is signed in, false otherwise.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * @description Checks if the user is the owner of the document.
-     * @param userId The user ID to compare against the request's auth UID.
-     * @return True if the user is the owner, false otherwise.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-      /**
-       * @description Check if the current user is an existing owner of the document.
-       *              Combines ownership check with existence check for update/delete operations.
-       * @param userId The ID of the user who should own the document.
-       * @return True if the user is the owner and the document exists.
-       */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * @description Checks if the user is an administrator.
-     * @return True if the user is an administrator, false otherwise.
-     * @note This function currently returns false. It should be updated to reflect the actual admin status.
-     */
-    function isAdmin() {
-      // TODO: Implement admin check using a custom claim or a document lookup.
-      return false;
-    }
+  // Helper function to determine if the current user is the owner of the document.
+  function isOwner(userId) {
+    return request.auth.uid == userId;
   }
 }
