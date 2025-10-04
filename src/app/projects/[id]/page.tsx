@@ -74,14 +74,20 @@ export default function ProjectDetailsPage() {
           {/* Image Column */}
           <div className="flex flex-col gap-4">
             <div className="overflow-hidden rounded-2xl">
-                <Image
-                    src={project.imageUrl}
-                    alt={project.title}
-                    width={800}
-                    height={600}
-                    className="w-full h-auto object-cover"
-                    data-ai-hint={project.imageHint}
-                />
+                {project.imageUrl && project.imageUrl.startsWith('http') ? (
+                    <Image
+                        src={project.imageUrl}
+                        alt={project.title}
+                        width={800}
+                        height={600}
+                        className="w-full h-auto object-cover"
+                        data-ai-hint={project.imageHint}
+                    />
+                ) : (
+                    <div className="w-full h-[400px] bg-muted flex items-center justify-center">
+                        <span className="text-sm text-muted-foreground">Pas d'image</span>
+                    </div>
+                )}
             </div>
             
           </div>

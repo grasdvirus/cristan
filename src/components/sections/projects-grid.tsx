@@ -56,7 +56,7 @@ export default function ProjectsGrid() {
                 <div key={project.id} className="break-inside-avoid">
                     <NeumorphicCard className="group overflow-hidden flex flex-col h-full relative pb-12">
                     <div className="overflow-hidden rounded-lg mb-4">
-                        {project.imageUrl && (
+                        {project.imageUrl && project.imageUrl.startsWith('http') ? (
                             <Image
                             src={project.imageUrl}
                             alt={project.title}
@@ -65,6 +65,10 @@ export default function ProjectsGrid() {
                             className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
                             data-ai-hint={project.imageHint}
                             />
+                        ) : (
+                            <div className="w-full h-[200px] bg-muted flex items-center justify-center">
+                                <span className="text-sm text-muted-foreground">Pas d'image</span>
+                            </div>
                         )}
                     </div>
                     <div className='flex flex-col flex-grow p-0'>

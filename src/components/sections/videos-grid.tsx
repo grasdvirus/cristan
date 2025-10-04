@@ -55,7 +55,7 @@ export default function VideosGrid() {
                 <Link href={`/videos/${video.id}`} key={video.id} className="group">
                 <NeumorphicCard className="overflow-hidden cursor-pointer flex flex-col h-full">
                     <div className="relative overflow-hidden rounded-lg mb-4">
-                    {video.thumbnailUrl && (
+                    {video.thumbnailUrl && video.thumbnailUrl.startsWith('http') ? (
                         <Image
                         src={video.thumbnailUrl}
                         alt={video.title}
@@ -64,6 +64,10 @@ export default function VideosGrid() {
                         className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
                         data-ai-hint={video.thumbnailHint}
                         />
+                    ) : (
+                        <div className="w-full h-[200px] bg-muted flex items-center justify-center">
+                             <span className="text-sm text-muted-foreground">Pas de miniature</span>
+                        </div>
                     )}
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <PlayCircle className="w-16 h-16 text-white" />

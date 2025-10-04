@@ -160,14 +160,20 @@ export default function VideoDetailsPage() {
                     >
                         <div className="w-2/5 shrink-0">
                             <NeumorphicCard inset className="overflow-hidden">
-                                <Image
-                                    src={suggVideo.thumbnailUrl}
-                                    alt={suggVideo.title}
-                                    width={160}
-                                    height={90}
-                                    className="w-full h-auto object-cover"
-                                    data-ai-hint={suggVideo.thumbnailHint}
-                                />
+                               {suggVideo.thumbnailUrl && suggVideo.thumbnailUrl.startsWith('http') ? (
+                                    <Image
+                                        src={suggVideo.thumbnailUrl}
+                                        alt={suggVideo.title}
+                                        width={160}
+                                        height={90}
+                                        className="w-full h-auto object-cover"
+                                        data-ai-hint={suggVideo.thumbnailHint}
+                                    />
+                                 ) : (
+                                    <div className="w-full h-[70px] bg-muted flex items-center justify-center">
+                                        <span className="text-xs text-muted-foreground">Pas de miniature</span>
+                                    </div>
+                                )}
                             </NeumorphicCard>
                         </div>
                       <div className="w-3/5">
