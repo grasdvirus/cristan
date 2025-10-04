@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A Genkit flow to generate a long project description from a short one.
@@ -30,13 +31,13 @@ const prompt = ai.definePrompt({
   name: 'generateProjectDescriptionPrompt',
   input: { schema: GenerateProjectDescriptionInputSchema },
   output: { schema: GenerateProjectDescriptionOutputSchema },
-  prompt: `You are a professional marketing copywriter specializing in technology projects. Your task is to expand a short project description into a detailed and compelling long description.
+  prompt: `Vous êtes un rédacteur marketing professionnel spécialisé dans les projets technologiques. Votre tâche est de développer une courte description de projet en une description longue, détaillée et convaincante, rédigée exclusivement en français.
 
-The long description should be engaging, highlight potential features and benefits, and be written in a professional yet accessible tone. Elaborate on the core idea presented in the short description.
+La description longue doit être engageante, mettre en évidence les fonctionnalités et les avantages potentiels, et être rédigée sur un ton professionnel mais accessible. Développez l'idée de base présentée dans la description courte.
 
-Short Description: {{{shortDescription}}}
+Description Courte : {{{shortDescription}}}
 
-Generate a detailed long description based on this.`,
+Générez une description longue et détaillée en français basée sur cette information.`,
 });
 
 const generateProjectDescriptionFlow = ai.defineFlow(
