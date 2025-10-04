@@ -160,7 +160,7 @@ export default function VideoDetailsPage() {
                     >
                         <div className="w-2/5 shrink-0">
                             <NeumorphicCard inset className="overflow-hidden">
-                               {suggVideo.thumbnailUrl && suggVideo.thumbnailUrl.startsWith('http') ? (
+                               {suggVideo.thumbnailUrl && (suggVideo.thumbnailUrl.startsWith('http') || suggVideo.thumbnailUrl.startsWith('/')) ? (
                                     <Image
                                         src={suggVideo.thumbnailUrl}
                                         alt={suggVideo.title}

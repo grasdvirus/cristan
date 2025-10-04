@@ -55,7 +55,7 @@ export default function VideosGrid() {
                 <Link href={`/videos/${video.id}`} key={video.id} className="group">
                 <NeumorphicCard className="overflow-hidden cursor-pointer flex flex-col h-full">
                     <div className="relative overflow-hidden rounded-lg mb-4">
-                    {video.thumbnailUrl && video.thumbnailUrl.startsWith('http') ? (
+                    {video.thumbnailUrl && (video.thumbnailUrl.startsWith('http') || video.thumbnailUrl.startsWith('/')) ? (
                         <Image
                         src={video.thumbnailUrl}
                         alt={video.title}

@@ -56,7 +56,7 @@ export default function ProjectsGrid() {
                 <div key={project.id} className="break-inside-avoid">
                     <NeumorphicCard className="group overflow-hidden flex flex-col h-full relative pb-12">
                     <div className="overflow-hidden rounded-lg mb-4">
-                        {project.imageUrl && project.imageUrl.startsWith('http') ? (
+                        {project.imageUrl && (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('/')) ? (
                             <Image
                             src={project.imageUrl}
                             alt={project.title}

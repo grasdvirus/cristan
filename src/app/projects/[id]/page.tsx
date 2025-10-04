@@ -74,7 +74,7 @@ export default function ProjectDetailsPage() {
           {/* Image Column */}
           <div className="flex flex-col gap-4">
             <div className="overflow-hidden rounded-2xl">
-                {project.imageUrl && project.imageUrl.startsWith('http') ? (
+                {project.imageUrl && (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('/')) ? (
                     <Image
                         src={project.imageUrl}
                         alt={project.title}
