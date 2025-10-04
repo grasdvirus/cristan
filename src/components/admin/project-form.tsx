@@ -1,9 +1,10 @@
 
 'use client';
 
+import { useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -17,6 +18,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { Project } from '@/app/admin/page';
 import { ImageUpload } from './image-upload';
+import { generateProjectDescription } from '@/ai/flows/generate-project-description';
+import { Sparkles, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Le titre est requis.'),
@@ -37,6 +41,60 @@ interface ProjectFormProps {
   isSubmitting: boolean;
 }
 
+function AiDescriptionGenerator({ form }: { form: UseFormReturn<ProjectFormValues> }) {
+    const [isGenerating, setIsGenerating] = useState(false);
+    const { toast } = useToast();
+
+    const handleGenerate = async () => {
+        const shortDescription = form.getValues('description');
+        if (!shortDescription) {
+            toast({
+                title: 'Description courte manquante',
+                description: "Veuillez d'abord remplir la description courte.",
+                variant: 'destructive'
+            });
+            return;
+        }
+
+        setIsGenerating(true);
+        try {
+            const result = await generateProjectDescription({ shortDescription });
+            form.setValue('longDescription', result.longDescription, { shouldValidate: true });
+            toast({ title: 'Description longue générée !' });
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: "Erreur de l'IA",
+                description: "Impossible de générer la description.",
+                variant: 'destructive'
+            });
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    return (
+        <div className="flex items-center justify-between">
+            <FormLabel>Description Longue</FormLabel>
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className="btn-neumorphic-light dark:btn-neumorphic-dark"
+            >
+                {isGenerating ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                Générer avec l'IA
+            </Button>
+        </div>
+    );
+}
+
 export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectFormProps) {
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(formSchema),
@@ -44,6 +102,7 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
         ...initialData,
         technologies: initialData.technologies?.join(', ') || '',
         liveUrl: initialData.liveUrl || '',
+        price: initialData.price.replace(' FCFA', ''),
     } : {
       title: '',
       description: '',
@@ -107,9 +166,9 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
           name="longDescription"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description Longue</FormLabel>
+              <AiDescriptionGenerator form={form} />
               <FormControl>
-                <Textarea placeholder="Description pour la page détaillée du projet" {...field} rows={5} />
+                <Textarea placeholder="Générez ou écrivez la description pour la page détaillée du projet" {...field} rows={5} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -120,9 +179,9 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
           name="price"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Prix</FormLabel>
+              <FormLabel>Prix (en FCFA)</FormLabel>
               <FormControl>
-                <Input placeholder="ex: 1500€" {...field} />
+                <Input placeholder="ex: 50000" {...field} type="number" />
               </FormControl>
               <FormMessage />
             </FormItem>

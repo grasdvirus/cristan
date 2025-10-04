@@ -204,6 +204,7 @@ function ProjectsManager() {
         const dataToSave = {
             ...values,
             technologies: values.technologies.split(',').map(tech => tech.trim()),
+            price: `${values.price.replace(/ FCFA/g, '')} FCFA`,
         };
 
         const promise = new Promise<void>((resolve, reject) => {
@@ -257,7 +258,7 @@ function ProjectsManager() {
                             <Plus className="mr-2 h-4 w-4" /> Ajouter un projet
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-2xl">
                         <DialogHeader>
                             <DialogTitle>{editingProject ? 'Modifier' : 'Ajouter'} un projet</DialogTitle>
                         </DialogHeader>
