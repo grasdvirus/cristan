@@ -1,7 +1,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import { Image as ImageIcon, Link } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -15,10 +14,11 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
+  const isValidUrl = value && (value.startsWith('http://') || value.startsWith('https://'));
 
   return (
     <div>
-      {value ? (
+      {isValidUrl ? (
         <NeumorphicCard inset className="relative w-full h-48 rounded-lg overflow-hidden p-2">
           <Image
             src={value}
