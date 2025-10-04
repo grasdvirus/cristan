@@ -90,6 +90,8 @@ export default function VideoDetailsPage() {
     );
   }
 
+  const embedUrl = `${video.videoUrl}?modestbranding=1`;
+
   return (
     <div className="container mx-auto px-4 py-16 sm:py-24">
        <div className="mb-8">
@@ -108,7 +110,7 @@ export default function VideoDetailsPage() {
             {/* Video Player */}
              <div className="aspect-video w-full">
               <iframe
-                src={video.videoUrl}
+                src={embedUrl}
                 title={video.title}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
