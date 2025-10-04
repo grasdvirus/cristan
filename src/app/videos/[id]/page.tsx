@@ -90,7 +90,7 @@ export default function VideoDetailsPage() {
     );
   }
 
-  const embedUrl = `${video.videoUrl}?modestbranding=1`;
+  const embedUrl = `${video.videoUrl}?modestbranding=1&controls=0&showinfo=0&rel=0`;
 
   return (
     <div className="container mx-auto px-4 py-16 sm:py-24">
