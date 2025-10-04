@@ -126,6 +126,42 @@
         }
       },
       "required": ["bio", "skills", "contactInfo"]
+    },
+    "ContractSubmission": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ContractSubmission",
+      "type": "object",
+      "description": "Represents a submission from the contract form.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the submission."
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "companyName": {
+          "type": "string"
+        },
+        "projectDetails": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time"
+        }
+      },
+      "required": ["id", "fullName", "email", "phone", "projectDetails", "projectId", "createdAt"]
     }
   },
   "auth": {
@@ -192,6 +228,21 @@
             {
               "name": "userId",
               "description": "Unique identifier for the user."
+            }
+          ]
+        }
+      },
+       {
+        "path": "/submissions/{submissionId}",
+        "definition": {
+          "schema": {
+            "$ref": "#/entities/ContractSubmission"
+          },
+          "description": "Stores contract form submissions.",
+          "params": [
+            {
+              "name": "submissionId",
+              "description": "Unique identifier for the submission."
             }
           ]
         }

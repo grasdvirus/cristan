@@ -20,6 +20,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { SlideForm } from '@/components/admin/slide-form';
 import { ProjectForm, type ProjectFormValues } from '@/components/admin/project-form';
 import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
+import { SubmissionsManager } from '@/components/admin/submissions-manager';
 
 // Define types based on backend.json
 export type Slide = {
@@ -50,6 +51,20 @@ export type Video = {
     videoUrl: string;
     thumbnailUrl: string;
     thumbnailHint?: string;
+};
+
+export type ContractSubmission = {
+    id: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    companyName?: string;
+    projectDetails: string;
+    projectId: string;
+    createdAt: {
+        seconds: number;
+        nanoseconds: number;
+    };
 };
 
 
@@ -142,7 +157,9 @@ function SlidesManager() {
                     {slides?.map((slide) => (
                         <TableRow key={slide.id}>
                             <TableCell>
-                                <Image src={slide.imageUrl} alt={slide.description} width={80} height={45} className="rounded-md object-cover" />
+                                {(slide.imageUrl.startsWith('http') || slide.imageUrl.startsWith('/')) ? (
+                                    <Image src={slide.imageUrl} alt={slide.description} width={80} height={45} className="rounded-md object-cover" />
+                                ): <div className="w-20 h-12 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">URL Invalide</div>}
                             </TableCell>
                             <TableCell className="font-medium">{slide.description}</TableCell>
                             <TableCell className="text-right">
@@ -420,10 +437,11 @@ export default function AdminPage() {
                 </p>
 
                 <Tabs defaultValue="slides">
-                    <TabsList className="mb-8 grid w-full grid-cols-3">
+                    <TabsList className="mb-8 grid w-full grid-cols-4">
                         <TabsTrigger value="slides">Slides</TabsTrigger>
                         <TabsTrigger value="internet">Internet</TabsTrigger>
                         <TabsTrigger value="tv">TV</TabsTrigger>
+                        <TabsTrigger value="submissions">Demandes</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="slides">
@@ -437,10 +455,12 @@ export default function AdminPage() {
                     <TabsContent value="tv">
                         <VideosManager />
                     </TabsContent>
+
+                    <TabsContent value="submissions">
+                        <SubmissionsManager />
+                    </TabsContent>
                 </Tabs>
             </NeumorphicCard>
         </div>
     );
 }
-
-    

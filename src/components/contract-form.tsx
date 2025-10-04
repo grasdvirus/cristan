@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { NeumorphicCard } from "./neumorphic-card"
+import { useFirebase } from "@/firebase"
+import { addDoc, collection, serverTimestamp } from "firebase/firestore"
 
 const formSchema = z.object({
   fullName: z.string().min(2, {
@@ -37,8 +39,13 @@ const formSchema = z.object({
   }),
 })
 
-export function ContractForm() {
+interface ContractFormProps {
+    projectId: string | null;
+}
+
+export function ContractForm({ projectId }: ContractFormProps) {
     const { toast } = useToast();
+    const { firestore } = useFirebase();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -51,19 +58,43 @@ export function ContractForm() {
         },
     })
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values)
-        toast({
-          title: "Formulaire envoyé !",
-          description: "Merci ! Nous avons bien reçu vos informations et nous vous contacterons bientôt.",
-        })
-        form.reset();
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        if (!firestore) {
+            toast({
+                variant: "destructive",
+                title: "Erreur de base de données",
+                description: "La connexion à la base de données n'est pas disponible.",
+            });
+            return;
+        }
+
+        try {
+            const submissionData = {
+                ...values,
+                projectId: projectId || "N/A",
+                createdAt: serverTimestamp()
+            };
+            await addDoc(collection(firestore, "submissions"), submissionData);
+            
+            toast({
+              title: "Formulaire envoyé !",
+              description: "Merci ! Nous avons bien reçu vos informations et nous vous contacterons bientôt.",
+            })
+            form.reset();
+        } catch (error) {
+            console.error("Error saving submission: ", error);
+            toast({
+                variant: "destructive",
+                title: "Erreur",
+                description: "Impossible d'enregistrer votre demande. Veuillez réessayer.",
+            });
+        }
     }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <NeumorphicCard inset className="p-6">
+        <NeumorphicCard inset className="p-6 sm:rounded-2xl rounded-none">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                     control={form.control}
@@ -142,8 +173,8 @@ export function ContractForm() {
              </div>
         </NeumorphicCard>
 
-        <div className="flex justify-end">
-            <Button type="submit" size="lg" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+        <div className="flex justify-end px-4 sm:px-0">
+            <Button type="submit" size="lg" className="w-full sm:w-auto btn-neumorphic-light dark:btn-neumorphic-dark">
                 Soumettre la demande
             </Button>
         </div>
