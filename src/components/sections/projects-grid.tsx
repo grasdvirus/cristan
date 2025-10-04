@@ -57,7 +57,7 @@ export default function ProjectsGrid() {
             {projects.map((project) => (
                 <div key={project.id} className="break-inside-avoid">
                     <NeumorphicCard className="group overflow-hidden flex flex-col h-full p-0">
-                        <div className="overflow-hidden relative">
+                        <div className="overflow-hidden">
                             {project.imageUrl && (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('/')) ? (
                                 <Image
                                 src={project.imageUrl}
@@ -73,17 +73,19 @@ export default function ProjectsGrid() {
                                 </div>
                             )}
                         </div>
-                        <div className='flex flex-col flex-grow p-4 pb-14'>
+                        <div className='flex flex-col flex-grow p-4'>
                             <CardTitle className="font-headline text-lg">{project.title}</CardTitle>
                             <CardDescription className="mt-2 text-sm text-muted-foreground flex-grow">{project.description}</CardDescription>
-                            <p className='text-lg font-bold font-headline text-primary mt-4'>{project.price}</p>
+                            <div className="flex justify-between items-center mt-4">
+                                <p className='text-lg font-bold font-headline text-primary'>{project.price}</p>
+                                <Button asChild size="icon" className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
+                                    <Link href={`/projects/${project.id}`}>
+                                        <Plus className="h-4 w-4" />
+                                        <span className="sr-only">Détails</span>
+                                    </Link>
+                                </Button>
+                            </div>
                         </div>
-                         <Button asChild size="icon" className="rounded-full absolute bottom-4 right-4 btn-neumorphic-light dark:btn-neumorphic-dark">
-                            <Link href={`/projects/${project.id}`}>
-                                <Plus className="h-4 w-4" />
-                                <span className="sr-only">Détails</span>
-                            </Link>
-                         </Button>
                     </NeumorphicCard>
                 </div>
             ))}
