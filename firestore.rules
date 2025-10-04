@@ -1,95 +1,118 @@
 /**
- * @fileoverview Firestore Security Rules for Prototyping.
+ * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset prioritizes rapid prototyping by focusing on authorization and basic relational integrity while relaxing data validation.  It enforces a strict user-ownership model for user profiles and allows public read access to other content (slides, projects, videos).
+ * This ruleset enforces a role-based access control model with an admin user
+ * ("grasdvirus@gmail.com") who can modify all data.  Other users can only
+ * access their own profile data under `/users/{userId}`. All other collections
+ * are only writable by the admin.
  *
  * Data Structure:
- * - /slides/{slideId}: Publicly readable collection of hero carousel slides.
- * - /projects/{projectId}: Publicly readable collection of internet projects.
- * - /videos/{videoId}: Publicly readable collection of TV videos.
- * - /users/{userId}: User profiles, accessible only to the owning user.
+ * - /slides/{slideId}: Slides for the hero carousel.
+ * - /projects/{projectId}: Internet projects.
+ * - /videos/{videoId}: TV videos.
+ * - /users/{userId}: User profile information.
  *
  * Key Security Decisions:
- * - Public read access is granted to the 'slides', 'projects', and 'videos' collections to simplify initial data loading and display.
- * - User listing is disabled to protect user privacy.
- * - Write access to 'slides', 'projects', and 'videos' is open. THIS IS INSECURE AND MUST BE ADDRESSED IN PRODUCTION.
- * - Only the authenticated user can create their profile.
- * - Only the authenticated user can update or delete their profile, and only if the profile exists.
+ * - Only the admin user ("grasdvirus@gmail.com") can create, update, or delete
+ *   slides, projects, and videos.
+ * - Users can only read and write their own profile data.
+ * - Listing slides, projects, and videos is publicly accessible.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to the 'slides' collection. Allows public read access and open write access.
+     * @description Checks if the user is signed in.
+     * @return {boolean} True if the user is signed in, false otherwise.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the user is the admin.
+     * @return {boolean} True if the user is the admin, false otherwise.
+     */
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == "grasdvirus@gmail.com";
+    }
+
+    /**
+     * @description Checks if the user is the owner of the resource.
+     * @param {string} userId The user ID to check against.
+     * @return {boolean} True if the user is the owner, false otherwise.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the user is the owner of the existing resource.
+     * @param {string} userId The user ID to check against.
+     * @return {boolean} True if the user is the owner and the resource exists, false otherwise.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Security rules for the /slides collection.
      * @path /slides/{slideId}
-     * @allow (get, list): Any user can read slide data.
-     * @allow (create, update, delete): Any user can modify slide data. THIS IS INSECURE AND MUST BE ADDRESSED IN PRODUCTION.
-     * @deny (create, update, delete): No conditions under which a write is denied.
-     * @principle Allows public reads for prototyping but highlights the insecure writes.
+     * @allow (get, list): Anyone can read the slides.
+     * @allow (create, update, delete): Only the admin can modify slides.
+     * @deny (create, update, delete): Non-admin users cannot modify slides.
+     * @principle Enforces admin-only writes for slide management.
      */
     match /slides/{slideId} {
       allow get, list: if true;
-      allow create, update, delete: if true; // TODO: Add authorization checks in production.
+      allow create, update, delete: if isAdmin();
     }
 
     /**
-     * @description Controls access to the 'projects' collection. Allows public read access and open write access.
+     * @description Security rules for the /projects collection.
      * @path /projects/{projectId}
-     * @allow (get, list): Any user can read project data.
-     * @allow (create, update, delete): Any user can modify project data. THIS IS INSECURE AND MUST BE ADDRESSED IN PRODUCTION.
-     * @deny (create, update, delete): No conditions under which a write is denied.
-     * @principle Allows public reads for prototyping but highlights the insecure writes.
+     * @allow (get, list): Anyone can read the projects.
+     * @allow (create, update, delete): Only the admin can modify projects.
+     * @deny (create, update, delete): Non-admin users cannot modify projects.
+     * @principle Enforces admin-only writes for project management.
      */
     match /projects/{projectId} {
       allow get, list: if true;
-      allow create, update, delete: if true; // TODO: Add authorization checks in production.
+      allow create, update, delete: if isAdmin();
     }
 
     /**
-     * @description Controls access to the 'videos' collection. Allows public read access and open write access.
+     * @description Security rules for the /videos collection.
      * @path /videos/{videoId}
-     * @allow (get, list): Any user can read video data.
-     * @allow (create, update, delete): Any user can modify video data. THIS IS INSECURE AND MUST BE ADDRESSED IN PRODUCTION.
-     * @deny (create, update, delete): No conditions under which a write is denied.
-     * @principle Allows public reads for prototyping but highlights the insecure writes.
+     * @allow (get, list): Anyone can read the videos.
+     * @allow (create, update, delete): Only the admin can modify videos.
+     * @deny (create, update, delete): Non-admin users cannot modify videos.
+     * @principle Enforces admin-only writes for video management.
      */
     match /videos/{videoId} {
       allow get, list: if true;
-      allow create, update, delete: if true; // TODO: Add authorization checks in production.
+      allow create, update, delete: if isAdmin();
     }
 
     /**
-     * @description Controls access to user profiles. Only the authenticated user can read, update, or delete their own profile.
+     * @description Security rules for the /users collection.
      * @path /users/{userId}
-     * @allow (create): Only the authenticated user can create their own profile.
-     * @allow (get, update, delete): Only the authenticated user can access and modify their own profile.
-     * @deny (list): Listing of users is not allowed.
-     * @deny (create): Prevents creating a user profile with a mismatched user ID.
-     * @deny (get, update, delete): Prevents access to other user's profiles.
-     * @principle Enforces document ownership for user profiles.
+     * @allow (get, list): Only the owner can read their own profile.
+     * @allow (create): Only the owner can create their own profile, and the userId must match the auth.uid.
+     * @allow (update, delete): Only the owner can update or delete their own profile.
+     * @deny (get, list): Other users cannot read this user's profile.
+     * @deny (create): Creating a profile with a mismatched userId is forbidden.
+     * @deny (update, delete): Updating or deleting another user's profile is forbidden.
+     * @principle Enforces user-ownership for profile data.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false;
+      allow list: if isOwner(userId);
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
   }
-
-  // Helper functions
-  function isSignedIn() {
-    return request.auth != null;
-  }
-
-  function isOwner(userId) {
-    return isSignedIn() && request.auth.uid == userId;
-  }
-
-    //  Combines the ownership check with the existence check.
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
 }
