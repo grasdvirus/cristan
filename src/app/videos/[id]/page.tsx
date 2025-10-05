@@ -7,10 +7,11 @@ import Link from 'next/link';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Calendar, Eye } from 'lucide-react';
+import { ArrowLeft, Calendar, Eye, PlayCircle } from 'lucide-react';
 import { useCollection, useDoc, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, doc, query } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import React, { useState } from 'react';
 
 export type Video = {
     id: string;
@@ -29,6 +30,8 @@ export default function VideoDetailsPage() {
   const router = useRouter();
   const { id } = params;
   const { firestore } = useFirebase();
+  const [isPlaying, setIsPlaying] = useState(false);
+
 
   const videoRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
@@ -90,7 +93,11 @@ export default function VideoDetailsPage() {
     );
   }
 
-  const embedUrl = `${video.videoUrl}?modestbranding=1&controls=0&showinfo=0&rel=0`;
+  const handlePlay = () => {
+    setIsPlaying(true);
+  };
+  
+  const embedUrl = `${video.videoUrl}?autoplay=1&modestbranding=1&controls=0&showinfo=0&rel=0`;
 
   return (
     <div className="container mx-auto px-4 py-16 sm:py-24">
@@ -108,15 +115,33 @@ export default function VideoDetailsPage() {
         {/* Main Content */}
         <div className="lg:col-span-2">
             {/* Video Player */}
-             <div className="aspect-video w-full">
-              <iframe
-                src={embedUrl}
-                title={video.title}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full rounded-2xl neumorphic-card-inset-light dark:neumorphic-card-inset-dark"
-              ></iframe>
+             <div className="group aspect-video w-full relative rounded-2xl overflow-hidden neumorphic-card-inset-light dark:neumorphic-card-inset-dark">
+              {isPlaying ? (
+                  <iframe
+                    src={embedUrl}
+                    title={video.title}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  ></iframe>
+              ) : (
+                <>
+                  <Image
+                    src={video.thumbnailUrl}
+                    alt={video.title}
+                    fill
+                    className="object-cover"
+                    data-ai-hint={video.thumbnailHint}
+                  />
+                  <div 
+                    className="absolute inset-0 bg-black/30 flex items-center justify-center cursor-pointer"
+                    onClick={handlePlay}
+                  >
+                    <PlayCircle className="w-20 h-20 text-white/80 group-hover:scale-110 group-hover:text-white transition-all duration-300" />
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Video Info */}
