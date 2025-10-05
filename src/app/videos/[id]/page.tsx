@@ -128,6 +128,8 @@ export default function VideoDetailsPage() {
                     ></iframe>
                     {/* Overlay to block clicks on the top part (title) of the video */}
                     <div className="absolute top-0 left-0 right-0 h-[50px]"></div>
+                    {/* Overlay to block clicks on the bottom right (youtube logo) of the video */}
+                    <div className="absolute bottom-0 right-0 w-[100px] h-[40px]"></div>
                   </div>
               ) : (
                 <>
