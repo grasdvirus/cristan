@@ -97,7 +97,7 @@ export default function VideoDetailsPage() {
     setIsPlaying(true);
   };
   
-  const embedUrl = `${video.videoUrl}?autoplay=1&modestbranding=1&controls=0&showinfo=0&rel=0`;
+  const embedUrl = `${video.videoUrl}?autoplay=1&modestbranding=1&controls=1&rel=0`;
 
   return (
     <div className="container mx-auto px-4 py-16 sm:py-24">
@@ -126,7 +126,8 @@ export default function VideoDetailsPage() {
                         allowFullScreen
                         className="w-full h-full"
                     ></iframe>
-                    <div className="absolute inset-0 w-full h-full"></div>
+                    {/* Overlay to block clicks on the top part (title) of the video */}
+                    <div className="absolute top-0 left-0 right-0 h-[50px]"></div>
                   </div>
               ) : (
                 <>
