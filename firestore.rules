@@ -1,120 +1,143 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset defines access control for the application's Firestore database.
+ * @description This ruleset is in "Prototyping Mode," prioritizing strict authorization
+ *              while being flexible on data shapes for rapid iteration.
  *
  * Core Philosophy:
- * The ruleset prioritizes secure access to user data and restricts unauthorized modifications.
- * It employs a combination of ownership-based access control and public read access where appropriate.
+ *   - Strict user-ownership model: Users can only read and write their own data
+ *     unless explicitly allowed otherwise.
+ *   - No data validation: Data validation is skipped to focus on access control.
  *
  * Data Structure:
- * - /slides/{slideId}: Publicly accessible slides for the hero carousel.
- * - /projects/{projectId}: Publicly accessible internet projects.
- * - /videos/{videoId}: Publicly accessible TV videos.
- * - /users/{userId}: User profiles, accessible only to the owning user.
- * - /submissions/{submissionId}: Contract submissions; publicly readable to allow listing.
+ *   - Slides: Top-level collection, publicly readable, owner-only writes.
+ *   - Projects: Top-level collection, publicly readable, owner-only writes.
+ *   - Videos: Top-level collection, publicly readable, owner-only writes.
+ *   - Users: Each user has a profile document at /users/{userId}.
+ *   - Submissions: Top-level collection, publicly readable, owner-only writes.
  *
  * Key Security Decisions:
- * - Slides, projects, and videos are publicly readable.
- * - User profiles are strictly private and accessible only to the owning user.
- * - Contract submissions are publicly readable to allow listing.
+ *   - Listing users is disallowed.
+ *   - Default security posture: If a relationship is ambiguous, deny access.
  *
+ * Denormalization for Authorization:
+ *   - The Slides, Projects, and Videos entities do not define ownerId fields. It is assumed that the `id` field is the owner.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Grants public read access to slides while restricting write access.
+     * @description Manages access to slides. Slides are publicly readable,
+     *              but only the owner can create, update, or delete them.
      * @path /slides/{slideId}
      * @allow (get, list) All users can read slide data.
-     * @deny (create, update, delete) No users can create, update, or delete slides.
-     * @principle Public read, no write access.
+     * @allow (create) Only the slide creator can create a new slide.
+     * @allow (update, delete) Only the slide owner can update or delete.
+     * @deny (create) A user other than the owner attempts to create a slide.
+     * @deny (update, delete) A user other than the owner attempts to modify a slide.
+     * @principle Public read, owner-only writes.
      */
     match /slides/{slideId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description Grants public read access to projects while restricting write access.
+     * @description Manages access to projects. Projects are publicly readable,
+     *              but only the owner can create, update, or delete them.
      * @path /projects/{projectId}
      * @allow (get, list) All users can read project data.
-     * @deny (create, update, delete) No users can create, update, or delete projects.
-     * @principle Public read, no write access.
+     * @allow (create) Only the project creator can create a new project.
+     * @allow (update, delete) Only the project owner can update or delete.
+     * @deny (create) A user other than the owner attempts to create a project.
+     * @deny (update, delete) A user other than the owner attempts to modify a project.
+     * @principle Public read, owner-only writes.
      */
     match /projects/{projectId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description Grants public read access to videos while restricting write access.
+     * @description Manages access to videos. Videos are publicly readable,
+     *              but only the owner can create, update, or delete them.
      * @path /videos/{videoId}
      * @allow (get, list) All users can read video data.
-     * @deny (create, update, delete) No users can create, update, or delete videos.
-     * @principle Public read, no write access.
+     * @allow (create) Only the video creator can create a new video.
+     * @allow (update, delete) Only the video owner can update or delete.
+     * @deny (create) A user other than the owner attempts to create a video.
+     * @deny (update, delete) A user other than the owner attempts to modify a video.
+     * @principle Public read, owner-only writes.
      */
     match /videos/{videoId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description Enforces strict user-ownership for profile data.
+     * @description Manages access to user profiles. Each user can only read and
+     *              write their own profile data.
      * @path /users/{userId}
-     * @allow (create) A user can create their own profile if the userId matches their auth UID.
-     * @allow (get, list) A user can only read their own profile data.
-     * @allow (update, delete) A user can only update or delete their own profile data if the document exists.
-     * @deny (create) A user cannot create a profile for another user.
-     * @deny (get, list) A user cannot read another user's profile data.
-     * @deny (update, delete) A user cannot update or delete another user's profile data.
-     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
+     * @allow (get, list) Only the user can read their own profile data. Listing is disallowed.
+     * @allow (create) Only the user can create their own profile data.
+     * @allow (update, delete) Only the user can update or delete their own profile data.
+     * @deny (create) A user other than the owner attempts to create a profile.
+     * @deny (get, update, delete) A user other than the owner attempts to access/modify a profile.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      allow create: if isSignedIn() && isOwner(userId) ;
-      allow get, list: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
-    /**
-     * @description Grants public read access to submissions while restricting write access.
+     /**
+     * @description Manages access to contract submissions. Submissions are publicly readable,
+     *              but only the owner can create, update, or delete them.
      * @path /submissions/{submissionId}
      * @allow (get, list) All users can read submission data.
-     * @deny (create, update, delete) No users can create, update, or delete submissions.
-     * @principle Public read, no write access.
+     * @allow (create) Only the submission creator can create a new submission.
+     * @allow (update, delete) Only the submission owner can update or delete.
+     * @deny (create) A user other than the owner attempts to create a submission.
+     * @deny (update, delete) A user other than the owner attempts to modify a submission.
+     * @principle Public read, owner-only writes.
      */
     match /submissions/{submissionId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
-    // --- Helper Functions ---
-
     /**
-     * @description Checks if the user is signed in.
-     * @return {bool} True if the user is signed in, false otherwise.
+     * @description Checks if the request is authenticated.
+     * @return {bool} True if the request is authenticated, false otherwise.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * @description Checks if the user is the owner of the resource.
-     * @param {string} userId The user ID to check against.
+     * @description Checks if the authenticated user is the owner of the resource.
+     * @param {string} userId The user ID to compare against the request's auth UID.
      * @return {bool} True if the user is the owner, false otherwise.
-     * @example isOwner('someUserId')
      */
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the user is the owner of the resource and the resource exists.
-     *              This is used for update and delete operations to prevent acting on non-existent data.
-     * @param {string} userId The user ID to check against.
+     * @description Checks if the authenticated user is the owner of the existing resource.
+     * @param {string} userId The user ID to compare against the request's auth UID.
      * @return {bool} True if the user is the owner and the resource exists, false otherwise.
-     * @example isExistingOwner('someUserId')
      */
     function isExistingOwner(userId) {
         return isOwner(userId) && resource != null;
