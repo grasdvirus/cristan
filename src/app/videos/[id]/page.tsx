@@ -117,14 +117,17 @@ export default function VideoDetailsPage() {
             {/* Video Player */}
              <div className="group aspect-video w-full relative rounded-2xl overflow-hidden neumorphic-card-inset-light dark:neumorphic-card-inset-dark">
               {isPlaying ? (
-                  <iframe
-                    src={embedUrl}
-                    title={video.title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full"
-                  ></iframe>
+                  <div className="w-full h-full relative">
+                    <iframe
+                        src={embedUrl}
+                        title={video.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full pointer-events-none"
+                    ></iframe>
+                    <div className="absolute inset-0 w-full h-full"></div>
+                  </div>
               ) : (
                 <>
                   <Image
