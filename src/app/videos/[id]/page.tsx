@@ -124,7 +124,7 @@ export default function VideoDetailsPage() {
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
-                        className="w-full h-full pointer-events-none"
+                        className="w-full h-full"
                     ></iframe>
                     <div className="absolute inset-0 w-full h-full"></div>
                   </div>
