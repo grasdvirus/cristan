@@ -2,8 +2,6 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
-
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { CardDescription, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
@@ -25,15 +23,18 @@ type Game = {
 
 function GameGridSkeleton() {
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="break-inside-avoid">
-                    <NeumorphicCard className="p-0 space-y-4">
-                        <Skeleton className="h-40 w-full" />
-                        <div className="p-4 space-y-2">
-                            <Skeleton className="h-6 w-3/4" />
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-6 w-1/4" />
+                    <NeumorphicCard className="p-0 space-y-4 h-full flex flex-col">
+                        <Skeleton className="h-48 w-full" />
+                        <div className="p-6 flex flex-col flex-grow">
+                            <Skeleton className="h-6 w-3/4 mb-2" />
+                            <Skeleton className="h-4 w-1/4 mb-4" />
+                            <Skeleton className="h-10 w-full mb-4" />
+                            <div className="mt-auto">
+                                <Skeleton className="h-12 w-full" />
+                            </div>
                         </div>
                     </NeumorphicCard>
                 </div>
@@ -57,10 +58,10 @@ export default function GamesGrid() {
 
     return (
         <section id="games" className="w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {games.map((game) => (
                     <div key={game.id} className="break-inside-avoid">
-                        <NeumorphicCard className="group overflow-hidden flex flex-col h-full p-0">
+                        <NeumorphicCard className="group overflow-hidden flex flex-col h-full p-0 transition-all duration-300 hover:-translate-y-1">
                             <div className="overflow-hidden relative">
                                 {game.imageUrl && (game.imageUrl.startsWith('http') || game.imageUrl.startsWith('/')) ? (
                                     <Image
@@ -68,24 +69,25 @@ export default function GamesGrid() {
                                         alt={game.title}
                                         width={500}
                                         height={350}
-                                        className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                                        className="w-full h-52 object-cover transition-transform duration-300 group-hover:scale-105"
                                         data-ai-hint={game.imageHint}
                                     />
                                 ) : (
-                                    <div className="w-full h-48 bg-muted flex items-center justify-center">
+                                    <div className="w-full h-52 bg-muted flex items-center justify-center">
                                         <span className="text-sm text-muted-foreground">Pas d'image</span>
                                     </div>
                                 )}
-                                 <Badge variant="secondary" className="absolute top-2 right-2 neumorphic-card-light dark:neumorphic-card-dark">{game.category}</Badge>
                             </div>
-                            <div className='flex flex-col flex-grow p-4'>
-                                <CardTitle className="font-headline text-lg">{game.title}</CardTitle>
-                                <CardDescription className="mt-2 text-sm text-muted-foreground flex-grow">{game.description}</CardDescription>
-                                <div className="flex justify-end items-center mt-4">
-                                    <Button asChild className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
+                            <div className='flex flex-col flex-grow p-6'>
+                                <CardTitle className="font-headline text-xl mb-1">{game.title}</CardTitle>
+                                <Badge variant="secondary" className="neumorphic-card-light dark:neumorphic-card-dark w-fit mb-3">{game.category}</Badge>
+                                <CardDescription className="text-sm text-muted-foreground flex-grow mb-6">{game.description}</CardDescription>
+                                
+                                <div className="mt-auto">
+                                    <Button asChild size="lg" className="w-full font-bold text-lg btn-neumorphic-light dark:btn-neumorphic-dark">
                                         <a href={game.affiliateUrl} target="_blank" rel="noopener noreferrer">
-                                            <Gamepad2 className="mr-2 h-4 w-4" />
-                                            Jouer
+                                            <Gamepad2 className="mr-2 h-5 w-5" />
+                                            Jouer maintenant
                                         </a>
                                     </Button>
                                 </div>
@@ -97,5 +99,3 @@ export default function GamesGrid() {
         </section>
     );
 }
-
-    
