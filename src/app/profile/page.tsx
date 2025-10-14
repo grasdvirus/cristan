@@ -2,22 +2,211 @@
 'use client';
 
 import Image from 'next/image';
-import { Mail, LogOut, KeyRound, Info, MessageSquare, Send, Shield } from 'lucide-react';
+import { Mail, LogOut, KeyRound, Info, MessageSquare, Send, Shield, CornerDownRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { sendPasswordResetEmail } from 'firebase/auth';
-
-import { useFirebase } from '@/firebase';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { useState } from 'react';
+import { collection, query, orderBy, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+type Avis = {
+  id: string;
+  text: string;
+  userId: string;
+  userName: string;
+  userPhotoURL: string | null;
+  createdAt: Timestamp;
+};
+
+type ReponseAvis = Avis & {
+  avisId: string;
+}
+
+function AvisForm() {
+  const { auth, user, firestore } = useFirebase();
+  const { toast } = useToast();
+  const [text, setText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firestore || !user || text.trim() === '') return;
+
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(firestore, 'avis'), {
+        text,
+        userId: user.uid,
+        userName: user.displayName,
+        userPhotoURL: user.photoURL,
+        createdAt: serverTimestamp(),
+      });
+      setText('');
+      toast({ title: 'Avis envoyé !' });
+    } catch (error) {
+      console.error('Error submitting avis:', error);
+      toast({ title: "Erreur lors de l'envoi", variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h3 className="font-semibold mb-4">Laissez votre avis</h3>
+      <div className="space-y-4">
+        <NeumorphicCard inset className="p-4">
+          <Textarea
+            placeholder="Votre message..."
+            className="bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            disabled={isSubmitting || !user}
+          />
+        </NeumorphicCard>
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isSubmitting || !user} className="btn-neumorphic-light dark:btn-neumorphic-dark">
+            <Send className="mr-2 h-4 w-4" />
+            {isSubmitting ? 'Envoi...' : 'Envoyer'}
+          </Button>
+        </div>
+      </div>
+    </form>
+  )
+}
+
+function ReplyForm({ avisId, onReplySuccess }: { avisId: string, onReplySuccess: () => void }) {
+  const { auth, user, firestore } = useFirebase();
+  const { toast } = useToast();
+  const [text, setText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firestore || !user || text.trim() === '') return;
+    
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(firestore, 'avis', avisId, 'reponses'), {
+        avisId,
+        text,
+        userId: user.uid,
+        userName: user.displayName,
+        userPhotoURL: user.photoURL,
+        createdAt: serverTimestamp(),
+      });
+      setText('');
+      toast({ title: 'Réponse envoyée !' });
+      onReplySuccess();
+    } catch (error) {
+      console.error('Error submitting reply:', error);
+      toast({ title: "Erreur lors de l'envoi", variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+     <form onSubmit={handleSubmit} className="mt-4 ml-8">
+        <NeumorphicCard inset className="p-2">
+            <Textarea
+                placeholder="Votre réponse..."
+                className="bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+                value={text}
+                onChange={e => setText(e.target.value)}
+                disabled={isSubmitting || !user}
+            />
+        </NeumorphicCard>
+        <div className="flex justify-end mt-2">
+            <Button type="submit" size="sm" disabled={isSubmitting || !user} className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                <Send className="mr-2 h-4 w-4" />
+                {isSubmitting ? 'Envoi...' : 'Envoyer'}
+            </Button>
+        </div>
+     </form>
+  )
+}
+
+function AvisItem({ avis }: { avis: Avis }) {
+  const { firestore, user } = useFirebase();
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const reponsesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'avis', avis.id, 'reponses'), orderBy('createdAt', 'asc')) : null, [firestore, avis.id]);
+  const { data: reponses } = useCollection<ReponseAvis>(reponsesQuery);
+
+  const formatRelativeTime = (timestamp: Timestamp | null) => {
+    if (!timestamp) return 'à l\'instant';
+    return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: fr });
+  }
+
+  return (
+     <NeumorphicCard className="p-4">
+      <div className="flex items-start gap-3">
+        <Avatar className="h-9 w-9">
+          <AvatarImage src={avis.userPhotoURL || undefined} />
+          <AvatarFallback>{avis.userName?.[0]?.toUpperCase()}</AvatarFallback>
+        </Avatar>
+        <div>
+          <p className="font-semibold text-sm">{avis.userName}</p>
+          <p className="text-xs text-muted-foreground">{formatRelativeTime(avis.createdAt)}</p>
+          <p className="text-sm mt-2">{avis.text}</p>
+          <Button variant="link" size="sm" className="p-0 h-auto text-xs mt-2" onClick={() => setShowReplyForm(!showReplyForm)} disabled={!user}>Répondre</Button>
+        </div>
+      </div>
+      
+      {reponses && reponses.length > 0 && (
+         <div className="ml-8 mt-4 space-y-4">
+           {reponses.map(reponse => (
+             <div key={reponse.id} className="flex items-start gap-3">
+                <CornerDownRight className="h-4 w-4 mt-1 text-muted-foreground shrink-0"/>
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={reponse.userPhotoURL || undefined} />
+                  <AvatarFallback>{reponse.userName?.[0]?.toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold text-sm">{reponse.userName}</p>
+                  <p className="text-xs text-muted-foreground">{formatRelativeTime(reponse.createdAt)}</p>
+                  <p className="text-sm mt-1">{reponse.text}</p>
+                </div>
+            </div>
+           ))}
+         </div>
+      )}
+
+      {showReplyForm && (
+        <ReplyForm avisId={avis.id} onReplySuccess={() => setShowReplyForm(false)} />
+      )}
+     </NeumorphicCard>
+  )
+}
+
+function AvisList() {
+  const { firestore } = useFirebase();
+  const avisQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'avis'), orderBy('createdAt', 'desc')) : null, [firestore]);
+  const { data: avisList, isLoading } = useCollection<Avis>(avisQuery);
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-semibold">Avis récents</h3>
+      {isLoading && <p>Chargement des avis...</p>}
+      {avisList?.map(avis => (
+        <AvisItem key={avis.id} avis={avis} />
+      ))}
+      {!isLoading && avisList?.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-4">Soyez le premier à laisser un avis !</p>
+      )}
+    </div>
+  )
+}
 
 export default function ProfilePage() {
   const { auth, user } = useFirebase();
@@ -148,41 +337,9 @@ export default function ProfilePage() {
                 </p>
             </div>
              <Separator className="my-4" />
-            <div>
-                <h3 className="font-semibold mb-4">Laissez votre avis</h3>
-                <div className="space-y-4">
-                    <NeumorphicCard inset className="p-4">
-                        <Textarea 
-                            placeholder="Votre message..."
-                            className="bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                        />
-                    </NeumorphicCard>
-                     <div className="flex justify-end">
-                        <Button className="btn-neumorphic-light dark:btn-neumorphic-dark">
-                            <Send className="mr-2 h-4 w-4" />
-                            Envoyer
-                        </Button>
-                    </div>
-                </div>
-            </div>
-            
-            <div className="space-y-4">
-                <h3 className="font-semibold">Avis récents</h3>
-                <NeumorphicCard className="p-4">
-                    <div className="flex items-start gap-3">
-                        <Avatar className='h-9 w-9'>
-                            <AvatarImage src="https://picsum.photos/seed/avatar1/40/40" />
-                            <AvatarFallback>AD</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-semibold text-sm">Alice Dupont</p>
-                            <p className="text-xs text-muted-foreground">Il y a 2 jours</p>
-                            <p className="text-sm mt-2">J'adore le nouveau thème sombre automatique ! C'est tellement plus agréable pour les yeux le soir.</p>
-                             <Button variant="link" size="sm" className="p-0 h-auto text-xs mt-2">Répondre</Button>
-                        </div>
-                    </div>
-                </NeumorphicCard>
-            </div>
+            <AvisForm />
+            <Separator className="my-4" />
+            <AvisList />
         </div>
       </NeumorphicCard>
     </div>

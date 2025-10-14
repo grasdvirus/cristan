@@ -163,6 +163,37 @@
         }
       },
       "required": ["id", "fullName", "email", "phone", "projectDetails", "projectId", "createdAt"]
+    },
+     "Avis": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Avis",
+      "type": "object",
+      "description": "Represents a review/comment left by a user.",
+      "properties": {
+        "id": { "type": "string" },
+        "text": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhotoURL": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "text", "userId", "userName", "createdAt"]
+    },
+    "ReponseAvis": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ReponseAvis",
+      "type": "object",
+      "description": "Represents a reply to a review/comment.",
+      "properties": {
+        "id": { "type": "string" },
+        "avisId": { "type": "string" },
+        "text": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhotoURL": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "avisId", "text", "userId", "userName", "createdAt"]
     }
   },
   "auth": {
@@ -247,6 +278,29 @@
             }
           ]
         }
+      },
+      {
+        "path": "/avis/{avisId}",
+        "definition": {
+          "schema": { "$ref": "#/entities/Avis" },
+          "description": "Stores user reviews/comments.",
+          "params": [
+            { "name": "avisId", "description": "Unique identifier for the review." }
+          ]
+        },
+        "subcollections": [
+            {
+                "path": "/avis/{avisId}/reponses/{reponseId}",
+                "definition": {
+                    "schema": { "$ref": "#/entities/ReponseAvis"},
+                    "description": "Stores replies to a specific review.",
+                    "params": [
+                        { "name": "avisId", "description": "ID of the parent review." },
+                        { "name": "reponseId", "description": "Unique identifier for the reply."}
+                    ]
+                }
+            }
+        ]
       }
     ]
   }
