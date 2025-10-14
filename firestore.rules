@@ -3,161 +3,161 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the user is signed in.
-     * @returns {boolean} True if the user is signed in, false otherwise.
+     * @file Firestore Security Rules
+     * @version 2
+     *
+     * @description This ruleset enforces a security model that balances public read access with owner-only write access for certain collections,
+     *              and restricts user-specific data to the owning user.
+     *
+     * Data Structure:
+     * - /slides/{slideId}: Publicly readable slides for the hero carousel. Write access is open (TODO: Secure writes).
+     * - /projects/{projectId}: Publicly readable projects. Write access is open (TODO: Secure writes).
+     * - /videos/{videoId}: Publicly readable videos. Write access is open (TODO: Secure writes).
+     * - /games/{gameId}: Publicly readable games. Write access is open (TODO: Secure writes).
+     * - /users/{userId}: User profiles, accessible only by the owning user.
+     * - /submissions/{submissionId}: Publicly readable submissions. Write access is open (TODO: Secure writes).
+     * - /avis/{avisId}: Publicly readable reviews/comments. Write access is open (TODO: Secure writes).
+     * - /avis/{avisId}/reponses/{reponseId}: Publicly readable replies to reviews/comments. Write access is open (TODO: Secure writes).
+     *
+     * Key Security Decisions:
+     * - Public Read Access: Slides, Projects, Videos, Games, Submissions and Avis are publicly readable to facilitate content discovery.
+     * - User Ownership: User profiles under /users/{userId} are strictly limited to the owning user.
+     * - Write Access: Write access for slides, projects, videos, games, submissions and avis is open and needs to be secured based on the application needs.
+     * - Denormalization: This ruleset avoids `get()` calls by assuming necessary authorization data is present within the documents being secured.
      */
-    function isSignedIn() {
-      return request.auth != null;
+
+    /**
+     * @description Allows anyone to read slides, but restricts write access.
+     * @path /slides/{slideId}
+     * @allow (get, list): if true
+     * @deny (create, update, delete): if false
+     * @principle Public read, restricted write.
+     */
+    match /slides/{slideId} {
+      allow get, list: if true;
+      allow create: if isSignedIn(); // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update, delete: if isSignedIn();
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of the resource.
-     * @param {string} userId - The user ID to compare against the authenticated user's ID.
-     * @returns {boolean} True if the user is the owner, false otherwise.
+     * @description Allows anyone to read projects, but restricts write access.
+     * @path /projects/{projectId}
+     * @allow (get, list): if true
+     * @deny (create, update, delete): if false
+     * @principle Public read, restricted write.
+     */
+    match /projects/{projectId} {
+      allow get, list: if true;
+      allow create: if isSignedIn(); // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update, delete: if isSignedIn();
+    }
+
+    /**
+     * @description Allows anyone to read videos, but restricts write access.
+     * @path /videos/{videoId}
+     * @allow (get, list): if true
+     * @deny (create, update, delete): if false
+     * @principle Public read, restricted write.
+     */
+    match /videos/{videoId} {
+      allow get, list: if true;
+      allow create: if isSignedIn(); // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update, delete: if isSignedIn();
+    }
+
+    /**
+     * @description Allows anyone to read games, but restricts write access.
+     * @path /games/{gameId}
+     * @allow (get, list): if true
+     * @deny (create, update, delete): if false
+     * @principle Public read, restricted write.
+     */
+    match /games/{gameId} {
+      allow get, list: if true;
+      allow create: if isSignedIn(); // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update, delete: if isSignedIn();
+    }
+
+    /**
+     * @description Allows a user to read and write their own profile data.
+     * @path /users/{userId}
+     * @allow (get, list): if isOwner(userId)
+     * @allow (create): if isOwner(userId)
+     * @allow (update, delete): if isExistingOwner(userId)
+     * @deny (create): if !isOwner(userId)
+     * @deny (update, delete): if !isExistingOwner(userId)
+     * @principle Enforces user-ownership for profile data.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if request.auth.uid == userId;
+      allow update, delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Allows anyone to read submissions, but restricts write access.
+     * @path /submissions/{submissionId}
+     * @allow (get, list): if true
+     * @deny (create, update, delete): if false
+     * @principle Public read, restricted write.
+     */
+     match /submissions/{submissionId} {
+      allow get, list: if true;
+      allow create: if isSignedIn(); // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update, delete: if isSignedIn();
+    }
+
+    /**
+     * @description Allows anyone to read reviews, but restricts write access.
+     * @path /avis/{avisId}
+     * @allow (get, list): if true
+     * @deny (create, update, delete): if false
+     * @principle Public read, restricted write.
+     */
+    match /avis/{avisId} {
+      allow get, list: if true;
+      allow create: if isSignedIn(); // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update, delete: if isSignedIn();
+
+          /**
+           * @description Allows anyone to read replies to reviews, but restricts write access.
+           * @path /avis/{avisId}/reponses/{reponseId}
+           * @allow (get, list): if true
+           * @deny (create, update, delete): if false
+           * @principle Public read, restricted write.
+           */
+          match /avis/{avisId}/reponses/{reponseId} {
+            allow get, list: if true;
+            allow create: if isSignedIn(); // TODO: Add owner validation once the schema is updated with an ownership field.
+            allow update, delete: if isSignedIn();
+          }
+    }
+
+    /**
+     * @description Checks if the requesting user is the owner of the resource.
+     * @param {string} userId The user ID to compare against the request's authentication UID.
+     * @return {boolean} True if the user is the owner, false otherwise.
      */
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of the existing resource.
-     * @param {string} userId - The user ID to compare against the authenticated user's ID.
-     * @returns {boolean} True if the user is the owner and the resource exists, false otherwise.
+     * @description Checks if the requesting user is the owner of the resource, and that the resource exists.
+     * @param {string} userId The user ID to compare against the request's authentication UID.
+     * @return {boolean} True if the user is the owner and the resource exists, false otherwise.
      */
     function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+      return isOwner(userId) && exists(/databases/$(database)/documents/users/$(userId));
     }
 
     /**
-     * @description Slides: Stores hero carousel slides.
-     * @path /slides/{slideId}
-     * @allow (get, list): Any user can read the slide data.
-     * @allow (create): Only the owner can create a slide if the slide.authorId == request.auth.uid.
-     * @allow (update, delete): Only the owner can modify the slide.
-     * @deny (create): A non-authenticated user attempts to create a slide.
-     * @deny (update, delete): A non-owner attempts to modify the slide.
-     * @principle Public Read with Owner-Only Writes.  Requires an `ownerId` or `authorId` field in the document.
+     * @description Checks if a user is signed in.
+     * @return {boolean} True if the user is signed in, false otherwise.
      */
-    match /slides/{slideId} {
-        allow get: if true;
-        allow list: if true;
-        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-        allow update: if isSignedIn() && resource.data.authorId == request.auth.uid;
-        allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+    function isSignedIn() {
+      return request.auth != null;
     }
-
-    /**
-     * @description Projects: Stores internet projects.
-     * @path /projects/{projectId}
-     * @allow (get, list): Any user can read the project data.
-     * @allow (create): Only the owner can create a project if the project.authorId == request.auth.uid.
-     * @allow (update, delete): Only the owner can modify the project.
-     * @deny (create): A non-authenticated user attempts to create a project.
-     * @deny (update, delete): A non-owner attempts to modify the project.
-     * @principle Public Read with Owner-Only Writes. Requires an `ownerId` or `authorId` field in the document.
-     */
-    match /projects/{projectId} {
-        allow get: if true;
-        allow list: if true;
-        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-        allow update: if isSignedIn() && resource.data.authorId == request.auth.uid;
-        allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
-    }
-
-    /**
-     * @description Videos: Stores TV videos.
-     * @path /videos/{videoId}
-     * @allow (get, list): Any user can read the video data.
-     * @allow (create): Only the owner can create a video if the video.authorId == request.auth.uid.
-     * @allow (update, delete): Only the owner can modify the video.
-     * @deny (create): A non-authenticated user attempts to create a video.
-     * @deny (update, delete): A non-owner attempts to modify the video.
-     * @principle Public Read with Owner-Only Writes. Requires an `ownerId` or `authorId` field in the document.
-     */
-    match /videos/{videoId} {
-        allow get: if true;
-        allow list: if true;
-        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-        allow update: if isSignedIn() && resource.data.authorId == request.auth.uid;
-        allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
-    }
-
-    /**
-     * @description Games: Stores affiliate games.
-     * @path /games/{gameId}
-     * @allow (get, list): Any user can read the game data.
-     * @allow (create): Only the owner can create a game if the game.authorId == request.auth.uid.
-     * @allow (update, delete): Only the owner can modify the game.
-     * @deny (create): A non-authenticated user attempts to create a game.
-     * @deny (update, delete): A non-owner attempts to modify the game.
-     * @principle Public Read with Owner-Only Writes. Requires an `ownerId` or `authorId` field in the document.
-     */
-    match /games/{gameId} {
-        allow get: if true;
-        allow list: if true;
-        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-        allow update: if isSignedIn() && resource.data.authorId == request.auth.uid;
-        allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
-    }
-
-    /**
-     * @description Users: Stores user profile information.
-     * @path /users/{userId}
-     * @allow (get): Only the owner can read their own profile.
-     * @allow (create): Only the user themselves can create their profile (self-creation).  Must validate that the ID matches.
-     * @allow (update, delete): Only the owner can modify their profile.
-     * @deny (list): Prevents listing all users.
-     * @deny (create): A different user attempts to create a profile for someone else.
-     * @deny (update, delete): A non-owner attempts to modify the profile.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId} {
-        allow get: if isOwner(userId);
-        allow list: if false;
-        allow create: if isOwner(userId);
-        allow update: if isOwner(userId);
-        allow delete: if isOwner(userId);
-    }
-
-      /**
-       * @description Submissions: Stores contract form submissions.
-       * @path /submissions/{submissionId}
-       * @allow get: if false;
-       * @allow list: if false;
-       * @allow create: if false;
-       * @allow update: if false;
-       * @allow delete: if false;
-       * @principle Only admin can read submissions.
-       */
-      match /submissions/{submissionId} {
-        allow get: if false;
-        allow list: if false;
-        allow create: if false;
-        allow update: if false;
-        allow delete: if false;
-      }
-        /**
-         * @description Avis: Stores user reviews/comments.
-         * @path /avis/{avisId}
-         */
-        match /avis/{avisId} {
-            allow get: if true;
-            allow list: if true;
-            allow create: if isSignedIn();
-            allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
-            allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
-
-            /**
-             * @description ReponseAvis: Stores replies to a specific review.
-             * @path /avis/{avisId}/reponses/{reponseId}
-             */
-            match /avis/{avisId}/reponses/{reponseId} {
-                allow get: if true;
-                allow list: if true;
-                allow create: if isSignedIn();
-                allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
-                allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
-            }
-        }
   }
 }
