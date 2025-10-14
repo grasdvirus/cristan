@@ -48,10 +48,6 @@ export default function ProfilePage() {
     }
   };
 
-  const profileImage = PlaceHolderImages.find(
-    (img) => img.id === 'profile-avatar'
-  );
-  
   const getInitials = (name?: string | null) => {
     if (!name || name.length === 0) return '?';
     return name[0].toUpperCase();
@@ -80,7 +76,7 @@ export default function ProfilePage() {
           <div className="relative w-32 h-32 sm:w-40 sm:h-40 shrink-0">
              <NeumorphicCard className="w-full h-full rounded-full p-2">
                 <Avatar className='w-full h-full text-4xl'>
-                    <AvatarImage src={user?.photoURL || profileImage?.imageUrl || ''} alt={user?.displayName || 'Avatar'} />
+                    <AvatarImage src={user?.photoURL || '/favico.png'} alt={user?.displayName || 'Avatar'} />
                     <AvatarFallback className='bg-muted'>
                         {getInitials(user?.displayName)}
                     </AvatarFallback>
