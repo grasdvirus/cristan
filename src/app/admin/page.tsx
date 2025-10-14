@@ -2,9 +2,8 @@
 'use client';
 
 import { useState } from 'react';
-import { collection, query, doc } from 'firebase/firestore';
+import { collection, query, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -90,39 +89,36 @@ function SlidesManager() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingSlide, setEditingSlide] = useState<Slide | null>(null);
 
-    const handleFormSubmit = (values: { description: string, imageUrl: string, imageHint?: string }) => {
+    const handleFormSubmit = async (values: { description: string, imageUrl: string, imageHint?: string }) => {
         if (!firestore) return;
         setIsSubmitting(true);
 
-        const promise = new Promise<void>((resolve, reject) => {
-            try {
-                if (editingSlide) {
-                    updateDocumentNonBlocking(doc(firestore, 'slides', editingSlide.id), values);
-                    resolve();
-                } else {
-                    addDocumentNonBlocking(collection(firestore, 'slides'), values).then(() => resolve()).catch(reject);
-                }
-            } catch (error) {
-                reject(error);
+        try {
+            if (editingSlide) {
+                await updateDoc(doc(firestore, 'slides', editingSlide.id), values);
+            } else {
+                await addDoc(collection(firestore, 'slides'), values);
             }
-        });
-
-        promise.then(() => {
             toast({ title: `Slide ${editingSlide ? 'modifié' : 'ajouté'} avec succès.` });
-            setIsSubmitting(false);
             setDialogOpen(false);
             setEditingSlide(null);
-        }).catch((error) => {
+        } catch (error) {
             console.error("Error saving slide: ", error);
             toast({ title: 'Erreur', description: `Impossible de sauvegarder le slide.`, variant: 'destructive' });
+        } finally {
             setIsSubmitting(false);
-        });
+        }
     };
     
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (!firestore) return;
-        deleteDocumentNonBlocking(doc(firestore, 'slides', id));
-        toast({ title: 'Slide supprimé.' });
+        try {
+            await deleteDoc(doc(firestore, 'slides', id));
+            toast({ title: 'Slide supprimé.' });
+        } catch (error) {
+            console.error("Error deleting slide: ", error);
+            toast({ title: 'Erreur', description: 'Impossible de supprimer le slide.', variant: 'destructive' });
+        }
     };
 
     const openEditDialog = (slide: Slide) => {
@@ -209,7 +205,7 @@ function ProjectsManager() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-    const handleFormSubmit = (values: ProjectFormValues) => {
+    const handleFormSubmit = async (values: ProjectFormValues) => {
         if (!firestore) return;
         setIsSubmitting(true);
         const dataToSave = {
@@ -218,35 +214,32 @@ function ProjectsManager() {
             price: `${values.price.replace(/ FCFA/g, '')} FCFA`,
         };
 
-        const promise = new Promise<void>((resolve, reject) => {
-            try {
-                if (editingProject) {
-                    updateDocumentNonBlocking(doc(firestore, 'projects', editingProject.id), dataToSave);
-                    resolve();
-                } else {
-                    addDocumentNonBlocking(collection(firestore, 'projects'), dataToSave).then(() => resolve()).catch(reject);
-                }
-            } catch (error) {
-                reject(error);
+        try {
+            if (editingProject) {
+                await updateDoc(doc(firestore, 'projects', editingProject.id), dataToSave);
+            } else {
+                await addDoc(collection(firestore, 'projects'), dataToSave);
             }
-        });
-
-        promise.then(() => {
             toast({ title: `Projet ${editingProject ? 'modifié' : 'ajouté'} avec succès.` });
-            setIsSubmitting(false);
             setDialogOpen(false);
             setEditingProject(null);
-        }).catch((error) => {
+        } catch (error) {
             console.error("Error saving project: ", error);
             toast({ title: 'Erreur', description: `Impossible de sauvegarder le projet.`, variant: 'destructive' });
+        } finally {
             setIsSubmitting(false);
-        });
+        }
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (!firestore) return;
-        deleteDocumentNonBlocking(doc(firestore, 'projects', id));
-        toast({ title: 'Projet supprimé.' });
+        try {
+            await deleteDoc(doc(firestore, 'projects', id));
+            toast({ title: 'Projet supprimé.' });
+        } catch (error) {
+            console.error("Error deleting project: ", error);
+            toast({ title: 'Erreur', description: 'Impossible de supprimer le projet.', variant: 'destructive' });
+        }
     };
     
     const openEditDialog = (project: Project) => {
@@ -331,7 +324,7 @@ function VideosManager() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingVideo, setEditingVideo] = useState<Video | null>(null);
 
-    const handleFormSubmit = (values: VideoFormValues) => {
+    const handleFormSubmit = async (values: VideoFormValues) => {
         if (!firestore) return;
         setIsSubmitting(true);
         const dataToSave = {
@@ -340,35 +333,32 @@ function VideosManager() {
             uploadDate: values.uploadDate || format(new Date(), 'dd MMMM yyyy'),
             views: values.views || '0 vues',
         };
-        const promise = new Promise<void>((resolve, reject) => {
-            try {
-                if (editingVideo) {
-                    updateDocumentNonBlocking(doc(firestore, 'videos', editingVideo.id), dataToSave);
-                    resolve();
-                } else {
-                    addDocumentNonBlocking(collection(firestore, 'videos'), dataToSave).then(() => resolve()).catch(reject);
-                }
-            } catch (error) {
-                reject(error);
+        try {
+            if (editingVideo) {
+                await updateDoc(doc(firestore, 'videos', editingVideo.id), dataToSave);
+            } else {
+                await addDoc(collection(firestore, 'videos'), dataToSave);
             }
-        });
-        
-        promise.then(() => {
             toast({ title: `Vidéo ${editingVideo ? 'modifiée' : 'ajoutée'} avec succès.` });
-            setIsSubmitting(false);
             setDialogOpen(false);
             setEditingVideo(null);
-        }).catch((error) => {
+        } catch (error) {
             console.error("Error saving video: ", error);
             toast({ title: 'Erreur', description: `Impossible de sauvegarder la vidéo.`, variant: 'destructive' });
+        } finally {
             setIsSubmitting(false);
-        });
+        }
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (!firestore) return;
-        deleteDocumentNonBlocking(doc(firestore, 'videos', id));
-        toast({ title: 'Vidéo supprimée.' });
+        try {
+            await deleteDoc(doc(firestore, 'videos', id));
+            toast({ title: 'Vidéo supprimée.' });
+        } catch (error) {
+            console.error("Error deleting video: ", error);
+            toast({ title: 'Erreur', description: 'Impossible de supprimer la vidéo.', variant: 'destructive' });
+        }
     };
 
     const openEditDialog = (video: Video) => {
@@ -453,39 +443,36 @@ function GamesManager() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingGame, setEditingGame] = useState<Game | null>(null);
 
-    const handleFormSubmit = (values: GameFormValues) => {
+    const handleFormSubmit = async (values: GameFormValues) => {
         if (!firestore) return;
         setIsSubmitting(true);
         
-        const promise = new Promise<void>((resolve, reject) => {
-            try {
-                if (editingGame) {
-                    updateDocumentNonBlocking(doc(firestore, 'games', editingGame.id), values);
-                    resolve();
-                } else {
-                    addDocumentNonBlocking(collection(firestore, 'games'), values).then(() => resolve()).catch(reject);
-                }
-            } catch (error) {
-                reject(error);
+        try {
+            if (editingGame) {
+                await updateDoc(doc(firestore, 'games', editingGame.id), values);
+            } else {
+                await addDoc(collection(firestore, 'games'), values);
             }
-        });
-        
-        promise.then(() => {
             toast({ title: `Jeu ${editingGame ? 'modifié' : 'ajouté'} avec succès.` });
-            setIsSubmitting(false);
             setDialogOpen(false);
             setEditingGame(null);
-        }).catch((error) => {
+        } catch (error) {
             console.error("Error saving game: ", error);
             toast({ title: 'Erreur', description: `Impossible de sauvegarder le jeu.`, variant: 'destructive' });
+        } finally {
             setIsSubmitting(false);
-        });
+        }
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (!firestore) return;
-        deleteDocumentNonBlocking(doc(firestore, 'games', id));
-        toast({ title: 'Jeu supprimé.' });
+        try {
+            await deleteDoc(doc(firestore, 'games', id));
+            toast({ title: 'Jeu supprimé.' });
+        } catch (error) {
+            console.error("Error deleting game: ", error);
+            toast({ title: 'Erreur', description: 'Impossible de supprimer le jeu.', variant: 'destructive' });
+        }
     };
 
     const openEditDialog = (game: Game) => {

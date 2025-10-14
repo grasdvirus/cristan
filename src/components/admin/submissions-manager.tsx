@@ -2,7 +2,7 @@
 'use client';
 
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { ContractSubmission } from '@/app/admin/page';
 import { NeumorphicCard } from '../neumorphic-card';
 import { Skeleton } from '../ui/skeleton';
@@ -13,7 +13,6 @@ import Link from 'next/link';
 import { ExternalLink, Trash2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
-import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 
 export function SubmissionsManager() {
@@ -31,10 +30,15 @@ export function SubmissionsManager() {
         return format(date, "d MMMM yyyy 'à' HH:mm", { locale: fr });
     };
     
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (!firestore) return;
-        deleteDocumentNonBlocking(doc(firestore, 'submissions', id));
-        toast({ title: 'Demande supprimée.' });
+        try {
+            await deleteDoc(doc(firestore, 'submissions', id));
+            toast({ title: 'Demande supprimée.' });
+        } catch (error) {
+            console.error('Error deleting submission', error);
+            toast({ title: 'Erreur', description: 'Impossible de supprimer la demande.', variant: 'destructive'});
+        }
     };
 
     return (
@@ -106,3 +110,5 @@ export function SubmissionsManager() {
         </NeumorphicCard>
     );
 }
+
+    
