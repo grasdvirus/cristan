@@ -104,6 +104,38 @@
       },
       "required": ["id", "title", "description", "videoUrl", "thumbnailUrl"]
     },
+    "Game": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Game",
+      "type": "object",
+      "description": "Represents a game for affiliation.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "affiliateUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "imageUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "imageHint": {
+          "type": "string"
+        }
+      },
+      "required": ["id", "title", "description", "category", "affiliateUrl", "imageUrl"]
+    },
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
@@ -246,6 +278,21 @@
             {
               "name": "videoId",
               "description": "Unique identifier for the video."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/games/{gameId}",
+        "definition": {
+          "schema": {
+            "$ref": "#/entities/Game"
+          },
+          "description": "Stores affiliate games.",
+          "params": [
+            {
+              "name": "gameId",
+              "description": "Unique identifier for the game."
             }
           ]
         }

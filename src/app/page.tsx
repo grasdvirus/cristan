@@ -5,6 +5,7 @@ import { useState } from 'react';
 import HeroSection from '@/components/sections/hero-section';
 import ProjectsGrid from '@/components/sections/projects-grid';
 import VideosGrid from '@/components/sections/videos-grid';
+import GamesGrid from '@/components/sections/games-grid';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Home() {
@@ -33,14 +34,23 @@ export default function Home() {
                   >
                       TV
                   </TabsTrigger>
+                  <TabsTrigger 
+                      value="games" 
+                      className="text-lg font-bold bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
+                  >
+                      Gamme
+                  </TabsTrigger>
                   </TabsList>
               </Tabs>
           </div>
 
           {activeTab === 'sites' && <ProjectsGrid />}
           {activeTab === 'videos' && <VideosGrid />}
+          {activeTab === 'games' && <GamesGrid />}
         </div>
       </div>
     </div>
   );
 }
+
+    

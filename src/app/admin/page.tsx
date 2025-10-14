@@ -21,6 +21,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { SlideForm } from '@/components/admin/slide-form';
 import { ProjectForm, type ProjectFormValues } from '@/components/admin/project-form';
 import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
+import { GameForm, type GameFormValues } from '@/components/admin/game-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
 import { convertToEmbedUrl } from '@/lib/utils';
 
@@ -53,6 +54,16 @@ export type Video = {
     videoUrl: string;
     thumbnailUrl: string;
     thumbnailHint?: string;
+};
+
+export type Game = {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    affiliateUrl: string;
+    imageUrl: string;
+    imageHint?: string;
 };
 
 export type ContractSubmission = {
@@ -433,6 +444,121 @@ function VideosManager() {
     );
 }
 
+function GamesManager() {
+    const { firestore } = useFirebase();
+    const gamesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'games')) : null, [firestore]);
+    const { data: games, isLoading } = useCollection<Game>(gamesQuery);
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingGame, setEditingGame] = useState<Game | null>(null);
+
+    const handleFormSubmit = (values: GameFormValues) => {
+        if (!firestore) return;
+        setIsSubmitting(true);
+        
+        const promise = new Promise<void>((resolve, reject) => {
+            try {
+                if (editingGame) {
+                    updateDocumentNonBlocking(doc(firestore, 'games', editingGame.id), values);
+                    resolve();
+                } else {
+                    addDocumentNonBlocking(collection(firestore, 'games'), values).then(() => resolve()).catch(reject);
+                }
+            } catch (error) {
+                reject(error);
+            }
+        });
+        
+        promise.then(() => {
+            toast({ title: `Jeu ${editingGame ? 'modifié' : 'ajouté'} avec succès.` });
+            setIsSubmitting(false);
+            setDialogOpen(false);
+            setEditingGame(null);
+        }).catch((error) => {
+            console.error("Error saving game: ", error);
+            toast({ title: 'Erreur', description: `Impossible de sauvegarder le jeu.`, variant: 'destructive' });
+            setIsSubmitting(false);
+        });
+    };
+
+    const handleDelete = (id: string) => {
+        if (!firestore) return;
+        deleteDocumentNonBlocking(doc(firestore, 'games', id));
+        toast({ title: 'Jeu supprimé.' });
+    };
+
+    const openEditDialog = (game: Game) => {
+        setEditingGame(game);
+        setDialogOpen(true);
+    };
+
+    const openAddDialog = () => {
+        setEditingGame(null);
+        setDialogOpen(true);
+    };
+
+    return (
+        <NeumorphicCard inset className="p-6">
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold font-headline">Gestion de la Gamme</h2>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                            <Plus className="mr-2 h-4 w-4" /> Ajouter un jeu
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{editingGame ? 'Modifier' : 'Ajouter'} un jeu</DialogTitle>
+                        </DialogHeader>
+                        <GameForm
+                            initialData={editingGame}
+                            onSubmit={handleFormSubmit}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </div>
+            { isLoading ? <Skeleton className="h-40 w-full" /> : (
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Titre</TableHead>
+                        <TableHead>Catégorie</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {games?.map((game) => (
+                        <TableRow key={game.id}>
+                            <TableCell className="font-medium">{game.title}</TableCell>
+                            <TableCell>{game.category}</TableCell>
+                            <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" onClick={() => openEditDialog(game)}><Edit className="h-4 w-4" /></Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
+                                        <AlertDialogDescription>Cette action est irréversible et supprimera définitivement le jeu.</AlertDialogDescription>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDelete(game.id)}>Supprimer</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+            )}
+        </NeumorphicCard>
+    );
+}
+
 export default function AdminPage() {
     return (
         <div className="container mx-auto px-4 py-16 sm:py-24">
@@ -446,10 +572,11 @@ export default function AdminPage() {
                 </p>
 
                 <Tabs defaultValue="slides">
-                    <TabsList className="mb-8 grid w-full grid-cols-4">
+                    <TabsList className="mb-8 grid w-full grid-cols-5">
                         <TabsTrigger value="slides">Slides</TabsTrigger>
                         <TabsTrigger value="internet">Internet</TabsTrigger>
                         <TabsTrigger value="tv">TV</TabsTrigger>
+                        <TabsTrigger value="games">Gamme</TabsTrigger>
                         <TabsTrigger value="submissions">Demandes</TabsTrigger>
                     </TabsList>
                     
@@ -465,6 +592,10 @@ export default function AdminPage() {
                         <VideosManager />
                     </TabsContent>
 
+                    <TabsContent value="games">
+                        <GamesManager />
+                    </TabsContent>
+
                     <TabsContent value="submissions">
                         <SubmissionsManager />
                     </TabsContent>
@@ -473,3 +604,5 @@ export default function AdminPage() {
         </div>
     );
 }
+
+    
