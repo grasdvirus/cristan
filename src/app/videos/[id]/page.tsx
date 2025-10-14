@@ -97,7 +97,7 @@ export default function VideoDetailsPage() {
     setIsPlaying(true);
   };
   
-  const embedUrl = `${video.videoUrl}?autoplay=1&modestbranding=1&controls=1&rel=0`;
+  const embedUrl = `${video.videoUrl}?autoplay=1&modestbranding=1&controls=1&rel=0&playsinline=1`;
 
   return (
     <div className="container mx-auto px-4 py-16 sm:py-24">
