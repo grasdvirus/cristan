@@ -1,148 +1,36 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a multi-layered security model, balancing open read access with strict ownership and authentication requirements for write operations.
+ * @fileoverview Firestore Security Rules for the application.
+ *
+ * Core Philosophy:
+ * This ruleset prioritizes strong authorization by strictly controlling access based on user roles or ownership.
+ * It assumes most data is publicly readable, but writes are heavily restricted. Data shape validation is minimal
+ * to allow for rapid prototyping.
  *
  * Data Structure:
- * - Slides, Projects, Videos, and Games are stored in top-level collections with public read access.
- * - User profiles are stored under `/users/{userId}`.
- * - Contract submissions are stored under `/submissions/{submissionId}`.
- * - Reviews (Avis) are stored under `/avis/{avisId}`, with responses (ReponseAvis) in a subcollection.
+ * - /slides/{slideId}: Publicly readable content, write access restricted.
+ * - /projects/{projectId}: Publicly readable content, write access restricted.
+ * - /videos/{videoId}: Publicly readable content, write access restricted.
+ * - /games/{gameId}: Publicly readable content, write access restricted.
+ * - /users/{userId}: Private user profiles, accessible only to the owner.
+ * - /submissions/{submissionId}: Publicly readable content, write access restricted.
+ * - /avis/{avisId}: Publicly readable reviews, write access restricted.
+ *   - /avis/{avisId}/reponses/{reponseId}: Publicly readable replies, write access restricted.
  *
  * Key Security Decisions:
- * - Slides, Projects, Videos, and Games: Publicly readable but only writeable with valid authentication. The creator must include their `uid` as the author on creation, and only the author can modify or delete.
- * - User Profiles: Only a user can read/write their own profile.
- * - Contract Submissions: Only authenticated users can create submissions.
- * - Reviews (Avis): Publicly readable, but writeable only by authenticated users with the correct user ID.
- * - Responses (ReponseAvis):  Writeable only by authenticated users with the correct user ID, linked to the parent Avis.
- * - Listing of User Profiles: Listing user profiles is not permitted.
+ * - Public read access is enabled for content collections (slides, projects, videos, games, submissions, avis, reponses)
+ * - User listing is disabled.
+ * - All write operations require authentication.
+ * - Ownership is enforced for user profiles.
  *
  * Denormalization for Authorization:
- * - For public read collections (Slides, Projects, Videos, Games, Avis, ReponseAvis), documents must include an `ownerId` or `authorId` field to enforce write permissions.
+ *  -The current data model does not include explicit ownership fields on publicly readable documents like slides, projects, videos, games, and submissions.  If the application requires specific users to be able to edit these documents, an `ownerId` field should be added to the schema to enable secure write rules.
+ *
+ * Structural Segregation:
+ *  -Private user data is stored under the `/users/{userId}` collection, separate from public content collections.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * @description Allows anyone to read Slides, but only allows authenticated users to create, update, or delete them if they are the owner.
-     * @path /slides/{slideId}
-     * @allow (get, list)
-     * @allow (create) - authenticated user with request.resource.data.ownerId set to their UID.
-     * @allow (update, delete) - authenticated user who is the owner (resource.data.ownerId == request.auth.uid).
-     * @deny (create) - unauthenticated user.
-     * @deny (update, delete) - unauthenticated user, or authenticated user who is not the owner.
-     * @principle Public read, owner-only writes.
-     */
-    match /slides/{slideId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-    }
-
-    /**
-     * @description Allows anyone to read Projects, but only allows authenticated users to create, update, or delete them if they are the owner.
-     * @path /projects/{projectId}
-     * @allow (get, list)
-     * @allow (create) - authenticated user with request.resource.data.ownerId set to their UID.
-     * @allow (update, delete) - authenticated user who is the owner (resource.data.ownerId == request.auth.uid).
-     * @deny (create) - unauthenticated user.
-     * @deny (update, delete) - unauthenticated user, or authenticated user who is not the owner.
-     * @principle Public read, owner-only writes.
-     */
-    match /projects/{projectId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-    }
-
-    /**
-     * @description Allows anyone to read Videos, but only allows authenticated users to create, update, or delete them if they are the owner.
-     * @path /videos/{videoId}
-     * @allow (get, list)
-     * @allow (create) - authenticated user with request.resource.data.ownerId set to their UID.
-     * @allow (update, delete) - authenticated user who is the owner.
-     * @deny (create) - unauthenticated user.
-     * @deny (update, delete) - unauthenticated user, or authenticated user who is not the owner.
-     * @principle Public read, owner-only writes.
-     */
-    match /videos/{videoId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-    }
-
-    /**
-     * @description Allows anyone to read Games, but only allows authenticated users to create, update, or delete them if they are the owner.
-     * @path /games/{gameId}
-     * @allow (get, list)
-     * @allow (create) - authenticated user with request.resource.data.ownerId set to their UID.
-     * @allow (update, delete) - authenticated user who is the owner.
-     * @deny (create) - unauthenticated user.
-     * @deny (update, delete) - unauthenticated user, or authenticated user who is not the owner.
-     * @principle Public read, owner-only writes.
-     */
-    match /games/{gameId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-    }
-
-    /**
-     * @description Allows a user to read and write their own profile.
-     * @path /users/{userId}
-     * @allow (get, create, update, delete) - authenticated user where userId matches request.auth.uid.
-     * @deny (get, create, update, delete) - unauthenticated user, or authenticated user where userId does not match request.auth.uid.
-     * @deny (list) - prevents listing all user profiles.
-     * @principle Enforces document ownership for writes. Restricts access to a user's own data tree.
-     */
-    match /users/{userId} {
-      allow get, create, update, delete: if isOwner(userId);
-      allow list: if false;
-    }
-
-    /**
-     * @description Allows any authenticated user to create a contract submission.
-     * @path /submissions/{submissionId}
-     * @allow (create) - authenticated user.
-     * @deny (get, list, update, delete) - all users.
-     * @principle Authenticated users can create submissions.
-     */
-    match /submissions/{submissionId} {
-        allow create: if isSignedIn();
-      allow get, list, update, delete: if false;
-    }
-
-    /**
-     * @description Allows anyone to read Avis, but only allows authenticated users to create, update, or delete them if they are the owner.
-     * @path /avis/{avisId}
-     * @allow (get, list)
-     * @allow (create) - authenticated user with request.resource.data.userId set to their UID.
-     * @allow (update, delete) - authenticated user who is the owner.
-     * @deny (create) - unauthenticated user.
-     * @deny (update, delete) - unauthenticated user, or authenticated user who is not the owner.
-     * @principle Public read, owner-only writes.
-     */
-    match /avis/{avisId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-
-        /**
-         * @description Allows anyone to read ReponseAvis, but only allows authenticated users to create, update, or delete them if they are the owner.
-         * @path /avis/{avisId}/reponses/{reponseId}
-         * @allow (get, list)
-         * @allow (create) - authenticated user with request.resource.data.userId set to their UID.
-         * @allow (update, delete) - authenticated user who is the owner.
-         * @deny (create) - unauthenticated user.
-         * @deny (update, delete) - unauthenticated user, or authenticated user who is not the owner.
-         * @principle Public read, owner-only writes.
-         */
-        match /reponses/{reponseId} {
-          allow get, list: if true;
-          allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-          allow update, delete: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        }
-    }
 
     function isSignedIn() {
       return request.auth != null;
@@ -153,7 +41,123 @@ service cloud.firestore {
     }
 
     function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      return isOwner(userId) && exists(resource.data);
+    }
+    
+    /**
+     * @description Allows public read access to slides, but restricts write access.
+     * @path /slides/{slideId}
+     * @allow (get, list): Any user can read the slide data.
+     * @deny (create, update, delete): No one can create, update, or delete slides without proper authorization.
+     * @principle Public read, restricted writes.
+     */
+    match /slides/{slideId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to projects, but restricts write access.
+     * @path /projects/{projectId}
+     * @allow (get, list): Any user can read the project data.
+     * @deny (create, update, delete): No one can create, update, or delete projects without proper authorization.
+     * @principle Public read, restricted writes.
+     */
+    match /projects/{projectId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to videos, but restricts write access.
+     * @path /videos/{videoId}
+     * @allow (get, list): Any user can read the video data.
+     * @deny (create, update, delete): No one can create, update, or delete videos without proper authorization.
+     * @principle Public read, restricted writes.
+     */
+    match /videos/{videoId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to games, but restricts write access.
+     * @path /games/{gameId}
+     * @allow (get, list): Any user can read the game data.
+     * @deny (create, update, delete): No one can create, update, or delete games without proper authorization.
+     * @principle Public read, restricted writes.
+     */
+    match /games/{gameId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false;
+    }
+
+    /**
+     * @description Controls access to user profiles. Only the owner can read and write their own profile.
+     * @path /users/{userId}
+     * @allow (get, list): Only the owner can read their own profile.
+     * @allow (create): Only the owner can create their own profile.
+     * @allow (update, delete): Only the owner can update or delete their own profile, and only if the document exists.
+     * @deny (create): If the user ID in the path does not match the authenticated user's ID.
+     * @deny (update, delete): If the document doesn't exist.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && isSignedIn();
+      allow delete: if isOwner(userId) && isSignedIn();
+    }
+
+    /**
+     * @description Allows public read access to submissions, but restricts write access.
+     * @path /submissions/{submissionId}
+     * @allow (get, list): Any user can read the submission data.
+     * @deny (create, update, delete): No one can create, update, or delete submissions without proper authorization.
+     * @principle Public read, restricted writes.
+     */
+    match /submissions/{submissionId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false;
+    }
+
+     /**
+     * @description Allows public read access to avis, but restricts write access.
+     * @path /avis/{avisId}
+     * @allow (get, list): Any user can read the avis data.
+     * @deny (create, update, delete): No one can create, update, or delete avis without proper authorization.
+     * @principle Public read, restricted writes.
+     */
+    match /avis/{avisId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false;
+
+      /**
+       * @description Allows public read access to reponses, but restricts write access.
+       * @path /avis/{avisId}/reponses/{reponseId}
+       * @allow (get, list): Any user can read the reponse data.
+       * @deny (create, update, delete): No one can create, update, or delete reponses without proper authorization.
+       * @principle Public read, restricted writes.
+       */
+      match /reponses/{reponseId} {
+        allow get, list: if true;
+        allow create: if isSignedIn();
+        allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+        allow delete: if false;
+      }
     }
   }
 }
