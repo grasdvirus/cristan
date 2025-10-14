@@ -1,178 +1,141 @@
 /**
- * @fileoverview Firestore Security Rules for the application.
- *
- * Core Philosophy:
- * This ruleset prioritizes security by enforcing strict ownership and explicit access control.
- * It is configured for rapid prototyping, so it avoids complex data validation.
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a public read-only policy for content collections (slides, projects, videos, games)
+ * and a strict user-ownership model for user profiles. Contract submissions are publicly writable.
  *
  * Data Structure:
- * - Slides: Public read, owner-only write.
- * - Projects: Public read, owner-only write.
- * - Videos: Public read, owner-only write.
- * - Games: Public read, owner-only write.
- * - Users: Each user has their own private data tree under /users/{userId}.
- * - Submissions: Public read, owner-only write.
- * - Avis: Public read, authenticated write.
- * - ReponseAvis: Public read, authenticated write.
+ * - /slides/{slideId}: Publicly readable slides.
+ * - /projects/{projectId}: Publicly readable projects.
+ * - /videos/{videoId}: Publicly readable videos.
+ * - /games/{gameId}: Publicly readable games.
+ * - /users/{userId}: User profiles, only accessible to the owner.
+ * - /submissions/{submissionId}: Publicly writable contract submissions.
+ * - /avis/{avisId}: Publicly readable avis.
+ * - /avis/{avisId}/reponses/{reponseId}: Publicly readable reponses to an avis.
  *
  * Key Security Decisions:
- * - Users can only access their own data under /users/{userId}.
- * - Public read access is granted to Slides, Projects, Videos, Games, Submissions, Avis and ReponseAvis.
- * - Data validation is minimized for prototyping, focusing on authorization and relational integrity.
- * - Destructive operations (update, delete) require document existence checks.
+ * - Public read access for slides, projects, videos, and games.
+ * - User profiles are strictly private, accessible only to the owner.
+ * - Anyone can create contract submissions, but they cannot be updated or deleted.
  *
  * Denormalization for Authorization:
- * - The "games", "slides", "projects", "videos", and "submissions" collections require that the document contains an `ownerId` or `authorId` field,
- *   but the schema does not specify one.
- *   Therefore, we will add a TODO placeholder for owner validation that will alert the developer.
- *
- * Structural Segregation:
- * - Private user data is stored under /users/{userId}, separate from public data.
+ * - The 'games' collection is missing an ownership field.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
     /**
-     * @description Slides: Anyone can read, but only owners can create, update, or delete.
+     * @description Allows public read access to slides.
      * @path /slides/{slideId}
-     * @allow (get, list): Any user can read slides.
-     * @allow (create): Only the owner can create a slide with the correct `ownerId`.
-     * @allow (update, delete): Only the owner of an existing slide can modify it.
-     * @deny (create): A user attempts to create a slide without being authenticated.
-     * @deny (update): A user attempts to update a slide they don't own.
-     * @principle Public read, owner-only writes.
+     * @allow (get, list) Any user can read slide data.
+     * @deny (create, update, delete) No user can create, update, or delete slides.
+     * @principle Public read-only access.
      */
     match /slides/{slideId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Projects: Anyone can read, but only owners can create, update, or delete.
+     * @description Allows public read access to projects.
      * @path /projects/{projectId}
-     * @allow (get, list): Any user can read projects.
-     * @allow (create): Only the owner can create a project with the correct `ownerId`.
-     * @allow (update, delete): Only the owner of an existing project can modify it.
-     * @deny (create): A user attempts to create a project without being authenticated.
-     * @deny (update): A user attempts to update a project they don't own.
-     * @principle Public read, owner-only writes.
+     * @allow (get, list) Any user can read project data.
+     * @deny (create, update, delete) No user can create, update, or delete projects.
+     * @principle Public read-only access.
      */
     match /projects/{projectId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Videos: Anyone can read, but only owners can create, update, or delete.
+     * @description Allows public read access to videos.
      * @path /videos/{videoId}
-     * @allow (get, list): Any user can read videos.
-     * @allow (create): Only the owner can create a video with the correct `ownerId`.
-     * @allow (update, delete): Only the owner of an existing video can modify it.
-     * @deny (create): A user attempts to create a video without being authenticated.
-     * @deny (update): A user attempts to update a video they don't own.
-     * @principle Public read, owner-only writes.
+     * @allow (get, list) Any user can read video data.
+     * @deny (create, update, delete) No user can create, update, or delete videos.
+     * @principle Public read-only access.
      */
     match /videos/{videoId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Games: Anyone can read, but only owners can create, update, or delete.
+     * @description Allows public read access to games.  Write permissions are restricted.
      * @path /games/{gameId}
-     * @allow (get, list): Any user can read games.
-     * @allow (create): Only the owner can create a game with the correct `ownerId`.
-     * @allow (update, delete): Only the owner of an existing game can modify it.
-     * @deny (create): A user attempts to create a game without being authenticated.
-     * @deny (update): A user attempts to update a game they don't own.
-     * @principle Public read, owner-only writes.
+     * @allow (get, list) Any user can read game data.
+     * @deny (update, delete) No user can update, or delete games.
+     * @allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @principle Public read-only access with restricted writes.
      */
     match /games/{gameId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow get, list: if true;
+      allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update, delete: if false;
     }
 
     /**
-     * @description Users: Only a user can read/write their own profile.
+     * @description Allows only the owner to read, update, and delete their own profile.  Allows self-creation.
      * @path /users/{userId}
-     * @allow (get, list): Only the owner can read their profile.
-     * @allow (create): Only the owner can create their profile.
-     * @allow (update, delete): Only the owner can update/delete their profile.
-     * @deny (create): A user attempts to create a profile for another user.
-     * @deny (update): A user attempts to update another user's profile.
-     * @principle Enforces strict user-ownership.
+     * @allow (get, list, update, delete) Only the user with matching userId can access.
+     * @allow (create) A user can create their own profile if the userId matches their auth UID.
+     * @deny (get, list, update, delete) Access is denied if the userId does not match the authenticated user's UID.
+     * @principle Enforces strict user-ownership for profile data.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      allow get, list: if isOwner(userId);
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Submissions: Anyone can read, but only owners can create, update, or delete.
+     * @description Allows anyone to create a contract submission, but no one can update or delete them.
      * @path /submissions/{submissionId}
-     * @allow (get, list): Any user can read submissions.
-     * @allow (create): Only the owner can create a submission with the correct `ownerId`.
-     * @allow (update, delete): Only the owner of an existing submission can modify it.
-     * @deny (create): A user attempts to create a submission without being authenticated.
-     * @deny (update): A user attempts to update a submission they don't own.
-     * @principle Public read, owner-only writes.
+     * @allow (create) Any authenticated user can create a submission.
+     * @deny (get, list, update, delete) No one can get, list, update, or delete submissions.
+     * @principle Public write-only for submissions.
      */
     match /submissions/{submissionId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create: if isSignedIn();
+      allow get, list, update, delete: if false;
     }
 
-    /**
-     * @description Avis: Anyone can read, only authenticated users can create.
+     /**
+     * @description Allows public read access to avis.
      * @path /avis/{avisId}
+     * @allow (get, list) Any user can read avis data.
+     * @deny (create, update, delete) No user can create, update, or delete avis.
+     * @principle Public read-only access.
      */
     match /avis/{avisId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
+        allow get, list: if true;
+        allow create, update, delete: if false;
 
         /**
-         * @description ReponseAvis: Anyone can read, only authenticated users can create.
+         * @description Allows public read access to reponses to an avis.
          * @path /avis/{avisId}/reponses/{reponseId}
+         * @allow (get, list) Any user can read reponse data.
+         * @deny (create, update, delete) No user can create, update, or delete reponses.
+         * @principle Public read-only access.
          */
         match /reponses/{reponseId} {
-          allow get: if true;
-          allow list: if true;
-          allow create: if isSignedIn();
-          allow update: if false;
-          allow delete: if false;
+            allow get, list: if true;
+            allow create, update, delete: if false;
         }
     }
   }
 
-  // Helper function to determine if the user is signed in
+  // Helper functions
   function isSignedIn() {
     return request.auth != null;
   }
 
-  // Helper function to determine if the user is the owner
   function isOwner(userId) {
     return request.auth.uid == userId;
+  }
+
+  function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
   }
 }
