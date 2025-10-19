@@ -127,4 +127,216 @@
     transform: translateY(0);
     box-shadow: inset 4px 4px 8px #2b2b2b, inset -4px -4px 8px #3b3b3b;
   }
+
+  .notification-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 380px;
+    height: 120px;
+    z-index: 100;
+  }
+  
+  .notification-card {
+    position: absolute;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease-out;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+  }
+  
+  .notification-card:hover {
+    transform: translateY(-4px);
+  }
+  
+  .notification-card:active {
+    transform: scale(0.98);
+  }
+  
+  .notification-top {
+    z-index: 30;
+    top: 0;
+  }
+  
+  .notification-top:hover {
+    transform: translateY(-4px) scale(1.01);
+  }
+  
+  .notification-middle {
+    z-index: 20;
+    top: 20px;
+    transform: scale(0.94);
+    opacity: 0.75;
+  }
+  
+  .notification-middle:hover {
+    transform: translateY(-4px) scale(0.96);
+    opacity: 0.85;
+  }
+  
+  .notification-bottom {
+    z-index: 10;
+    top: 40px;
+    transform: scale(0.88);
+    opacity: 0.5;
+  }
+  
+  .notification-bottom:hover {
+    transform: translateY(-4px) scale(0.9);
+    opacity: 0.65;
+  }
+  
+  .notification-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 80px;
+  }
+  
+  .notification-path {
+    transition: all 0.3s ease;
+  }
+  
+  .notification-card:hover .notification-path {
+    stroke: rgba(255, 255, 255, 0.25);
+  }
+  
+  .notification-content {
+    position: relative;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 80px;
+  }
+  
+  .notification-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .user-avatar {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+  }
+  
+  .notification-body {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .notification-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  
+  .notification-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.2;
+  }
+  
+  .notification-time {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 400;
+  }
+  
+  .notification-message {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .notification-meta {
+    display: flex;
+    align-items: center;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 2px;
+  }
+  
+  .notification-meta svg {
+    width: 10px;
+    height: 10px;
+    margin-right: 4px;
+    fill: currentColor;
+  }
+
+  .dark .notification-title {
+    color: #ffffff;
+  }
+  .dark .notification-time {
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .dark .notification-message {
+     color: rgba(255, 255, 255, 0.8);
+  }
+  .dark .notification-meta {
+    color: rgba(255, 255, 255, 0.5);
+  }
+   .dark .notification-avatar {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+   .dark .user-avatar {
+     color: #ffffff;
+   }
+  .dark .notification-avatar svg {
+    fill: rgba(255,255,255,0.8);
+  }
+
+  .light .notification-title {
+    color: #111827;
+  }
+  .light .notification-time {
+    color: #4b5563;
+  }
+  .light .notification-message {
+      color: #374151;
+  }
+  .light .notification-meta {
+    color: #6b7280;
+  }
+  .light .notification-avatar {
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  .light .user-avatar {
+    color: #111827;
+  }
+  .light .notification-avatar svg {
+    fill: #374151;
+  }
+
+  .light .notification-path {
+    stroke: rgba(0,0,0,0.1);
+  }
+  .light .notification-card:hover .notification-path {
+    stroke: rgba(0,0,0,0.15);
+  }
+   .light #grad1, .light #grad2, .light #grad3 {
+    stop:nth-child(1) { stop-color: rgba(0,0,0,0.05); }
+    stop:nth-child(2) { stop-color: rgba(0,0,0,0.02); }
+    stop:nth-child(3) { stop-color: rgba(0,0,0,0.01); }
+  }
 }
