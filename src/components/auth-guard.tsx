@@ -15,7 +15,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // If loading, do nothing yet.
+    // If loading, do nothing yet. The loading screen will be displayed.
     if (isUserLoading) {
       return;
     }
@@ -33,7 +33,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }
   }, [user, isUserLoading, router, pathname]);
 
-  // While loading auth state, we can show a loader or null.
+  // While loading auth state, we show a loader.
   if (isUserLoading) {
     return (
         <div className="flex items-center justify-center min-h-screen bg-background">
@@ -42,13 +42,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  // If there's a user, or we are on the public login page, render the children.
+  // If there's a user, or we are on the public login page (and not loading), render the children.
   if (user || pathname === '/login') {
     return <>{children}</>;
   }
   
   // If no user and not on login page, this will be briefly rendered before redirect.
-  // Or, you can show a dedicated loading/redirecting screen.
+  // This state indicates that the useEffect has run and is now redirecting.
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
         <p>Redirection...</p>
