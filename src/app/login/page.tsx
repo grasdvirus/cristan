@@ -110,6 +110,10 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
       router.push('/');
     } catch (err: any) {
+      // Ignore popup closed by user error
+      if (err.code === 'auth/popup-closed-by-user') {
+        return;
+      }
       setError(err.message);
        toast({
         variant: 'destructive',
@@ -274,5 +278,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
