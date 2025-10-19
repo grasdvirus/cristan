@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -12,36 +13,53 @@ const icons = {
   error: <XCircle />,
 };
 
+type VisibleToast = ReturnType<typeof useToast>['toasts'][number] & {
+  timer?: NodeJS.Timeout;
+};
+
+
 export function CustomToaster() {
   const { toasts, dismiss } = useToast();
-  const [visibleToasts, setVisibleToasts] = useState<any[]>([]);
+  const [visibleToasts, setVisibleToasts] = useState<VisibleToast[]>([]);
 
   useEffect(() => {
-    const newToasts = toasts.filter(
-      (t) => !visibleToasts.some((vt) => vt.id === t.id)
-    );
+    setVisibleToasts(currentToasts => {
+      const newToasts = toasts.filter(
+        t => !currentToasts.some(vt => vt.id === t.id)
+      );
+      const updatedToasts = currentToasts.filter(vt =>
+        toasts.some(t => t.id === vt.id)
+      );
 
-    if (newToasts.length > 0) {
-      const toastWithTimer = newToasts.map((toast) => {
-        const timer = setTimeout(() => {
-          dismiss(toast.id);
-        }, toast.duration || 5000);
-        return { ...toast, timer };
+      newToasts.forEach(toast => {
+        if (toast.duration && toast.duration !== Infinity) {
+          const timer = setTimeout(() => {
+            dismiss(toast.id);
+          }, toast.duration);
+          (toast as VisibleToast).timer = timer;
+        }
       });
-      setVisibleToasts((prev) => [...toastWithTimer, ...prev]);
-    }
+      
+      return [...newToasts, ...updatedToasts];
+    });
 
-    setVisibleToasts((prev) =>
-      prev.filter((vt) => toasts.some((t) => t.id === vt.id))
-    );
-
-    return () => {
-      visibleToasts.forEach(vt => clearTimeout(vt.timer));
-    };
   }, [toasts, dismiss]);
+  
+  useEffect(() => {
+    return () => {
+        visibleToasts.forEach(toast => {
+            if (toast.timer) {
+                clearTimeout(toast.timer);
+            }
+        });
+    };
+  }, [visibleToasts]);
 
-  const handleDismiss = (toast: any) => {
-    clearTimeout(toast.timer);
+
+  const handleDismiss = (toast: VisibleToast) => {
+    if (toast.timer) {
+      clearTimeout(toast.timer);
+    }
     dismiss(toast.id);
   };
 
