@@ -74,7 +74,7 @@ export default function LoginPage() {
         const loginValues = values as LoginFormValues;
         await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
       }
-      router.push('/');
+      // The AuthGuard will handle redirection.
     } catch (err: any) {
       let friendlyMessage = 'Une erreur est survenue.';
       switch(err.code) {
@@ -108,10 +108,12 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      router.push('/');
+      // The AuthGuard will handle redirection once the user state is updated.
+      // No need for router.push('/') here.
     } catch (err: any) {
       // Ignore popup closed by user error
       if (err.code === 'auth/popup-closed-by-user') {
+        setIsSubmitting(false);
         return;
       }
       setError(err.message);
@@ -120,9 +122,9 @@ export default function LoginPage() {
         title: 'Erreur Google Sign-In',
         description: err.message,
       });
-    } finally {
       setIsSubmitting(false);
     }
+    // No need for finally block if we handle the successful case without setting isSubmitting to false
   };
 
   const handlePasswordReset = async () => {
@@ -278,3 +280,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
