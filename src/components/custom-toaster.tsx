@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, CheckCircle, Info, XCircle } from 'lucide-react';
@@ -13,54 +13,32 @@ const icons = {
   error: <XCircle />,
 };
 
-type VisibleToast = ReturnType<typeof useToast>['toasts'][number] & {
+type ToastWithTimer = ReturnType<typeof useToast>['toasts'][number] & {
   timer?: NodeJS.Timeout;
 };
 
-
 export function CustomToaster() {
   const { toasts, dismiss } = useToast();
-  const [visibleToasts, setVisibleToasts] = useState<VisibleToast[]>([]);
 
   useEffect(() => {
-    setVisibleToasts(currentToasts => {
-      const newToasts = toasts.filter(
-        t => !currentToasts.some(vt => vt.id === t.id)
-      );
-      const updatedToasts = currentToasts.filter(vt =>
-        toasts.some(t => t.id === vt.id)
-      );
+    const timers = new Map<string, NodeJS.Timeout>();
 
-      newToasts.forEach(toast => {
-        if (toast.duration && toast.duration !== Infinity) {
-          const timer = setTimeout(() => {
-            dismiss(toast.id);
-          }, toast.duration);
-          (toast as VisibleToast).timer = timer;
-        }
-      });
-      
-      return [...newToasts, ...updatedToasts];
+    toasts.forEach(toast => {
+      if (toast.duration && toast.duration !== Infinity) {
+        const timer = setTimeout(() => {
+          dismiss(toast.id);
+        }, toast.duration);
+        timers.set(toast.id, timer);
+      }
     });
 
-  }, [toasts, dismiss]);
-  
-  useEffect(() => {
     return () => {
-        visibleToasts.forEach(toast => {
-            if (toast.timer) {
-                clearTimeout(toast.timer);
-            }
-        });
+      timers.forEach(timer => clearTimeout(timer));
     };
-  }, [visibleToasts]);
+  }, [toasts, dismiss]);
 
-
-  const handleDismiss = (toast: VisibleToast) => {
-    if (toast.timer) {
-      clearTimeout(toast.timer);
-    }
-    dismiss(toast.id);
+  const handleDismiss = (toastId: string) => {
+    dismiss(toastId);
   };
 
   const getPositionClass = (index: number) => {
@@ -77,11 +55,11 @@ export function CustomToaster() {
 
   return (
     <div className="notification-container">
-      {visibleToasts.slice(0, 3).map((toast, index) => (
+      {toasts.slice(0, 3).map((toast, index) => (
         <div
           key={toast.id}
           className={cn('notification-card', getPositionClass(index))}
-          onClick={() => handleDismiss(toast)}
+          onClick={() => handleDismiss(toast.id)}
         >
           <svg className="notification-svg">
             <defs>
@@ -101,7 +79,7 @@ export function CustomToaster() {
           </svg>
           <div className="notification-content">
             <div className={cn("notification-avatar", {
-                "bg-red-500/20 border-red-500/30": toast.variant === 'destructive',
+                "bg-red-500/20 border-red-500/30": toast.variant === 'destructive' || toast.variant === 'error',
                 "bg-green-500/20 border-green-500/30": toast.variant === 'success',
             })}>
                {getIcon(toast.variant)}
