@@ -4,6 +4,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 import { useUser } from '@/firebase';
+import { LoadingSpinner } from './loading-spinner';
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -37,7 +38,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   if (isUserLoading) {
     return (
         <div className="flex items-center justify-center min-h-screen bg-background">
-            <p>Chargement...</p>
+            <LoadingSpinner />
         </div>
     );
   }
@@ -51,7 +52,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // This state indicates that the useEffect has run and is now redirecting.
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
-        <p>Redirection...</p>
+        <LoadingSpinner />
     </div>
     );
 }

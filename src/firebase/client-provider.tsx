@@ -7,6 +7,7 @@ import { initializeFirebase } from '@/firebase';
 import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
+import { LoadingSpinner } from '@/components/loading-spinner';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
@@ -24,18 +25,18 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   useEffect(() => {
     // This effect runs only once on the client after the component mounts.
     // It's the safest place to initialize client-side libraries.
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && !services) {
         const initializedServices = initializeFirebase();
         setServices(initializedServices);
     }
-  }, []); // The empty dependency array is crucial.
+  }, [services]); // The empty dependency array is crucial.
 
   if (!services) {
     // While services are initializing, you can return a loader
     // or null to prevent children from rendering without Firebase.
     return (
         <div className="flex items-center justify-center min-h-screen bg-background">
-            <p>Chargement...</p>
+            <LoadingSpinner />
         </div>
     );
   }
