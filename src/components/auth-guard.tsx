@@ -37,8 +37,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   // Affiche un écran de chargement si :
   // 1. L'authentification est en cours de vérification.
-  // 2. L'utilisateur n'est pas connecté et n'est pas sur la page de login (redirection imminente).
-  // 3. L'utilisateur est connecté et est sur la page de login (redirection imminente).
+  // 2. Ou si une redirection est imminente (pour éviter un flash de contenu).
   if (isUserLoading || (!user && pathname !== '/login') || (user && pathname === '/login')) {
     return <LoadingSpinner />;
   }

@@ -110,21 +110,23 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // La redirection sera gérée par le AuthGuard qui détecte le changement d'état de l'utilisateur.
-      // On ne fait PAS de router.push('/') ici pour éviter les race conditions.
+      // La redirection est maintenant gérée par AuthGuard qui détecte le changement d'état.
+      // On ne fait PAS de router.push('/') ici pour éviter les "race conditions".
+      // Le composant reste en état de chargement jusqu'à ce que AuthGuard redirige.
     } catch (err: any) {
+      // Si l'utilisateur ferme la popup, on ne considère pas ça comme une erreur.
       if (err.code !== 'auth/popup-closed-by-user') {
-        setError(err.message);
+        setError("La connexion avec Google a échoué. Veuillez réessayer.");
         toast({
           variant: 'destructive',
           title: 'Erreur Google Sign-In',
           description: "La connexion avec Google a échoué. Veuillez réessayer.",
         });
       }
-      setIsSubmitting(false);
+      setIsSubmitting(false); // On réactive le bouton seulement en cas d'erreur.
     }
-    // isSubmitting restera à true si la connexion réussit,
-    // car le composant sera démonté par AuthGuard avant la fin.
+    // Si la connexion réussit, `isSubmitting` reste `true` car AuthGuard va 
+    // démonter ce composant pour afficher le spinner puis la page d'accueil.
   };
 
   const handlePasswordReset = async () => {
