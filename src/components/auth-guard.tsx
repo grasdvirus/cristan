@@ -15,27 +15,34 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Ne rien faire tant que l'état de l'utilisateur n'est pas certain.
     if (isUserLoading) {
-      return; // Ne rien faire tant que l'état de l'utilisateur n'est pas connu.
+      return; 
     }
 
     const isLoginPage = pathname === '/login';
 
+    // Si l'utilisateur est connecté et essaie d'accéder à la page de connexion,
+    // le rediriger vers la page d'accueil.
     if (user && isLoginPage) {
       router.replace('/');
     }
 
+    // Si l'utilisateur n'est pas connecté et essaie d'accéder à une page autre
+    // que la page de connexion, le rediriger vers la page de connexion.
     if (!user && !isLoginPage) {
       router.replace('/login');
     }
   }, [user, isUserLoading, router, pathname]);
 
-  // Si l'application détermine l'état de l'utilisateur, ou si une redirection est sur le point de se produire,
-  // afficher un spinner est la chose la plus sûre à faire pour éviter les flashs de contenu.
+  // Affiche un écran de chargement si :
+  // 1. L'authentification est en cours de vérification.
+  // 2. L'utilisateur n'est pas connecté et n'est pas sur la page de login (redirection imminente).
+  // 3. L'utilisateur est connecté et est sur la page de login (redirection imminente).
   if (isUserLoading || (!user && pathname !== '/login') || (user && pathname === '/login')) {
     return <LoadingSpinner />;
   }
 
-  // Si l'état de l'utilisateur est connu et qu'aucune redirection n'est nécessaire, afficher le contenu.
+  // Si tout est en ordre (ex: utilisateur connecté sur une page protégée), affiche le contenu.
   return <>{children}</>;
 }

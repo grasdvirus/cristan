@@ -69,16 +69,18 @@ export default function LoginPage() {
         await updateProfile(userCredential.user, {
             displayName: signUpValues.name
         });
-        router.push('/');
+        // La redirection est gérée par AuthGuard
       } else {
         const loginValues = values as LoginFormValues;
         await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
-        router.push('/');
+        // La redirection est gérée par AuthGuard
       }
     } catch (err: any) {
       let friendlyMessage = 'Une erreur est survenue.';
       switch(err.code) {
         case 'auth/invalid-credential':
+        case 'auth/wrong-password':
+        case 'auth/user-not-found':
           friendlyMessage = 'Email ou mot de passe incorrect.';
           break;
         case 'auth/email-already-in-use':
@@ -88,7 +90,7 @@ export default function LoginPage() {
             friendlyMessage = 'Le mot de passe est trop faible.';
             break;
         default:
-            friendlyMessage = err.message;
+            friendlyMessage = 'Une erreur d\'authentification est survenue. Veuillez réessayer.';
       }
       setError(friendlyMessage);
       toast({
@@ -108,18 +110,21 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      router.push('/');
+      // La redirection sera gérée par le AuthGuard qui détecte le changement d'état de l'utilisateur.
+      // On ne fait PAS de router.push('/') ici pour éviter les race conditions.
     } catch (err: any) {
       if (err.code !== 'auth/popup-closed-by-user') {
         setError(err.message);
         toast({
           variant: 'destructive',
           title: 'Erreur Google Sign-In',
-          description: err.message,
+          description: "La connexion avec Google a échoué. Veuillez réessayer.",
         });
       }
       setIsSubmitting(false);
     }
+    // isSubmitting restera à true si la connexion réussit,
+    // car le composant sera démonté par AuthGuard avant la fin.
   };
 
   const handlePasswordReset = async () => {
@@ -147,7 +152,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Erreur',
-        description: error.message,
+        description: "Impossible d'envoyer l'email de réinitialisation.",
       });
     }
   }
