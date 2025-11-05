@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Mail, LogOut, KeyRound, Info, MessageSquare, Send, Shield, CornerDownRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirebase, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
