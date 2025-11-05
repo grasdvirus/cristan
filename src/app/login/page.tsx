@@ -108,9 +108,12 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // Let AuthGuard handle the redirect. No router.push('/') here.
-      // The component will wait until the user state is updated and AuthGuard redirects.
+      // SUCCESS!
+      // We do NOT redirect here. We let the page stay in a "submitting" state.
+      // The `AuthGuard` component will detect the user state change and perform the redirection.
+      // This is a more robust pattern than a manual redirect.
     } catch (err: any) {
+      // If the user closes the popup, it's not a real error.
       if (err.code !== 'auth/popup-closed-by-user') {
         setError(err.message);
         toast({
@@ -119,7 +122,7 @@ export default function LoginPage() {
           description: err.message,
         });
       }
-      // In all cases, including popup closed, stop submitting state.
+      // In all error cases (including popup closed), we stop the submitting state.
       setIsSubmitting(false);
     }
   };

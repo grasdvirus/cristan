@@ -15,7 +15,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // If loading, do nothing yet. The loading screen will be displayed.
+    // If we are still waiting for the user state to be determined, do nothing.
+    // The loading spinner will be displayed.
     if (isUserLoading) {
       return;
     }
@@ -33,7 +34,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }
   }, [user, isUserLoading, router, pathname]);
 
-  // While loading auth state, we show a loader.
+  // While loading auth state, show a full-page loader. This is critical.
+  // It prevents rendering the children (e.g., login page) before the auth state is known.
   if (isUserLoading) {
     return <LoadingSpinner />;
   }
@@ -43,7 +45,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return <>{children}</>;
   }
 
-  // If no user and not on login page, this will be briefly rendered before redirect.
-  // This state indicates that the useEffect has run and is now redirecting.
+  // If no user and not on login page, this means a redirect is in progress.
+  // Show a loading spinner to prevent a flash of content.
   return <LoadingSpinner />;
 }
