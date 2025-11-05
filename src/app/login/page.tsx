@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,7 +8,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   updateProfile,
   sendPasswordResetEmail,
 } from 'firebase/auth';
@@ -40,13 +41,49 @@ type SignUpFormValues = z.infer<typeof signUpSchema>;
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const { auth } = useFirebase();
+  const { auth, isUserLoading } = useFirebase();
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (!auth || isUserLoading) return;
+
+    // This handles the redirect result after returning from Google sign-in
+    const handleRedirectResult = async () => {
+      try {
+        setIsSubmitting(true);
+        const result = await getRedirectResult(auth);
+        if (result) {
+          // User has successfully signed in via redirect.
+          // AuthGuard will handle the redirection to the homepage.
+          // We don't need to call router.push('/') here because onAuthStateChanged
+          // in the provider will trigger the AuthGuard.
+          toast({ title: 'Connexion réussie !' });
+        }
+      } catch (err: any) {
+        let friendlyMessage = "La connexion avec Google a échoué. Veuillez réessayer.";
+        setError(friendlyMessage);
+        toast({
+          variant: 'destructive',
+          title: 'Erreur de connexion',
+          description: friendlyMessage,
+        });
+      } finally {
+        // Only set isSubmitting to false if there wasn't a successful redirect.
+        // If there was a redirect, the component will unmount soon anyway.
+        if (!auth.currentUser) {
+            setIsSubmitting(false);
+        }
+      }
+    };
+    
+    handleRedirectResult();
+  }, [auth, isUserLoading, toast]);
+
 
   const form = useForm<SignUpFormValues | LoginFormValues>({
     resolver: zodResolver(isSignUp ? signUpSchema : loginSchema),
@@ -69,11 +106,11 @@ export default function LoginPage() {
         await updateProfile(userCredential.user, {
             displayName: signUpValues.name
         });
-        // La redirection est gérée par AuthGuard
+        // AuthGuard will handle redirection.
       } else {
         const loginValues = values as LoginFormValues;
         await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
-        // La redirection est gérée par AuthGuard
+        // AuthGuard will handle redirection.
       }
     } catch (err: any) {
       let friendlyMessage = 'Une erreur est survenue.';
@@ -98,7 +135,6 @@ export default function LoginPage() {
         title: 'Erreur d\'authentification',
         description: friendlyMessage,
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -108,25 +144,10 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setError(null);
     const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      // La redirection est maintenant gérée par AuthGuard qui détecte le changement d'état.
-      // On ne fait PAS de router.push('/') ici pour éviter les "race conditions".
-      // Le composant reste en état de chargement jusqu'à ce que AuthGuard redirige.
-    } catch (err: any) {
-      // Si l'utilisateur ferme la popup, on ne considère pas ça comme une erreur.
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError("La connexion avec Google a échoué. Veuillez réessayer.");
-        toast({
-          variant: 'destructive',
-          title: 'Erreur Google Sign-In',
-          description: "La connexion avec Google a échoué. Veuillez réessayer.",
-        });
-      }
-      setIsSubmitting(false); // On réactive le bouton seulement en cas d'erreur.
-    }
-    // Si la connexion réussit, `isSubmitting` reste `true` car AuthGuard va 
-    // démonter ce composant pour afficher le spinner puis la page d'accueil.
+    // Use signInWithRedirect instead of signInWithPopup
+    await signInWithRedirect(auth, provider);
+    // The page will redirect to Google. After sign-in, it will redirect back,
+    // and the useEffect hook will handle the result.
   };
 
   const handlePasswordReset = async () => {
