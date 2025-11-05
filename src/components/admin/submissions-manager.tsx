@@ -13,6 +13,7 @@ import { ExternalLink, Trash2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '../ui/badge';
 
 export function SubmissionsManager() {
     const { firestore } = useFirebase();
@@ -21,7 +22,7 @@ export function SubmissionsManager() {
         () => firestore ? query(collection(firestore, 'submissions'), orderBy('createdAt', 'desc')) : null,
         [firestore]
     );
-    const { data: submissions, isLoading } = useCollection<ContractSubmission>(submissionsQuery);
+    const { data: submissions, isLoading } = useCollection<ContractSubmission & { type?: string }>(submissionsQuery);
 
     const formatDate = (timestamp: ContractSubmission['createdAt'] | null) => {
         if (!timestamp) return 'Date inconnue';
@@ -55,11 +56,11 @@ export function SubmissionsManager() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Date</TableHead>
+                                <TableHead>Type</TableHead>
                                 <TableHead>Nom</TableHead>
                                 <TableHead>Email</TableHead>
                                 <TableHead>Téléphone</TableHead>
-                                <TableHead>Entreprise</TableHead>
-                                <TableHead>Projet</TableHead>
+                                <TableHead>Projet Lié</TableHead>
                                 <TableHead>Détails</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
@@ -68,10 +69,14 @@ export function SubmissionsManager() {
                             {submissions?.map((submission) => (
                                 <TableRow key={submission.id}>
                                     <TableCell className="font-medium whitespace-nowrap">{formatDate(submission.createdAt)}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={submission.type === 'Partenariat' ? 'default' : 'secondary'}>
+                                            {submission.type || 'Projet'}
+                                        </Badge>
+                                    </TableCell>
                                     <TableCell>{submission.fullName}</TableCell>
                                     <TableCell><a href={`mailto:${submission.email}`} className="hover:underline text-primary">{submission.email}</a></TableCell>
                                     <TableCell>{submission.phone}</TableCell>
-                                    <TableCell>{submission.companyName || '-'}</TableCell>
                                     <TableCell>
                                         {submission.projectId !== "N/A" ? (
                                             <Link href={`/projects/${submission.projectId}`} className="hover:underline text-primary flex items-center gap-1">

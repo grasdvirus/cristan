@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense } from 'react';
@@ -20,6 +19,7 @@ function ContractPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const projectId = searchParams.get('projectId');
+  const type = searchParams.get('type');
   
   const { firestore } = useFirebase();
   const projectRef = useMemoFirebase(() => {
@@ -27,6 +27,18 @@ function ContractPageContent() {
     return doc(firestore, 'projects', projectId);
   }, [firestore, projectId]);
   const { data: project, isLoading } = useDoc<Project>(projectRef);
+
+  const getTitle = () => {
+    if (type === 'partner') return 'Demande de Partenariat';
+    if (project) return 'Formulaire de Commande';
+    return 'Formulaire de Contact';
+  }
+
+  const getDescription = () => {
+    if (type === 'partner') return 'Remplissez ce formulaire pour finaliser votre demande de partenariat.';
+    if (project) return 'Veuillez remplir les informations ci-dessous pour démarrer votre projet.';
+    return 'Laissez-nous un message et nous vous recontacterons rapidement.'
+  }
 
   return (
     <div className="container mx-auto px-0 sm:px-4 py-16 sm:py-24">
@@ -41,9 +53,9 @@ function ContractPageContent() {
             >
                 <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-4xl font-bold font-headline">Formulaire de Commande</h1>
+            <h1 className="text-4xl font-bold font-headline">{getTitle()}</h1>
             <p className="text-muted-foreground mt-2">
-                Veuillez remplir les informations ci-dessous pour démarrer votre projet.
+                {getDescription()}
             </p>
         </div>
 
@@ -53,7 +65,7 @@ function ContractPageContent() {
                 <p className='text-muted-foreground mt-1'>Prix : {project.price}</p>
             </NeumorphicCard>
         )}
-         {isLoading && (
+         {isLoading && projectId && (
              <NeumorphicCard inset className="mt-8 mx-4 sm:mx-0 p-4 text-center">
                  <div className="h-6 bg-muted rounded w-3/4 mx-auto"></div>
                  <div className="h-4 bg-muted rounded w-1/4 mx-auto mt-2"></div>
@@ -61,7 +73,7 @@ function ContractPageContent() {
          )}
 
         <div className="mt-8 sm:p-0">
-            <ContractForm projectId={projectId} />
+            <ContractForm projectId={projectId} type={type} />
         </div>
       </div>
     </div>

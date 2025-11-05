@@ -99,7 +99,7 @@ function SlidesManager() {
             } else {
                 await addDoc(collection(firestore, 'slides'), values);
             }
-            toast({ title: `Slide ${editingSlide ? 'modifié' : 'ajouté'} avec succès.` });
+            toast({ variant: 'success', title: `Slide ${editingSlide ? 'modifié' : 'ajouté'} avec succès.` });
             setDialogOpen(false);
             setEditingSlide(null);
         } catch (error) {
@@ -114,7 +114,7 @@ function SlidesManager() {
         if (!firestore) return;
         try {
             await deleteDoc(doc(firestore, 'slides', id));
-            toast({ title: 'Slide supprimé.' });
+            toast({ variant: 'success', title: 'Slide supprimé.' });
         } catch (error) {
             console.error("Error deleting slide: ", error);
             toast({ title: 'Erreur', description: 'Impossible de supprimer le slide.', variant: 'destructive' });
@@ -220,7 +220,7 @@ function ProjectsManager() {
             } else {
                 await addDoc(collection(firestore, 'projects'), dataToSave);
             }
-            toast({ title: `Projet ${editingProject ? 'modifié' : 'ajouté'} avec succès.` });
+            toast({ variant: 'success', title: `Projet ${editingProject ? 'modifié' : 'ajouté'} avec succès.` });
             setDialogOpen(false);
             setEditingProject(null);
         } catch (error) {
@@ -235,7 +235,7 @@ function ProjectsManager() {
         if (!firestore) return;
         try {
             await deleteDoc(doc(firestore, 'projects', id));
-            toast({ title: 'Projet supprimé.' });
+            toast({ variant: 'success', title: 'Projet supprimé.' });
         } catch (error) {
             console.error("Error deleting project: ", error);
             toast({ title: 'Erreur', description: 'Impossible de supprimer le projet.', variant: 'destructive' });
@@ -339,7 +339,7 @@ function VideosManager() {
             } else {
                 await addDoc(collection(firestore, 'videos'), dataToSave);
             }
-            toast({ title: `Vidéo ${editingVideo ? 'modifiée' : 'ajoutée'} avec succès.` });
+            toast({ variant: 'success', title: `Vidéo ${editingVideo ? 'modifiée' : 'ajoutée'} avec succès.` });
             setDialogOpen(false);
             setEditingVideo(null);
         } catch (error) {
@@ -354,7 +354,7 @@ function VideosManager() {
         if (!firestore) return;
         try {
             await deleteDoc(doc(firestore, 'videos', id));
-            toast({ title: 'Vidéo supprimée.' });
+            toast({ variant: 'success', title: 'Vidéo supprimée.' });
         } catch (error) {
             console.error("Error deleting video: ", error);
             toast({ title: 'Erreur', description: 'Impossible de supprimer la vidéo.', variant: 'destructive' });
@@ -453,7 +453,7 @@ function GamesManager() {
             } else {
                 await addDoc(collection(firestore, 'games'), values);
             }
-            toast({ title: `Jeu ${editingGame ? 'modifié' : 'ajouté'} avec succès.` });
+            toast({ variant: 'success', title: `Jeu ${editingGame ? 'modifié' : 'ajouté'} avec succès.` });
             setDialogOpen(false);
             setEditingGame(null);
         } catch (error) {
@@ -468,7 +468,7 @@ function GamesManager() {
         if (!firestore) return;
         try {
             await deleteDoc(doc(firestore, 'games', id));
-            toast({ title: 'Jeu supprimé.' });
+            toast({ variant: 'success', title: 'Jeu supprimé.' });
         } catch (error) {
             console.error("Error deleting game: ", error);
             toast({ title: 'Erreur', description: 'Impossible de supprimer le jeu.', variant: 'destructive' });
@@ -591,5 +591,3 @@ export default function AdminPage() {
         </div>
     );
 }
-
-    

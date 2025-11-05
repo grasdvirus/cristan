@@ -40,9 +40,10 @@ const formSchema = z.object({
 
 interface ContractFormProps {
     projectId: string | null;
+    type: string | null;
 }
 
-export function ContractForm({ projectId }: ContractFormProps) {
+export function ContractForm({ projectId, type }: ContractFormProps) {
     const { toast } = useToast();
     const { firestore } = useFirebase();
 
@@ -71,6 +72,7 @@ export function ContractForm({ projectId }: ContractFormProps) {
             const submissionData = {
                 ...values,
                 projectId: projectId || "N/A",
+                type: type === 'partner' ? 'Partenariat' : 'Projet',
                 createdAt: serverTimestamp()
             };
             await addDoc(collection(firestore, "submissions"), submissionData);
@@ -155,7 +157,7 @@ export function ContractForm({ projectId }: ContractFormProps) {
                     name="projectDetails"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Détails de votre projet</FormLabel>
+                        <FormLabel>Détails de votre projet/partenariat</FormLabel>
                         <FormControl>
                             <Textarea
                                 placeholder="Décrivez brièvement vos besoins, vos objectifs, et toute autre information pertinente..."
