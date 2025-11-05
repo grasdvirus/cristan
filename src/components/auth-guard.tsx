@@ -15,37 +15,27 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // If we are still waiting for the user state to be determined, do nothing.
-    // The loading spinner will be displayed.
     if (isUserLoading) {
-      return;
+      return; // Ne rien faire tant que l'état de l'utilisateur n'est pas connu.
     }
 
     const isLoginPage = pathname === '/login';
 
-    // If there is a user and they are on the login page, redirect to home.
     if (user && isLoginPage) {
       router.replace('/');
     }
 
-    // If there's no user and we're not on the login page, redirect to login.
     if (!user && !isLoginPage) {
       router.replace('/login');
     }
   }, [user, isUserLoading, router, pathname]);
 
-  // While loading auth state, show a full-page loader. This is critical.
-  // It prevents rendering the children (e.g., login page) before the auth state is known.
-  if (isUserLoading) {
+  // Si l'application détermine l'état de l'utilisateur, ou si une redirection est sur le point de se produire,
+  // afficher un spinner est la chose la plus sûre à faire pour éviter les flashs de contenu.
+  if (isUserLoading || (!user && pathname !== '/login') || (user && pathname === '/login')) {
     return <LoadingSpinner />;
   }
 
-  // If there's a user, or we are on the public login page (and not loading), render the children.
-  if (user || pathname === '/login') {
-    return <>{children}</>;
-  }
-
-  // If no user and not on login page, this means a redirect is in progress.
-  // Show a loading spinner to prevent a flash of content.
-  return <LoadingSpinner />;
+  // Si l'état de l'utilisateur est connu et qu'aucune redirection n'est nécessaire, afficher le contenu.
+  return <>{children}</>;
 }

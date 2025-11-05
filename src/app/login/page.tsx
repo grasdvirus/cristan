@@ -118,7 +118,6 @@ export default function LoginPage() {
           description: err.message,
         });
       }
-    } finally {
       setIsSubmitting(false);
     }
   };
