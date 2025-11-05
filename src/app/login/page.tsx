@@ -106,8 +106,6 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // The AuthGuard will handle redirection once the user state is updated.
-      // No need for router.push('/') here.
       router.push('/');
     } catch (err: any) {
       // Ignore popup closed by user error
@@ -278,4 +276,3 @@ export default function LoginPage() {
     </div>
   );
 }
-    
