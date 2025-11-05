@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { useToast } from '@/hooks/use-toast';
-import { Chrome, Eye, EyeOff } from 'lucide-react';
+import { Chrome, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const signUpSchema = z.object({
   name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
@@ -69,11 +69,13 @@ export default function LoginPage() {
         await updateProfile(userCredential.user, {
             displayName: signUpValues.name
         });
+        // The AuthGuard will handle the redirection.
       } else {
         const loginValues = values as LoginFormValues;
         await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
+        // The AuthGuard will handle the redirection.
       }
-      router.push('/');
+      // No router.push here, AuthGuard handles it.
     } catch (err: any) {
       let friendlyMessage = 'Une erreur est survenue.';
       switch(err.code) {
@@ -106,19 +108,18 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      router.push('/');
+      // Let AuthGuard handle the redirect. No router.push('/') here.
+      // The component will wait until the user state is updated and AuthGuard redirects.
     } catch (err: any) {
-      // Ignore popup closed by user error
-      if (err.code === 'auth/popup-closed-by-user') {
-        setIsSubmitting(false);
-        return;
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError(err.message);
+        toast({
+          variant: 'destructive',
+          title: 'Erreur Google Sign-In',
+          description: err.message,
+        });
       }
-      setError(err.message);
-       toast({
-        variant: 'destructive',
-        title: 'Erreur Google Sign-In',
-        description: err.message,
-      });
+      // In all cases, including popup closed, stop submitting state.
       setIsSubmitting(false);
     }
   };
@@ -131,7 +132,6 @@ export default function LoginPage() {
       return;
     }
     
-    // Validate email format before sending
     const emailSchema = z.string().email('Adresse e-mail invalide');
     const validation = emailSchema.safeParse(email);
     if(!validation.success) {
@@ -242,7 +242,7 @@ export default function LoginPage() {
               className="w-full btn-neumorphic-light dark:btn-neumorphic-dark"
               size="lg"
             >
-              {isSubmitting ? 'Chargement...' : (isSignUp ? 'S\'inscrire' : 'Se connecter')}
+              {isSubmitting ? <Loader2 className="animate-spin" /> : (isSignUp ? 'S\'inscrire' : 'Se connecter')}
             </Button>
           </div>
         </form>
@@ -269,7 +269,11 @@ export default function LoginPage() {
             variant="outline" 
             className="w-full btn-neumorphic-light dark:btn-neumorphic-dark"
         >
-          <Chrome className="mr-2 h-4 w-4" />
+          {isSubmitting ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Chrome className="mr-2 h-4 w-4" />
+          )}
           Continuer avec Google
         </Button>
       </NeumorphicCard>
