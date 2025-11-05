@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import HeroSection from '@/components/sections/hero-section';
 import ProjectsGrid from '@/components/sections/projects-grid';
 import VideosGrid from '@/components/sections/videos-grid';
@@ -10,6 +11,15 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('sites');
+  const router = useRouter();
+
+  const handleTabChange = (value: string) => {
+    if (value === 'partner') {
+      router.push('/partner');
+    } else {
+      setActiveTab(value);
+    }
+  };
 
   return (
     <div>
@@ -20,7 +30,7 @@ export default function Home() {
               <h2 className="text-3xl font-bold font-headline mb-8 text-center">
                 À découvrir
               </h2>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-auto">
                   <TabsList className="bg-transparent p-0">
                   <TabsTrigger 
                       value="sites" 
@@ -40,6 +50,12 @@ export default function Home() {
                   >
                       Gamme
                   </TabsTrigger>
+                  <TabsTrigger 
+                      value="partner" 
+                      className="text-lg font-bold bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
+                  >
+                      Partenariat
+                  </TabsTrigger>
                   </TabsList>
               </Tabs>
           </div>
@@ -52,5 +68,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
