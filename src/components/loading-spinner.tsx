@@ -1,13 +1,13 @@
 export function LoadingSpinner() {
   return (
-    <div className="flex items-center justify-center w-full h-full">
+    <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
       <video
         src="/charge.mp4"
         autoPlay
         loop
         muted
         playsInline
-        className="w-48 h-48 object-cover"
+        className="w-full h-full object-cover"
       />
     </div>
   );
