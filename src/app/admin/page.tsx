@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { collection, query, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';

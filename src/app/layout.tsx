@@ -4,7 +4,7 @@ import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
-import { CustomToaster } from '@/components/custom-toaster';
+import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { AuthGuard } from '@/components/auth-guard';
 
@@ -51,7 +51,7 @@ export default function RootLayout({
                 <main className="flex-grow">{children}</main>
                 <Footer />
               </div>
-              <CustomToaster />
+              <Toaster />
             </AuthGuard>
           </ThemeProvider>
         </FirebaseClientProvider>

@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NeumorphicCard } from '@/components/neumorphic-card';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { Chrome, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const signUpSchema = z.object({

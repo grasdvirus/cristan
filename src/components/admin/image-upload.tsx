@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { NeumorphicCard } from '../neumorphic-card';
 import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 interface ImageUploadProps {
   value: string;

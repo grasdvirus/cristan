@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { ExternalLink, Trash2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 export function SubmissionsManager() {
     const { firestore } = useFirebase();

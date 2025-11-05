@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/components/ui/use-toast"
 import { NeumorphicCard } from "./neumorphic-card"
 import { useFirebase } from "@/firebase"
 import { addDoc, collection, serverTimestamp } from "firebase/firestore"

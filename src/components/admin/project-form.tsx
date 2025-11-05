@@ -20,7 +20,7 @@ import type { Project } from '@/app/admin/page';
 import { ImageUpload } from './image-upload';
 import { generateProjectDescription } from '@/ai/flows/generate-project-description';
 import { Sparkles, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Le titre est requis.'),
@@ -234,3 +234,4 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
     </Form>
   );
 }
+
