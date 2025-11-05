@@ -69,13 +69,12 @@ export default function LoginPage() {
         await updateProfile(userCredential.user, {
             displayName: signUpValues.name
         });
-        // The AuthGuard will handle the redirection.
+        router.push('/');
       } else {
         const loginValues = values as LoginFormValues;
         await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
-        // The AuthGuard will handle the redirection.
+        router.push('/');
       }
-      // No router.push here, AuthGuard handles it.
     } catch (err: any) {
       let friendlyMessage = 'Une erreur est survenue.';
       switch(err.code) {
@@ -97,8 +96,9 @@ export default function LoginPage() {
         title: 'Erreur d\'authentification',
         description: friendlyMessage,
       });
+    } finally {
       setIsSubmitting(false);
-    } 
+    }
   };
 
   const handleGoogleSignIn = async () => {
@@ -108,12 +108,8 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // SUCCESS!
-      // We do NOT redirect here. We let the page stay in a "submitting" state.
-      // The `AuthGuard` component will detect the user state change and perform the redirection.
-      // This is a more robust pattern than a manual redirect.
+      router.push('/');
     } catch (err: any) {
-      // If the user closes the popup, it's not a real error.
       if (err.code !== 'auth/popup-closed-by-user') {
         setError(err.message);
         toast({
@@ -122,7 +118,7 @@ export default function LoginPage() {
           description: err.message,
         });
       }
-      // In all error cases (including popup closed), we stop the submitting state.
+    } finally {
       setIsSubmitting(false);
     }
   };
