@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -74,7 +73,7 @@ export default function LoginPage() {
         const loginValues = values as LoginFormValues;
         await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
       }
-      // The AuthGuard will handle redirection.
+      router.push('/');
     } catch (err: any) {
       let friendlyMessage = 'Une erreur est survenue.';
       switch(err.code) {
@@ -96,9 +95,8 @@ export default function LoginPage() {
         title: 'Erreur d\'authentification',
         description: friendlyMessage,
       });
-    } finally {
       setIsSubmitting(false);
-    }
+    } 
   };
 
   const handleGoogleSignIn = async () => {
@@ -110,6 +108,7 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
       // The AuthGuard will handle redirection once the user state is updated.
       // No need for router.push('/') here.
+      router.push('/');
     } catch (err: any) {
       // Ignore popup closed by user error
       if (err.code === 'auth/popup-closed-by-user') {
@@ -124,7 +123,6 @@ export default function LoginPage() {
       });
       setIsSubmitting(false);
     }
-    // No need for finally block if we handle the successful case without setting isSubmitting to false
   };
 
   const handlePasswordReset = async () => {
