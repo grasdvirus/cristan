@@ -1,11 +1,10 @@
-
 'use client';
 
 import Image from 'next/image';
 import { Mail, LogOut, KeyRound, Info, MessageSquare, Send, Shield, CornerDownRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { useFirebase, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,7 @@ type ReponseAvis = Avis & {
 }
 
 function AvisForm() {
-  const { auth, user, firestore } = useFirebase();
+  const { user, firestore } = useFirebase();
   const { toast } = useToast();
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,10 +51,10 @@ function AvisForm() {
         createdAt: serverTimestamp(),
       });
       setText('');
-      toast({ title: 'Avis envoyé !' });
+      toast({ variant: 'success', title: 'Avis envoyé !' });
     } catch (error) {
       console.error('Error submitting avis:', error);
-      toast({ title: "Erreur lors de l'envoi", variant: 'destructive' });
+      toast({ variant: 'destructive', title: "Erreur lors de l'envoi" });
     } finally {
       setIsSubmitting(false);
     }
@@ -86,7 +85,7 @@ function AvisForm() {
 }
 
 function ReplyForm({ avisId, onReplySuccess }: { avisId: string, onReplySuccess: () => void }) {
-  const { auth, user, firestore } = useFirebase();
+  const { user, firestore } = useFirebase();
   const { toast } = useToast();
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,11 +105,11 @@ function ReplyForm({ avisId, onReplySuccess }: { avisId: string, onReplySuccess:
         createdAt: serverTimestamp(),
       });
       setText('');
-      toast({ title: 'Réponse envoyée !' });
+      toast({ variant: 'success', title: 'Réponse envoyée !' });
       onReplySuccess();
     } catch (error) {
       console.error('Error submitting reply:', error);
-      toast({ title: "Erreur lors de l'envoi", variant: 'destructive' });
+      toast({ variant: 'destructive', title: "Erreur lors de l'envoi" });
     } finally {
       setIsSubmitting(false);
     }
@@ -225,6 +224,7 @@ export default function ProfilePage() {
     try {
       await sendPasswordResetEmail(auth, user.email);
       toast({
+        variant: "default",
         title: 'E-mail envoyé',
         description: 'Un lien pour réinitialiser votre mot de passe a été envoyé à votre adresse e-mail.',
       });

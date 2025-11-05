@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -51,7 +50,7 @@ function AiDescriptionGenerator({ form }: { form: UseFormReturn<ProjectFormValue
             toast({
                 title: 'Description courte manquante',
                 description: "Veuillez d'abord remplir la description courte.",
-                variant: 'destructive'
+                variant: 'warning'
             });
             return;
         }
@@ -60,7 +59,7 @@ function AiDescriptionGenerator({ form }: { form: UseFormReturn<ProjectFormValue
         try {
             const result = await generateProjectDescription({ shortDescription });
             form.setValue('longDescription', result.longDescription, { shouldValidate: true });
-            toast({ title: 'Description longue générée !' });
+            toast({ variant: 'success', title: 'Description longue générée !' });
         } catch (error) {
             console.error(error);
             toast({
@@ -234,4 +233,3 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
     </Form>
   );
 }
-

@@ -60,11 +60,12 @@ export default function LoginPage() {
         if (result) {
           // User has successfully signed in via redirect.
           // AuthGuard will handle the redirection to the homepage.
-          // We don't need to call router.push('/') here because onAuthStateChanged
-          // in the provider will trigger the AuthGuard.
-          toast({ title: 'Connexion réussie !' });
+          toast({ variant: 'success', title: 'Connexion réussie !', description: `Bienvenue ${result.user.displayName}` });
         }
       } catch (err: any) {
+        if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+           return;
+        }
         let friendlyMessage = "La connexion avec Google a échoué. Veuillez réessayer.";
         setError(friendlyMessage);
         toast({
@@ -106,10 +107,12 @@ export default function LoginPage() {
         await updateProfile(userCredential.user, {
             displayName: signUpValues.name
         });
+        toast({ variant: "success", title: "Compte créé !", description: "Vous êtes maintenant connecté."});
         // AuthGuard will handle redirection.
       } else {
         const loginValues = values as LoginFormValues;
-        await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
+        const userCredential = await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
+        toast({ variant: "success", title: "Connexion réussie !", description: `Bienvenue ${userCredential.user.displayName}`});
         // AuthGuard will handle redirection.
       }
     } catch (err: any) {
@@ -168,6 +171,7 @@ export default function LoginPage() {
     try {
       await sendPasswordResetEmail(auth, email);
       toast({
+        variant: 'default',
         title: 'E-mail envoyé',
         description: 'Un lien pour réinitialiser votre mot de passe a été envoyé à votre adresse e-mail.',
       });

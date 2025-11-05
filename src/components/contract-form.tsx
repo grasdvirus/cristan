@@ -1,4 +1,3 @@
-
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -77,6 +76,7 @@ export function ContractForm({ projectId }: ContractFormProps) {
             await addDoc(collection(firestore, "submissions"), submissionData);
             
             toast({
+              variant: "success",
               title: "Formulaire envoyé !",
               description: "Merci ! Nous avons bien reçu vos informations et nous vous contacterons bientôt.",
             })

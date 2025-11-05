@@ -43,7 +43,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
       const result = await response.json();
       if (result.success) {
         onChange(result.url);
-        toast({ title: 'Téléversement réussi!' });
+        toast({ variant: "success", title: 'Téléversement réussi!' });
       } else {
         throw new Error(result.error || 'Unknown upload error');
       }

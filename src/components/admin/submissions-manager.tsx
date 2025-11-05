@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
@@ -34,10 +33,10 @@ export function SubmissionsManager() {
         if (!firestore) return;
         try {
             await deleteDoc(doc(firestore, 'submissions', id));
-            toast({ title: 'Demande supprimée.' });
+            toast({ variant: 'success', title: 'Demande supprimée.' });
         } catch (error) {
             console.error('Error deleting submission', error);
-            toast({ title: 'Erreur', description: 'Impossible de supprimer la demande.', variant: 'destructive'});
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer la demande.'});
         }
     };
 
@@ -110,5 +109,3 @@ export function SubmissionsManager() {
         </NeumorphicCard>
     );
 }
-
-    
