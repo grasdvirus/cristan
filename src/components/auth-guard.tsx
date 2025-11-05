@@ -15,33 +15,25 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Ne rien faire tant que l'état de l'utilisateur n'est pas certain.
+    // Wait until the user's auth state is confirmed.
     if (isUserLoading) {
       return; 
     }
 
-    const isLoginPage = pathname === '/login';
-
-    // Si l'utilisateur est connecté et essaie d'accéder à la page de connexion,
-    // le rediriger vers la page d'accueil.
-    if (user && isLoginPage) {
-      router.replace('/');
-    }
-
-    // Si l'utilisateur n'est pas connecté et essaie d'accéder à une page autre
-    // que la page de connexion, le rediriger vers la page de connexion.
-    if (!user && !isLoginPage) {
+    // If the user is not logged in, redirect them to the login page.
+    if (!user) {
+      // You can also store the intended path to redirect back after login
+      // e.g., router.replace(`/login?redirect=${pathname}`);
       router.replace('/login');
     }
   }, [user, isUserLoading, router, pathname]);
 
-  // Affiche un écran de chargement si :
-  // 1. L'authentification est en cours de vérification.
-  // 2. Ou si une redirection est imminente (pour éviter un flash de contenu).
-  if (isUserLoading || (!user && pathname !== '/login') || (user && pathname === '/login')) {
+  // While loading or if there's no user and we are about to redirect,
+  // show a loading spinner to prevent flashing of protected content.
+  if (isUserLoading || !user) {
     return <LoadingSpinner />;
   }
 
-  // Si tout est en ordre (ex: utilisateur connecté sur une page protégée), affiche le contenu.
+  // If the user is authenticated, render the children.
   return <>{children}</>;
 }

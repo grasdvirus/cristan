@@ -23,6 +23,7 @@ import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
 import { GameForm, type GameFormValues } from '@/components/admin/game-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
 import { convertToEmbedUrl } from '@/lib/utils';
+import { AuthGuard } from '@/components/auth-guard';
 
 // Define types based on backend.json
 export type Slide = {
@@ -546,7 +547,7 @@ function GamesManager() {
     );
 }
 
-export default function AdminPage() {
+function AdminPageContent() {
     return (
         <div className="container mx-auto px-4 py-16 sm:py-24">
             <NeumorphicCard className="max-w-7xl mx-auto">
@@ -590,4 +591,12 @@ export default function AdminPage() {
             </NeumorphicCard>
         </div>
     );
+}
+
+export default function AdminPage() {
+    return (
+        <AuthGuard>
+            <AdminPageContent />
+        </AuthGuard>
+    )
 }

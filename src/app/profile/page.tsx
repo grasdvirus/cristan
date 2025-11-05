@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { collection, query, orderBy, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { AuthGuard } from '@/components/auth-guard';
 
 type Avis = {
   id: string;
@@ -189,7 +190,7 @@ function AvisItem({ avis }: { avis: Avis }) {
 }
 
 function AvisList() {
-  const { firestore } = useFirebase();
+  const { firestore, user } = useFirebase();
   const avisQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'avis'), orderBy('createdAt', 'desc')) : null, [firestore]);
   const { data: avisList, isLoading } = useCollection<Avis>(avisQuery);
 
@@ -207,7 +208,7 @@ function AvisList() {
   )
 }
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const { auth, user } = useFirebase();
   const router = useRouter();
   const { toast } = useToast();
@@ -224,7 +225,7 @@ export default function ProfilePage() {
     try {
       await sendPasswordResetEmail(auth, user.email);
       toast({
-        variant: "default",
+        variant: "success",
         title: 'E-mail envoyé',
         description: 'Un lien pour réinitialiser votre mot de passe a été envoyé à votre adresse e-mail.',
       });
@@ -344,4 +345,13 @@ export default function ProfilePage() {
       </NeumorphicCard>
     </div>
   );
+}
+
+
+export default function ProfilePage() {
+    return (
+        <AuthGuard>
+            <ProfilePageContent />
+        </AuthGuard>
+    )
 }

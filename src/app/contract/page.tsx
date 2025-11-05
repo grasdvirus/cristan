@@ -1,13 +1,15 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { ContractForm } from '@/components/contract-form';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { AuthGuard } from '@/components/auth-guard';
+import Link from 'next/link';
 
 type Project = {
     id: string;
@@ -17,9 +19,8 @@ type Project = {
 
 function ContractPageContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const projectId = searchParams.get('projectId');
-  const type = searchParams.get('type');
+  const type = searchParams.get('type') || (projectId ? 'Projet' : 'Contact');
   
   const { firestore } = useFirebase();
   const projectRef = useMemoFirebase(() => {
@@ -45,13 +46,15 @@ function ContractPageContent() {
       <div className="max-w-4xl mx-auto">
         <div className="relative text-center mb-8 px-4">
             <Button 
+                asChild
                 variant="ghost" 
                 size="icon"
-                onClick={() => router.back()} 
                 className="absolute left-4 top-0 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                 aria-label="Retour"
             >
-                <ArrowLeft className="h-5 w-5" />
+                <Link href={type === 'partner' ? '/partner' : (projectId ? `/projects/${projectId}` : '/')}>
+                    <ArrowLeft className="h-5 w-5" />
+                </Link>
             </Button>
             <h1 className="text-4xl font-bold font-headline">{getTitle()}</h1>
             <p className="text-muted-foreground mt-2">
@@ -84,7 +87,9 @@ function ContractPageContent() {
 export default function ContractPage() {
     return (
         <Suspense fallback={<div>Chargement...</div>}>
-            <ContractPageContent />
+            <AuthGuard>
+                <ContractPageContent />
+            </AuthGuard>
         </Suspense>
     )
 }
