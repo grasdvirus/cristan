@@ -4,47 +4,58 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a user's profile information.",
+      "description": "Represents a user profile on the portfolio website.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the UserProfile entity."
         },
-        "displayName": {
+        "name": {
           "type": "string",
-          "description": "The user's display name."
+          "description": "The user's full name."
         },
-        "photoURL": {
+        "email": {
           "type": "string",
-          "description": "URL of the user's profile picture.",
-          "format": "uri"
+          "description": "The user's email address.",
+          "format": "email"
         },
         "bio": {
           "type": "string",
-          "description": "A short biography of the user."
+          "description": "A brief biography or introduction of the user."
         },
         "skills": {
-          "type": "string",
-          "description": "A list of skills that the user possesses."
+          "type": "array",
+          "description": "An array of skills possessed by the user.",
+          "items": {
+            "type": "string"
+          }
         },
         "contactInformation": {
           "type": "string",
-          "description": "Contact information for the user."
+          "description": "Contact information for the user, such as phone number or social media links."
         },
         "themePreference": {
           "type": "string",
-          "description": "The user's preferred theme (e.g., light, dark, system)."
+          "description": "The user's preferred theme (e.g., light, dark).",
+          "format": "string"
+        },
+        "googleId": {
+          "type": "string",
+          "description": "Google ID from google OAuth"
         }
       },
       "required": [
-        "id"
+        "id",
+        "name",
+        "email",
+        "bio"
       ]
     },
     "Video": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Video",
       "type": "object",
-      "description": "Represents an embedded video.",
+      "description": "Represents an embedded video on the website.",
       "properties": {
         "id": {
           "type": "string",
@@ -54,14 +65,14 @@
           "type": "string",
           "description": "The title of the video."
         },
-        "embedUrl": {
-          "type": "string",
-          "description": "The URL of the embedded video.",
-          "format": "uri"
-        },
         "description": {
           "type": "string",
           "description": "A description of the video."
+        },
+        "embedUrl": {
+          "type": "string",
+          "description": "The URL for embedding the video.",
+          "format": "uri"
         }
       },
       "required": [
@@ -90,11 +101,11 @@
         },
         "text": {
           "type": "string",
-          "description": "The text of the comment."
+          "description": "The text content of the comment."
         },
         "createdAt": {
           "type": "string",
-          "description": "The date and time the comment was created.",
+          "description": "The date and time when the comment was created.",
           "format": "date-time"
         }
       },
@@ -126,7 +137,7 @@
         },
         "createdAt": {
           "type": "string",
-          "description": "The date and time the like was created.",
+          "description": "The date and time when the like was created.",
           "format": "date-time"
         }
       },
@@ -136,25 +147,59 @@
         "userProfileId",
         "createdAt"
       ]
+    },
+    "Framework": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Framework",
+      "type": "object",
+      "description": "Represents a framework or project displayed in the grid layout.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Framework entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the framework or project."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the framework or project."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the image representing the framework.",
+          "format": "uri"
+        },
+        "link": {
+          "type": "string",
+          "description": "A link to the project"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "imageUrl"
+      ]
     }
   },
   "auth": {
     "providers": [
       "password",
-      "anonymous",
-      "google.com"
+      "anonymous"
     ]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/users/{userId}/userProfile",
+        "path": "/users/{userId}",
         "definition": {
           "entityName": "UserProfile",
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores user profile information. Uses path-based ownership; only the user with the matching userId can access the profile.",
+          "description": "Stores user profiles. Path-based ownership ensures only the user can read/write their own profile.",
           "params": [
             {
               "name": "userId",
@@ -170,7 +215,7 @@
           "schema": {
             "$ref": "#/backend/entities/Video"
           },
-          "description": "Stores video information.",
+          "description": "Stores video entities. Allows any authenticated user to read.  Write access is restricted.",
           "params": [
             {
               "name": "videoId",
@@ -186,7 +231,7 @@
           "schema": {
             "$ref": "#/backend/entities/Comment"
           },
-          "description": "Stores comments for a specific video. Includes denormalized 'userProfileId' for authorization independence.",
+          "description": "Stores comments associated with a video. Includes denormalized 'userProfileId' for authorization independence. Allows any authenticated user to create comments.",
           "params": [
             {
               "name": "videoId",
@@ -206,7 +251,7 @@
           "schema": {
             "$ref": "#/backend/entities/Like"
           },
-          "description": "Stores likes for a specific video. Includes denormalized 'userProfileId' for authorization independence.",
+          "description": "Stores likes associated with a video. Includes denormalized 'userProfileId' for authorization independence.  Allows authenticated users to like/unlike a video (create/delete).",
           "params": [
             {
               "name": "videoId",
@@ -218,8 +263,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/frameworks/{frameworkId}",
+        "definition": {
+          "entityName": "Framework",
+          "schema": {
+            "$ref": "#/backend/entities/Framework"
+          },
+          "description": "Stores framework entities. Allows any authenticated user to read.  Write access is restricted.",
+          "params": [
+            {
+              "name": "frameworkId",
+              "description": "The unique identifier of the framework."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to support a personal portfolio site with video showcasing, user profiles, and interactive elements like likes and comments. Authorization independence is achieved through path-based ownership for user profiles and denormalization of userProfileId in comments and likes, allowing secure data access without complex `get()` calls. Segregation is achieved by separating user-specific data (profiles) from video-related data, simplifying security rules. The structure facilitates QAPs by enabling direct listing of videos and comments/likes associated with each video, secured by path-based rules. Path-based ownership is used for user profiles (`/users/{userId}/userProfile`) ensuring only the authenticated user can access their profile."
+    "reasoning": "The Firestore structure is designed to support a portfolio website with user profiles, videos, comments, likes, and frameworks. It emphasizes authorization independence and clear security rules. User profiles are stored in `/users/{userId}`, enabling path-based ownership for private user data. Videos and frameworks are stored in root-level collections (`/videos` and `/frameworks`) as they are not directly owned by individual users and are intended to be more globally accessible. Comments and Likes are stored as subcollections under `/videos/{videoId}` to represent the 1:N relationships. This structure avoids hierarchical authorization dependencies, ensuring that rules can be written without requiring `get()` calls to parent documents. For example, comment documents include `userProfileId` to check write access control. Security rules are simplified due to the structural segregation of user-specific data and global data. List operations are secured by ensuring that only authenticated users can access certain collections (e.g., `/users`)."
   }
 }
