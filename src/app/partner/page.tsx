@@ -175,7 +175,7 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
     const totalUses = uses?.length || 0;
     
     return (
-        <NeumorphicCard className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
                 <h1 className="text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
                 <p className="text-muted-foreground mt-2">Bienvenue, {partner.fullName} !</p>
@@ -198,7 +198,7 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
                     <p className="text-sm text-muted-foreground">Nombre total d'achats avec votre code.</p>
                 </NeumorphicCard>
             </div>
-        </NeumorphicCard>
+        </div>
     );
 }
 
@@ -354,3 +354,5 @@ export default function PartnerPage() {
         </AuthGuard>
     )
 }
+
+    
