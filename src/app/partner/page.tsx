@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,9 +15,9 @@ import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AuthGuard } from '@/components/auth-guard';
 import { ContractSubmission } from '@/app/admin/page';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -168,13 +168,35 @@ const motivationalMessages = [
     { text: "Plus que quelques pas avant la récompense ! 🎉", color: "text-pink-500" },
 ];
 
+const congratsEmojis = ['🎉', '🥳', '🎊', '🤩', '🚀', '💯'];
+
+
 function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
     const uses = partner.promoCodeUses || 0;
     const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
     const [motivation, setMotivation] = useState({ text: "", color: ""});
+    
+    // State for the congratulations modal
+    const [congratsData, setCongratsData] = useState<{ open: boolean; increase: number, emoji: string }>({ open: false, increase: 0, emoji: '🎉' });
+    const prevUses = useRef<number | undefined>(partner.promoCodeUses);
+
 
     useEffect(() => {
         setMotivation(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
+    }, [partner.promoCodeUses]);
+
+    useEffect(() => {
+        const currentUses = partner.promoCodeUses;
+        // Check if prevUses.current is not undefined and there's an increase
+        if (prevUses.current !== undefined && currentUses !== undefined && currentUses > prevUses.current) {
+            const increase = currentUses - prevUses.current;
+            if (increase > 0) {
+                 const randomEmoji = congratsEmojis[Math.floor(Math.random() * congratsEmojis.length)];
+                 setCongratsData({ open: true, increase, emoji: randomEmoji });
+            }
+        }
+        // Update the ref to the current value for the next render
+        prevUses.current = currentUses;
     }, [partner.promoCodeUses]);
 
 
@@ -214,6 +236,25 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
                     <p className={cn("font-semibold", motivation.color)}>{motivation.text}</p>
                 </div>
             </NeumorphicCard>
+
+             <Dialog open={congratsData.open} onOpenChange={(open) => setCongratsData(prev => ({ ...prev, open }))}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                    <DialogTitle className="text-center text-2xl font-bold font-headline">Félicitations !</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center text-center py-4">
+                        <div className="text-7xl animate-bounce">
+                           {congratsData.emoji}
+                        </div>
+                        <p className="mt-4 text-lg">
+                            Vous avez enregistré <span className="font-bold text-primary">{congratsData.increase}</span> nouvel(s) achat(s) !
+                        </p>
+                         <Button onClick={() => setCongratsData({ open: false, increase: 0, emoji: '🎉' })} className="mt-6">
+                            Continuer
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
         </div>
     );
@@ -372,7 +413,3 @@ export default function PartnerPage() {
         </AuthGuard>
     )
 }
-
-    
-
-    
