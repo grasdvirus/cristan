@@ -8,17 +8,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp, query, where, doc, updateDoc } from 'firebase/firestore';
+import Link from 'next/link';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2, User, Trophy, Copy, Edit } from 'lucide-react';
+import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2, User, Trophy, Copy, Edit, ArrowLeft } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AuthGuard } from '@/components/auth-guard';
 import { ContractSubmission } from '@/app/admin/page';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -393,44 +394,67 @@ function PartnerPageContent() {
         setIsSubmitting(false);
       }
   };
+  
+  const PageWrapper = ({ children, showBackButton = true }: { children: React.ReactNode, showBackButton?: boolean }) => (
+    <div className="container mx-auto px-4 py-16 sm:py-24 relative">
+      {showBackButton && (
+         <Button 
+            asChild
+            variant="ghost" 
+            size="icon"
+            className="absolute left-4 top-4 sm:left-6 sm:top-10 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+            aria-label="Retour"
+        >
+            <Link href="/">
+                <ArrowLeft className="h-5 w-5" />
+            </Link>
+        </Button>
+      )}
+      {children}
+    </div>
+  );
 
   if (isLoadingPartner) {
-    return <div className="container mx-auto px-4 py-16 sm:py-24 text-center">Chargement de votre statut...</div>
+    return <PageWrapper><div className="text-center">Chargement de votre statut...</div></PageWrapper>
   }
 
   if (confirmedPartner) {
       return (
-        <div className="container mx-auto px-4 py-16 sm:py-24">
+        <PageWrapper showBackButton={false}>
             <PartnerDashboard partner={confirmedPartner} />
-        </div>
+        </PageWrapper>
       )
   }
 
   if (pendingPartner) {
       return (
-        <div className="container mx-auto px-4 py-16 sm:py-24 text-center">
-            <NeumorphicCard className="max-w-2xl mx-auto">
-                <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
-                <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
-            </NeumorphicCard>
-        </div>
+        <PageWrapper>
+            <div className="text-center">
+                <NeumorphicCard className="max-w-2xl mx-auto">
+                    <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
+                    <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
+                </NeumorphicCard>
+            </div>
+        </PageWrapper>
       )
   }
   
   if (refusedPartner) {
     return (
-      <div className="container mx-auto px-4 py-16 sm:py-24 text-center">
-          <NeumorphicCard className="max-w-2xl mx-auto">
-              <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
-              <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
-          </NeumorphicCard>
-      </div>
+      <PageWrapper>
+        <div className="text-center">
+            <NeumorphicCard className="max-w-2xl mx-auto">
+                <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
+                <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
+            </NeumorphicCard>
+        </div>
+      </PageWrapper>
     )
 }
 
   if (!isCodeVerified) {
       return (
-        <div className="container mx-auto px-4 py-16 sm:py-24">
+        <PageWrapper>
             <NeumorphicCard className="max-w-2xl mx-auto text-center">
             <div className="flex justify-center mb-6">
                 <NeumorphicCard className="rounded-full p-4">
@@ -460,14 +484,14 @@ function PartnerPageContent() {
                 </Button>
             </form>
             </NeumorphicCard>
-        </div>
+        </PageWrapper>
       )
   }
 
   return (
-    <div className="container mx-auto px-4 py-16 sm:py-24">
+    <PageWrapper>
         <PartnerForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
-    </div>
+    </PageWrapper>
   );
 }
 

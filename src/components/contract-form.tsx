@@ -1,6 +1,8 @@
+
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -49,6 +51,7 @@ interface ContractFormProps {
 export function ContractForm({ projectId }: ContractFormProps) {
     const { toast } = useToast();
     const { firestore } = useFirebase();
+    const router = useRouter();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [showSuccessDialog, setShowSuccessDialog] = React.useState(false);
 
@@ -93,6 +96,13 @@ export function ContractForm({ projectId }: ContractFormProps) {
             });
         } finally {
             setIsSubmitting(false);
+        }
+    }
+    
+    const handleDialogClose = (isOpen: boolean) => {
+        setShowSuccessDialog(isOpen);
+        if (!isOpen) {
+            router.push('/');
         }
     }
 
@@ -203,7 +213,7 @@ export function ContractForm({ projectId }: ContractFormProps) {
         </form>
       </Form>
       
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+      <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
           <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
               <NeumorphicCard className="relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
@@ -220,7 +230,7 @@ export function ContractForm({ projectId }: ContractFormProps) {
                           Nous avons bien reçu vos informations et vous recontacterons bientôt.
                       </p>
                       <Button 
-                          onClick={() => setShowSuccessDialog(false)} 
+                          onClick={() => handleDialogClose(false)} 
                           className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark"
                       >
                           Fermer
