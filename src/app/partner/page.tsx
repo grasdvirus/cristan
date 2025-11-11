@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -6,18 +7,18 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { addDoc, collection, serverTimestamp, query, where } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, query, where, doc, updateDoc } from 'firebase/firestore';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2, User, Trophy } from 'lucide-react';
+import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2, User, Trophy, Copy, Edit } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AuthGuard } from '@/components/auth-guard';
 import { ContractSubmission } from '@/app/admin/page';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -172,9 +173,14 @@ const congratsEmojis = ['🎉', '🥳', '🎊', '🤩', '🚀', '💯'];
 
 
 function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
+    const { firestore } = useFirebase();
+    const { toast } = useToast();
     const uses = partner.promoCodeUses || 0;
     const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
     const [motivation, setMotivation] = useState({ text: "", color: ""});
+    const [isEditingCode, setIsEditingCode] = useState(false);
+    const [newCode, setNewCode] = useState(partner.promoCode || '');
+    const [isSavingCode, setIsSavingCode] = useState(false);
     
     const [congratsData, setCongratsData] = useState<{ open: boolean; increase: number, emoji: string }>({ open: false, increase: 0, emoji: '🎉' });
     const prevUses = useRef<number | undefined>(partner.promoCodeUses);
@@ -195,6 +201,32 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
         }
         prevUses.current = currentUses;
     }, [partner.promoCodeUses]);
+    
+    const handleCopyCode = () => {
+        if (partner.promoCode) {
+            navigator.clipboard.writeText(partner.promoCode);
+            toast({ variant: 'success', title: 'Code copié !' });
+        }
+    };
+    
+    const handleSaveCode = async () => {
+        if (!firestore || !partner.promoCode || newCode.trim() === '' || newCode.trim() === partner.promoCode) {
+            setIsEditingCode(false);
+            return;
+        }
+        setIsSavingCode(true);
+        try {
+            const partnerRef = doc(firestore, 'submissions', partner.id);
+            await updateDoc(partnerRef, { promoCode: newCode.trim() });
+            toast({ variant: 'success', title: 'Code promo mis à jour !' });
+            setIsEditingCode(false);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour le code.' });
+            console.error(error);
+        } finally {
+            setIsSavingCode(false);
+        }
+    }
 
 
     return (
@@ -207,7 +239,36 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
                 <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center transition-transform duration-300 hover:scale-105">
                     <User className="w-12 h-12 text-primary mb-4" />
                     <h3 className="text-lg font-semibold">Votre Code Promo</h3>
-                    <p className="text-3xl font-bold font-mono text-primary my-2">{partner.promoCode}</p>
+                    <div className="text-3xl font-bold font-mono text-primary my-2 flex items-center gap-2">
+                        <span>{partner.promoCode}</span>
+                        <Button variant="ghost" size="icon" onClick={handleCopyCode} className="h-8 w-8 rounded-full">
+                            <Copy className="h-4 w-4"/>
+                        </Button>
+                         <Dialog open={isEditingCode} onOpenChange={setIsEditingCode}>
+                            <DialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                    <Edit className="h-4 w-4"/>
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Modifier votre code promo</DialogTitle>
+                                </DialogHeader>
+                                <Input 
+                                    value={newCode}
+                                    onChange={(e) => setNewCode(e.target.value)}
+                                    placeholder="Nouveau code promo"
+                                    className="my-4"
+                                />
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setIsEditingCode(false)}>Annuler</Button>
+                                    <Button onClick={handleSaveCode} disabled={isSavingCode}>
+                                        {isSavingCode ? <Loader2 className="animate-spin"/> : 'Sauvegarder'}
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                     <p className="text-sm text-muted-foreground">Partagez ce code pour gagner des commissions.</p>
                 </NeumorphicCard>
                 <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center transition-transform duration-300 hover:scale-105">
