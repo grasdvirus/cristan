@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -7,18 +6,20 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { addDoc, collection, serverTimestamp, query, where, whereIn } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, query, where } from 'firebase/firestore';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2, ShoppingCart, User, Code } from 'lucide-react';
+import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart, User, Trophy, BarChart2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AuthGuard } from '@/components/auth-guard';
 import { ContractSubmission } from '@/app/admin/page';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
+const REWARD_GOAL = 100;
 
 const partnerFormSchema = z.object({
   fullName: z.string().min(2, 'Le nom est requis.'),
@@ -159,45 +160,43 @@ function PartnerForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: Pa
 }
 
 function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
-    const { firestore } = useFirebase();
+    const uses = partner.promoCodeUses || 0;
+    const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
 
-    const submissionsQuery = useMemoFirebase(() => {
-        if (!firestore || !partner.promoCode) return null;
-        return query(
-            collection(firestore, 'submissions'),
-            where('type', '==', 'Projet'),
-            where('promoCode', '==', partner.promoCode)
-        );
-    }, [firestore, partner.promoCode]);
-
-    const { data: uses, isLoading } = useCollection<ContractSubmission>(submissionsQuery);
-
-    const totalUses = uses?.length || 0;
-    
     return (
         <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
+            <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
                 <p className="text-muted-foreground mt-2">Bienvenue, {partner.fullName} !</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center">
                     <User className="w-12 h-12 text-primary mb-4" />
                     <h3 className="text-lg font-semibold">Votre Code Promo</h3>
                     <p className="text-3xl font-bold font-mono text-primary my-2">{partner.promoCode}</p>
                     <p className="text-sm text-muted-foreground">Partagez ce code pour gagner des commissions.</p>
                 </NeumorphicCard>
-                 <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center">
-                    <ShoppingCart className="w-12 h-12 text-primary mb-4" />
-                    <h3 className="text-lg font-semibold">Utilisations du Code</h3>
-                    {isLoading ? (
-                        <Skeleton className="h-9 w-16 mt-2" />
-                    ) : (
-                        <p className="text-3xl font-bold font-mono text-primary my-2">{totalUses}</p>
-                    )}
+                <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center">
+                    <BarChart2 className="w-12 h-12 text-primary mb-4" />
+                    <h3 className="text-lg font-semibold">Utilisations Totales (à vie)</h3>
+                     <p className="text-3xl font-bold font-mono text-primary my-2">{partner.promoCodeTotalUses || 0}</p>
                     <p className="text-sm text-muted-foreground">Nombre total d'achats avec votre code.</p>
                 </NeumorphicCard>
             </div>
+            
+            <NeumorphicCard>
+                <div className="flex items-center gap-4 mb-4">
+                    <Trophy className="w-8 h-8 text-primary"/>
+                    <h2 className="text-2xl font-bold font-headline">Prochaine Récompense</h2>
+                </div>
+                <div className="text-center my-4">
+                    <span className="text-4xl font-bold">{uses}</span>
+                    <span className="text-xl text-muted-foreground"> / {REWARD_GOAL}</span>
+                    <p className="text-sm text-muted-foreground mt-1">utilisations avant la prochaine récompense</p>
+                </div>
+                <Progress value={progress} className="w-full h-4" />
+            </NeumorphicCard>
+
         </div>
     );
 }
@@ -257,6 +256,7 @@ function PartnerPageContent() {
           userId: user.uid,
           status: 'en attente',
           promoCodeUses: 0,
+          promoCodeTotalUses: 0,
           createdAt: serverTimestamp(),
         });
         toast({ variant: 'success', title: 'Demande envoyée !', description: 'Nous examinerons votre demande bientôt.' });

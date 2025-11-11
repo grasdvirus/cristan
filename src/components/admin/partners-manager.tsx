@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -8,10 +7,9 @@ import { collection, query, where, doc, updateDoc, increment } from 'firebase/fi
 import { ContractSubmission } from '@/app/admin/page';
 import { NeumorphicCard } from '../neumorphic-card';
 import { Skeleton } from '../ui/skeleton';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Button } from '../ui/button';
 import { useToast } from '../ui/use-toast';
-import { Minus, Plus, Link as LinkIcon, User, Mail, Phone, Code, Check, X, Clock } from 'lucide-react';
+import { Minus, Plus, Link as LinkIcon, User, Mail, Phone, Code, Check, X, Clock, RefreshCw, BarChart, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Badge } from '../ui/badge';
@@ -29,9 +27,19 @@ function PartnerDetails({ partner }: { partner: ContractSubmission }) {
         if (currentUses + amount < 0) return;
 
         await updateDoc(partnerRef, {
-            promoCodeUses: increment(amount)
+            promoCodeUses: increment(amount),
+            promoCodeTotalUses: increment(amount)
         });
         toast({ variant: "success", title: "Compteur mis à jour!" });
+    };
+
+    const handleResetUses = async () => {
+        if (!firestore) return;
+        const partnerRef = doc(firestore, 'submissions', partner.id);
+        await updateDoc(partnerRef, {
+            promoCodeUses: 0
+        });
+        toast({ variant: "success", title: "Compteur de récompense réinitialisé !" });
     };
 
     return (
@@ -50,20 +58,35 @@ function PartnerDetails({ partner }: { partner: ContractSubmission }) {
                 </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-lg p-3 neumorphic-card-light dark:neumorphic-card-dark">
-                <div className='text-center sm:text-left'>
-                    <p className="font-semibold flex items-center gap-2"><Code className="w-4 h-4" />Code Promo: <span className="font-mono text-primary">{partner.promoCode}</span></p>
-                    <p className="text-sm text-muted-foreground">Nombre d'utilisations: {partner.promoCodeUses || 0}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button size="icon" variant="outline" onClick={() => handleUpdateUses(-1)} disabled={(partner.promoCodeUses || 0) === 0} className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
-                        <Minus className="h-4 w-4" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Reward Counter */}
+                <div className="flex flex-col gap-4 rounded-lg p-3 neumorphic-card-light dark:neumorphic-card-dark">
+                    <div className='text-center sm:text-left'>
+                        <p className="font-semibold flex items-center gap-2 text-sm"><Trophy className="w-4 h-4" />Compteur pour Récompense</p>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                        <Button size="icon" variant="outline" onClick={() => handleUpdateUses(-1)} disabled={(partner.promoCodeUses || 0) === 0} className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
+                            <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="font-bold text-lg w-10 text-center">{partner.promoCodeUses || 0}</span>
+                        <Button size="icon" variant="outline" onClick={() => handleUpdateUses(1)} className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <Button onClick={handleResetUses} variant="outline" size="sm" className="self-center btn-neumorphic-light dark:btn-neumorphic-dark">
+                        <RefreshCw className="h-3 w-3 mr-2" /> Réinitialiser
                     </Button>
-                    <span className="font-bold text-lg w-10 text-center">{partner.promoCodeUses || 0}</span>
-                    <Button size="icon" variant="outline" onClick={() => handleUpdateUses(1)} className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
-                        <Plus className="h-4 w-4" />
-                    </Button>
                 </div>
+                {/* Total Uses Counter */}
+                 <div className="flex flex-col justify-center items-center gap-2 rounded-lg p-3 neumorphic-card-light dark:neumorphic-card-dark">
+                     <p className="font-semibold flex items-center gap-2 text-sm"><BarChart className="w-4 h-4" />Utilisations Totales (à vie)</p>
+                     <p className="font-bold text-2xl text-primary">{partner.promoCodeTotalUses || 0}</p>
+                </div>
+            </div>
+            
+            <div className="text-center rounded-lg p-3 neumorphic-card-light dark:neumorphic-card-dark">
+                <p className="font-semibold flex items-center justify-center gap-2"><Code className="w-4 h-4" />Code Promo</p>
+                <p className="font-mono text-primary text-xl mt-1">{partner.promoCode}</p>
             </div>
         </NeumorphicCard>
     );
@@ -98,8 +121,8 @@ function PartnerRow({ partner }: { partner: ContractSubmission }) {
     };
 
     return (
-        <React.Fragment>
-            <TableRow data-state={isOpen ? 'open' : 'closed'}>
+        <>
+            <TableRow data-state={isOpen ? 'open' : 'closed'} className="cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
                 <TableCell className="font-medium">{partner.fullName}</TableCell>
                 <TableCell>{partner.email}</TableCell>
                 <TableCell><span className="font-mono">{partner.promoCode}</span></TableCell>
@@ -113,34 +136,25 @@ function PartnerRow({ partner }: { partner: ContractSubmission }) {
                         {partner.status}
                     </Badge>
                 </TableCell>
-                <TableCell className="text-right flex items-center justify-end gap-2">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">Gérer</Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'confirmé')}>
-                                <Check className="mr-2 h-4 w-4 text-green-500"/> Confirmer
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'refusé')}>
-                                <X className="mr-2 h-4 w-4 text-red-500"/> Refuser
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'en attente')}>
-                                <Clock className="mr-2 h-4 w-4 text-yellow-500"/> Mettre en attente
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="p-2 hover:bg-accent rounded-md [&[data-state=open]>svg]:rotate-90"
-                    >
-                         <svg className="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                        <span className="sr-only">Voir les détails</span>
-                    </Button>
+                <TableCell className="text-right">
+                    <div onClick={e => e.stopPropagation()}>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm">Gérer</Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'confirmé')}>
+                                    <Check className="mr-2 h-4 w-4 text-green-500"/> Confirmer
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'refusé')}>
+                                    <X className="mr-2 h-4 w-4 text-red-500"/> Refuser
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'en attente')}>
+                                    <Clock className="mr-2 h-4 w-4 text-yellow-500"/> Mettre en attente
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </TableCell>
             </TableRow>
             {isOpen && (
@@ -152,7 +166,7 @@ function PartnerRow({ partner }: { partner: ContractSubmission }) {
                     </TableCell>
                 </TableRow>
             )}
-        </React.Fragment>
+        </>
     );
 }
 
