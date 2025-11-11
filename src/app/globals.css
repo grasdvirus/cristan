@@ -92,6 +92,24 @@
   }
 }
 
+@layer utilities {
+  .sparkle-mask {
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, black 20%, transparent 80%);
+    mask-image: radial-gradient(circle at 50% 50%, black 20%, transparent 80%);
+    background-image:
+      radial-gradient(1.5px 1.5px at 25px 5px, white, transparent),
+      radial-gradient(1.5px 1.5px at 125px 35px, white, transparent),
+      radial-gradient(2.5px 2.5px at 75px 80px, white, transparent),
+      radial-gradient(1.5px 1.5px at 175px 120px, white, transparent),
+      radial-gradient(2.5px 2.5px at 25px 160px, white, transparent);
+    animation: sparkle-animation 5s linear infinite;
+  }
+  @keyframes sparkle-animation {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-100px); }
+  }
+}
+
 @layer components {
   .neumorphic-card-light {
     box-shadow: 6px 6px 12px #d4d4d4, -6px -6px 12px #ffffff;

@@ -176,7 +176,6 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
     const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
     const [motivation, setMotivation] = useState({ text: "", color: ""});
     
-    // State for the congratulations modal
     const [congratsData, setCongratsData] = useState<{ open: boolean; increase: number, emoji: string }>({ open: false, increase: 0, emoji: '🎉' });
     const prevUses = useRef<number | undefined>(partner.promoCodeUses);
 
@@ -187,7 +186,6 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
 
     useEffect(() => {
         const currentUses = partner.promoCodeUses;
-        // Check if prevUses.current is not undefined and there's an increase
         if (prevUses.current !== undefined && currentUses !== undefined && currentUses > prevUses.current) {
             const increase = currentUses - prevUses.current;
             if (increase > 0) {
@@ -195,7 +193,6 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
                  setCongratsData({ open: true, increase, emoji: randomEmoji });
             }
         }
-        // Update the ref to the current value for the next render
         prevUses.current = currentUses;
     }, [partner.promoCodeUses]);
 
@@ -237,25 +234,32 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
                 </div>
             </NeumorphicCard>
 
-             <Dialog open={congratsData.open} onOpenChange={(open) => setCongratsData(prev => ({ ...prev, open }))}>
-                <DialogContent className="max-w-sm">
-                    <DialogHeader>
-                    <DialogTitle className="text-center text-2xl font-bold font-headline">Félicitations !</DialogTitle>
-                    </DialogHeader>
-                    <div className="flex flex-col items-center text-center py-4">
-                        <div className="text-7xl animate-bounce">
-                           {congratsData.emoji}
+            <Dialog open={congratsData.open} onOpenChange={(open) => setCongratsData(prev => ({ ...prev, open }))}>
+                <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
+                    <NeumorphicCard className="relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
+                        <div className="absolute inset-0 sparkle-mask"></div>
+                        
+                        <div className="relative flex flex-col items-center text-center py-8 px-4">
+                            <DialogHeader>
+                                <DialogTitle className="text-center text-2xl font-bold font-headline">Félicitations !</DialogTitle>
+                            </DialogHeader>
+                            <div className="text-7xl my-6 animate-bounce">
+                                {congratsData.emoji}
+                            </div>
+                            <p className="text-lg text-foreground">
+                                Vous avez enregistré <span className="font-bold text-primary">{congratsData.increase}</span> nouvel(s) achat(s) !
+                            </p>
+                            <Button 
+                                onClick={() => setCongratsData({ open: false, increase: 0, emoji: '🎉' })} 
+                                className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark"
+                            >
+                                Continuer
+                            </Button>
                         </div>
-                        <p className="mt-4 text-lg">
-                            Vous avez enregistré <span className="font-bold text-primary">{congratsData.increase}</span> nouvel(s) achat(s) !
-                        </p>
-                         <Button onClick={() => setCongratsData({ open: false, increase: 0, emoji: '🎉' })} className="mt-6">
-                            Continuer
-                        </Button>
-                    </div>
+                    </NeumorphicCard>
                 </DialogContent>
             </Dialog>
-
         </div>
     );
 }
