@@ -10,6 +10,15 @@
           "type": "string",
           "description": "Unique identifier for the UserProfile entity."
         },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL of the user's profile picture.",
+          "format": "uri"
+        },
         "bio": {
           "type": "string",
           "description": "A short biography of the user."
@@ -132,7 +141,8 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "google.com"
     ]
   },
   "firestore": {

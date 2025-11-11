@@ -9,6 +9,9 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   sendPasswordResetEmail,
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider,
 } from 'firebase/auth';
 import { useFirebase, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -19,6 +22,7 @@ import { NeumorphicCard } from '@/components/neumorphic-card';
 import { useToast } from '@/components/ui/use-toast';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/loading-spinner';
+import { Separator } from '@/components/ui/separator';
 
 const signUpSchema = z.object({
   name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
@@ -38,22 +42,75 @@ const loginSchema = z.object({
 type SignUpFormValues = z.infer<typeof signUpSchema>;
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 48 48"
+        width="24px"
+        height="24px"
+        {...props}
+      >
+        <path
+          fill="#FFC107"
+          d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
+        />
+        <path
+          fill="#FF3D00"
+          d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
+        />
+        <path
+          fill="#4CAF50"
+          d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.582-3.333-11.127-7.962l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
+        />
+        <path
+          fill="#1976D2"
+          d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.99,36.62,44,30.638,44,24C44,22.659,43.862,21.35,43.611,20.083z"
+        />
+      </svg>
+    );
+}
+
 export default function LoginPage() {
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // This effect handles the user being redirected away from login if already authenticated
+  // Effect to handle redirect result from Google Sign-In
   useEffect(() => {
-    if (!isUserLoading && user) {
+    if (!auth) return;
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          toast({ variant: 'success', title: 'Connexion réussie via Google !' });
+          // User will be redirected by the other useEffect
+        }
+      })
+      .catch((error) => {
+        console.error("Redirect Error:", error);
+        toast({
+          variant: 'destructive',
+          title: 'Erreur de connexion',
+          description: "Impossible de finaliser la connexion avec Google.",
+        });
+      })
+      .finally(() => {
+        setIsCheckingRedirect(false);
+      });
+  }, [auth, toast, router]);
+
+  // Effect handles redirecting the user if they are logged in
+  useEffect(() => {
+    if (!isUserLoading && !isCheckingRedirect && user) {
         router.replace('/profile');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, isCheckingRedirect, router]);
 
   const form = useForm<SignUpFormValues | LoginFormValues>({
     resolver: zodResolver(isSignUp ? signUpSchema : loginSchema),
@@ -111,6 +168,13 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    if (!auth) return;
+    const provider = new GoogleAuthProvider();
+    setIsSubmitting(true); // Show loading state before redirect
+    await signInWithRedirect(auth, provider);
+  };
+  
   const handlePasswordReset = async () => {
     if (!auth) return;
     const email = form.getValues('email');
@@ -129,6 +193,7 @@ export default function LoginPage() {
     try {
       await sendPasswordResetEmail(auth, email);
       toast({
+        variant: 'success',
         title: 'E-mail envoyé',
         description: 'Un lien pour réinitialiser votre mot de passe a été envoyé à votre adresse e-mail.',
       });
@@ -149,7 +214,7 @@ export default function LoginPage() {
   
   const { register, handleSubmit, formState: { errors } } = form;
 
-  if (isUserLoading || (isSubmitting && !form.formState.isDirty)) {
+  if (isUserLoading || isCheckingRedirect || isSubmitting) {
       return <LoadingSpinner />;
   }
 
@@ -159,6 +224,23 @@ export default function LoginPage() {
         <div className="text-center mb-8">
             <h1 className="text-3xl font-bold font-headline">{isSignUp ? 'Créer un compte' : 'Bienvenue'}</h1>
             <p className="text-muted-foreground mt-2">{isSignUp ? 'Remplissez les champs pour vous inscrire.' : 'Connectez-vous pour continuer'}</p>
+        </div>
+
+        <Button
+            onClick={handleGoogleSignIn}
+            disabled={isSubmitting}
+            variant="outline"
+            className="w-full btn-neumorphic-light dark:btn-neumorphic-dark"
+            size="lg"
+        >
+            <GoogleIcon className="mr-2 h-5 w-5" />
+            Continuer avec Google
+        </Button>
+
+        <div className="flex items-center my-6">
+            <Separator className="flex-1" />
+            <span className="px-4 text-xs text-muted-foreground">OU</span>
+            <Separator className="flex-1" />
         </div>
         
         <form onSubmit={handleSubmit(handleEmailPasswordAction)} className="space-y-4">
