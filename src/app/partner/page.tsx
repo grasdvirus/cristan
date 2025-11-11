@@ -233,14 +233,14 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
     return (
         <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
+                <h1 className="text-3xl sm:text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
                 <p className="text-muted-foreground mt-2">Bienvenue, {partner.fullName} !</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center transition-transform duration-300 hover:scale-105">
                     <User className="w-12 h-12 text-primary mb-4" />
                     <h3 className="text-lg font-semibold">Votre Code Promo</h3>
-                    <div className="text-3xl font-bold font-mono text-primary my-2 flex items-center gap-2">
+                    <div className="text-2xl sm:text-3xl font-bold font-mono text-primary my-2 flex items-center gap-2">
                         <span>{partner.promoCode}</span>
                         <Button variant="ghost" size="icon" onClick={handleCopyCode} className="h-8 w-8 rounded-full">
                             <Copy className="h-4 w-4"/>
@@ -455,35 +455,37 @@ function PartnerPageContent() {
   if (!isCodeVerified) {
       return (
         <PageWrapper>
-            <NeumorphicCard className="max-w-2xl mx-auto text-center">
-            <div className="flex justify-center mb-6">
-                <NeumorphicCard className="rounded-full p-4">
-                <Handshake className="w-16 h-16 text-primary" />
-                </NeumorphicCard>
-            </div>
-            <h1 className="text-4xl font-bold font-headline">Devenez Partenaire</h1>
-            <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-                Pour accéder au formulaire de partenariat, veuillez entrer le code d'accès qui vous a été fourni.
-            </p>
+            <div className="text-center px-4 sm:px-0">
+                <div className="sm:neumorphic-card-light sm:dark:neumorphic-card-dark max-w-2xl mx-auto sm:p-8 rounded-2xl">
+                    <div className="flex justify-center mb-6">
+                        <NeumorphicCard className="rounded-full p-4">
+                        <Handshake className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
+                        </NeumorphicCard>
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-bold font-headline">Devenez Partenaire</h1>
+                    <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
+                        Pour accéder au formulaire de partenariat, veuillez entrer le code d'accès qui vous a été fourni.
+                    </p>
 
-            <form onSubmit={handleCodeSubmit} className="mt-10 max-w-sm mx-auto space-y-4">
-                <div className="relative">
-                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                    type="text"
-                    placeholder="Entrez votre code partenaire"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark pl-10"
-                />
+                    <form onSubmit={handleCodeSubmit} className="mt-10 max-w-sm mx-auto space-y-4">
+                        <div className="relative">
+                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            placeholder="Entrez votre code partenaire"
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark pl-10"
+                        />
+                        </div>
+
+                        <Button type="submit" size="lg" className="w-full btn-neumorphic-light dark:btn-neumorphic-dark font-bold text-lg">
+                        Vérifier le code
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                        </Button>
+                    </form>
                 </div>
-
-                <Button type="submit" size="lg" className="w-full btn-neumorphic-light dark:btn-neumorphic-dark font-bold text-lg">
-                Vérifier le code
-                <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-            </form>
-            </NeumorphicCard>
+            </div>
         </PageWrapper>
       )
   }
@@ -502,5 +504,3 @@ export default function PartnerPage() {
         </AuthGuard>
     )
 }
-
-    

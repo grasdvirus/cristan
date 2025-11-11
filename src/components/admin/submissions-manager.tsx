@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
-import { ExternalLink, Trash2, Code } from 'lucide-react';
+import { ExternalLink, Trash2, Code, Phone, Building } from 'lucide-react';
 import { Button } from '../ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
@@ -41,6 +41,11 @@ function SubmissionCard({ submission, formatDate, handleDelete }: { submission: 
             </AlertDialog>
         </div>
       
+        <div className="space-y-1 text-sm">
+            <p className='flex items-center gap-2'><Phone className='w-4 h-4 text-muted-foreground' /> {submission.phone}</p>
+            {submission.companyName && <p className='flex items-center gap-2'><Building className='w-4 h-4 text-muted-foreground' /> {submission.companyName}</p>}
+        </div>
+
         <p className="text-sm text-muted-foreground border-t border-b py-2 my-2 border-border/50">{submission.projectDetails}</p>
 
         <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
@@ -114,9 +119,10 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
                             <TableRow>
                                 <TableHead>Date</TableHead>
                                 <TableHead>Nom</TableHead>
-                                <TableHead>Email</TableHead>
+                                <TableHead>Contact</TableHead>
+                                <TableHead>Entreprise</TableHead>
                                 <TableHead>Code Promo</TableHead>
-                                <TableHead>Projet Lié</TableHead>
+                                <TableHead>Projet</TableHead>
                                 <TableHead>Détails</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
@@ -126,7 +132,13 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
                                 <TableRow key={submission.id}>
                                     <TableCell className="font-medium whitespace-nowrap">{formatDate(submission.createdAt)}</TableCell>
                                     <TableCell>{submission.fullName}</TableCell>
-                                    <TableCell><a href={`mailto:${submission.email}`} className="hover:underline text-primary">{submission.email}</a></TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <a href={`mailto:${submission.email}`} className="hover:underline text-primary text-xs">{submission.email}</a>
+                                            <span className="text-xs text-muted-foreground">{submission.phone}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{submission.companyName || '-'}</TableCell>
                                     <TableCell>
                                         {submission.promoCode ? (
                                             <span className='flex items-center gap-1 font-mono text-sm'><Code className='w-4 h-4 text-muted-foreground'/>{submission.promoCode}</span>
@@ -143,7 +155,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
                                             '-'
                                         )}
                                     </TableCell>
-                                    <TableCell className="max-w-xs truncate">{submission.projectDetails}</TableCell>
+                                    <TableCell className="max-w-[200px] truncate">{submission.projectDetails}</TableCell>
                                     <TableCell className="text-right">
                                          <AlertDialog>
                                             <AlertDialogTrigger asChild>
