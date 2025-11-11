@@ -22,6 +22,7 @@ import { ProjectForm, type ProjectFormValues } from '@/components/admin/project-
 import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
 import { GameForm, type GameFormValues } from '@/components/admin/game-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
+import { PartnersManager } from '@/components/admin/partners-manager';
 import { convertToEmbedUrl } from '@/lib/utils';
 import { AuthGuard } from '@/components/auth-guard';
 
@@ -78,6 +79,10 @@ export type ContractSubmission = {
         seconds: number;
         nanoseconds: number;
     };
+    promoCode?: string;
+    promoCodeUses?: number;
+    socialLinks?: string[];
+    type?: string;
 };
 
 
@@ -560,12 +565,13 @@ function AdminPageContent() {
                 </p>
 
                 <Tabs defaultValue="slides">
-                    <TabsList className="mb-8 grid w-full grid-cols-5">
+                    <TabsList className="mb-8 grid w-full grid-cols-6">
                         <TabsTrigger value="slides">Slides</TabsTrigger>
                         <TabsTrigger value="internet">Internet</TabsTrigger>
                         <TabsTrigger value="tv">TV</TabsTrigger>
                         <TabsTrigger value="games">Gamme</TabsTrigger>
                         <TabsTrigger value="submissions">Demandes</TabsTrigger>
+                        <TabsTrigger value="partners">Partenaires</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="slides">
@@ -586,6 +592,10 @@ function AdminPageContent() {
 
                     <TabsContent value="submissions">
                         <SubmissionsManager />
+                    </TabsContent>
+
+                    <TabsContent value="partners">
+                        <PartnersManager />
                     </TabsContent>
                 </Tabs>
             </NeumorphicCard>
