@@ -7,9 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
   updateProfile,
   sendPasswordResetEmail,
 } from 'firebase/auth';
@@ -20,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { useToast } from '@/components/ui/use-toast';
-import { Chrome, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/loading-spinner';
 
 const signUpSchema = z.object({
@@ -57,37 +54,6 @@ export default function LoginPage() {
         router.replace('/profile');
     }
   }, [user, isUserLoading, router]);
-
-  // This effect handles the result of the redirect from Google
-  useEffect(() => {
-    const handleRedirectResult = async () => {
-      if (!auth) return;
-      try {
-        setIsSubmitting(true);
-        const result = await getRedirectResult(auth);
-        if (result) {
-          toast({ variant: 'success', title: 'Connexion réussie !', description: `Bienvenue ${result.user.displayName}` });
-          router.replace('/profile'); 
-        }
-      } catch (err: any) {
-        if (err.code !== 'auth/web-storage-unsupported') {
-            console.error("Redirect Error:", err);
-            let friendlyMessage = "La connexion avec Google a échoué. Veuillez réessayer.";
-            setError(friendlyMessage);
-            toast({
-                variant: 'destructive',
-                title: 'Erreur de connexion',
-                description: friendlyMessage,
-            });
-        }
-      } finally {
-        setIsSubmitting(false);
-      }
-    };
-    
-    handleRedirectResult();
-  }, [auth, toast, router]);
-
 
   const form = useForm<SignUpFormValues | LoginFormValues>({
     resolver: zodResolver(isSignUp ? signUpSchema : loginSchema),
@@ -143,22 +109,6 @@ export default function LoginPage() {
     } finally {
         setIsSubmitting(false);
     }
-  };
-
-  const handleGoogleSignIn = async () => {
-    if (!auth) return;
-    setIsSubmitting(true);
-    setError(null);
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider).catch(error => {
-        console.error("Sign in with redirect error:", error);
-        toast({
-            variant: 'destructive',
-            title: 'Erreur de redirection',
-            description: "Impossible de démarrer la connexion avec Google.",
-        });
-        setIsSubmitting(false);
-    });
   };
 
   const handlePasswordReset = async () => {
@@ -294,29 +244,6 @@ export default function LoginPage() {
                 {isSignUp ? 'Se connecter' : 'S\'inscrire'}
             </button>
         </p>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center" aria-hidden="true">
-              <div className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center">
-              <span className="bg-background px-2 text-xs uppercase text-muted-foreground">Ou</span>
-          </div>
-        </div>
-
-        <Button 
-            onClick={handleGoogleSignIn}
-            disabled={isSubmitting}
-            variant="outline" 
-            className="w-full btn-neumorphic-light dark:btn-neumorphic-dark"
-        >
-          {isSubmitting ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Chrome className="mr-2 h-4 w-4" />
-          )}
-          Continuer avec Google
-        </Button>
       </NeumorphicCard>
     </div>
   );
