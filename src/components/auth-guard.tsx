@@ -22,8 +22,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
     // If the user is not logged in, redirect them to the login page.
     if (!user) {
-      // You can also store the intended path to redirect back after login
-      // e.g., router.replace(`/login?redirect=${pathname}`);
       router.replace('/login');
     }
   }, [user, isUserLoading, router, pathname]);
@@ -37,3 +35,5 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // If the user is authenticated, render the children.
   return <>{children}</>;
 }
+
+    

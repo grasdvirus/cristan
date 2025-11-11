@@ -13,7 +13,7 @@ import {
   updateProfile,
   sendPasswordResetEmail,
 } from 'firebase/auth';
-import { useFirebase } from '@/firebase';
+import { useFirebase, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { useToast } from '@/components/ui/use-toast';
 import { Chrome, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { LoadingSpinner } from '@/components/loading-spinner';
 
 const signUpSchema = z.object({
   name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
@@ -41,7 +42,8 @@ type SignUpFormValues = z.infer<typeof signUpSchema>;
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const { auth, isUserLoading } = useFirebase();
+  const { auth } = useFirebase();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,41 +51,42 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
+  // This effect handles the user being redirected away from login if already authenticated
   useEffect(() => {
-    if (!auth || isUserLoading) return;
+    if (!isUserLoading && user) {
+        router.replace('/profile');
+    }
+  }, [user, isUserLoading, router]);
 
-    // This handles the redirect result after returning from Google sign-in
+  // This effect handles the result of the redirect from Google
+  useEffect(() => {
     const handleRedirectResult = async () => {
+      if (!auth) return;
       try {
         setIsSubmitting(true);
         const result = await getRedirectResult(auth);
         if (result) {
-          // User has successfully signed in via redirect.
-          // AuthGuard will handle the redirection to the homepage.
           toast({ variant: 'success', title: 'Connexion réussie !', description: `Bienvenue ${result.user.displayName}` });
+          router.replace('/profile'); 
         }
       } catch (err: any) {
-        if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-           return;
+        if (err.code !== 'auth/web-storage-unsupported') {
+            console.error("Redirect Error:", err);
+            let friendlyMessage = "La connexion avec Google a échoué. Veuillez réessayer.";
+            setError(friendlyMessage);
+            toast({
+                variant: 'destructive',
+                title: 'Erreur de connexion',
+                description: friendlyMessage,
+            });
         }
-        let friendlyMessage = "La connexion avec Google a échoué. Veuillez réessayer.";
-        setError(friendlyMessage);
-        toast({
-          variant: 'destructive',
-          title: 'Erreur de connexion',
-          description: friendlyMessage,
-        });
       } finally {
-        // Only set isSubmitting to false if there wasn't a successful redirect.
-        // If there was a redirect, the component will unmount soon anyway.
-        if (!auth.currentUser) {
-            setIsSubmitting(false);
-        }
+        setIsSubmitting(false);
       }
     };
     
     handleRedirectResult();
-  }, [auth, isUserLoading, toast]);
+  }, [auth, toast, router]);
 
 
   const form = useForm<SignUpFormValues | LoginFormValues>({
@@ -108,13 +111,12 @@ export default function LoginPage() {
             displayName: signUpValues.name
         });
         toast({ variant: "success", title: "Compte créé !", description: "Vous êtes maintenant connecté."});
-        // AuthGuard will handle redirection.
       } else {
         const loginValues = values as LoginFormValues;
-        const userCredential = await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
-        toast({ variant: "success", title: "Connexion réussie !", description: `Bienvenue ${userCredential.user.displayName}`});
-        // AuthGuard will handle redirection.
+        await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
+        toast({ variant: "success", title: "Connexion réussie !"});
       }
+      // The useEffect hook will now handle redirection
     } catch (err: any) {
       let friendlyMessage = 'Une erreur est survenue.';
       switch(err.code) {
@@ -138,7 +140,8 @@ export default function LoginPage() {
         title: 'Erreur d\'authentification',
         description: friendlyMessage,
       });
-      setIsSubmitting(false);
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -147,10 +150,15 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setError(null);
     const provider = new GoogleAuthProvider();
-    // Use signInWithRedirect instead of signInWithPopup
-    await signInWithRedirect(auth, provider);
-    // The page will redirect to Google. After sign-in, it will redirect back,
-    // and the useEffect hook will handle the result.
+    await signInWithRedirect(auth, provider).catch(error => {
+        console.error("Sign in with redirect error:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Erreur de redirection',
+            description: "Impossible de démarrer la connexion avec Google.",
+        });
+        setIsSubmitting(false);
+    });
   };
 
   const handlePasswordReset = async () => {
@@ -171,7 +179,6 @@ export default function LoginPage() {
     try {
       await sendPasswordResetEmail(auth, email);
       toast({
-        variant: 'default',
         title: 'E-mail envoyé',
         description: 'Un lien pour réinitialiser votre mot de passe a été envoyé à votre adresse e-mail.',
       });
@@ -191,6 +198,10 @@ export default function LoginPage() {
   }
   
   const { register, handleSubmit, formState: { errors } } = form;
+
+  if (isUserLoading || (isSubmitting && !form.formState.isDirty)) {
+      return <LoadingSpinner />;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -310,3 +321,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
