@@ -49,19 +49,19 @@ export default function VideoDetailsPage() {
 
   if (isVideoLoading) {
     return (
-      <div className="container mx-auto px-4 py-16 sm:py-24">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
         <Skeleton className="h-10 w-32 mb-8" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
           <div className="lg:col-span-2">
             <Skeleton className="aspect-video w-full rounded-2xl" />
-            <NeumorphicCard className="w-full mt-8 p-6">
+            <NeumorphicCard className="w-full mt-8 p-4 sm:p-6">
                 <Skeleton className="h-8 w-3/4 mb-4" />
                 <Skeleton className="h-4 w-1/2 mb-6" />
                 <Skeleton className="h-20 w-full" />
             </NeumorphicCard>
           </div>
           <div className="lg:col-span-1">
-            <NeumorphicCard className="p-6">
+            <NeumorphicCard className="p-4 sm:p-6">
                 <Skeleton className="h-8 w-1/2 mb-4" />
                 <div className="flex flex-col gap-4">
                     <Skeleton className="h-24 w-full" />
@@ -83,10 +83,10 @@ export default function VideoDetailsPage() {
         <p className="text-muted-foreground mt-2">
           La vidéo que vous cherchez n'existe pas ou a été déplacée.
         </p>
-         <Link href="/" passHref>
+         <Link href="/tv" passHref>
             <Button variant="outline" className="mt-8">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Retour à l'accueil
+                Retour aux vidéos
             </Button>
         </Link>
       </div>
@@ -100,11 +100,11 @@ export default function VideoDetailsPage() {
   const embedUrl = `${video.videoUrl}?autoplay=1&modestbranding=1&controls=1&rel=0&playsinline=1`;
 
   return (
-    <div className="container mx-auto px-4 py-16 sm:py-24">
+    <div className="container mx-auto px-4 py-8 sm:py-16">
        <div className="mb-8">
             <Button 
                 variant="ghost" 
-                onClick={() => router.push('/#videos')} 
+                onClick={() => router.push('/tv')} 
                 className="btn-neumorphic-light dark:btn-neumorphic-dark"
             >
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -151,10 +151,10 @@ export default function VideoDetailsPage() {
             </div>
 
             {/* Video Info */}
-            <NeumorphicCard className="w-full mt-8">
+            <NeumorphicCard className="w-full mt-8 p-4 sm:p-6">
             <div className="">
-              <h1 className="text-3xl font-bold font-headline">{video.title}</h1>
-              <div className="flex items-center text-sm text-muted-foreground mt-2 gap-4">
+              <h1 className="text-2xl sm:text-3xl font-bold font-headline">{video.title}</h1>
+              <div className="flex items-center flex-wrap text-sm text-muted-foreground mt-2 gap-4">
                   <div className='flex items-center gap-2'>
                       <Calendar className='w-4 h-4'/>
                       <span>{video.uploadDate}</span>
@@ -175,7 +175,7 @@ export default function VideoDetailsPage() {
 
         {/* Suggested Videos */}
         <div className="lg:col-span-1">
-          <NeumorphicCard>
+          <NeumorphicCard className="p-4 sm:p-6">
             <h2 className="text-2xl font-bold font-headline mb-4">À suivre</h2>
             <div className="flex flex-col gap-4">
               {areVideosLoading && (

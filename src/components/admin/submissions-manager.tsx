@@ -17,6 +17,49 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '../ui/badge';
 
+function SubmissionCard({ submission, formatDate, handleDelete }: { submission: ContractSubmission, formatDate: (ts: any) => string, handleDelete: (id: string) => void }) {
+  return (
+    <NeumorphicCard className="p-4 space-y-3">
+        <div className="flex justify-between items-start">
+            <div>
+                <h3 className="font-bold">{submission.fullName}</h3>
+                <p className="text-sm text-primary hover:underline"><a href={`mailto:${submission.email}`}>{submission.email}</a></p>
+                <p className="text-xs text-muted-foreground mt-1">{formatDate(submission.createdAt)}</p>
+            </div>
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-destructive flex-shrink-0"><Trash2 className="h-4 w-4" /></Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
+                    <AlertDialogDescription>Cette action est irréversible et supprimera définitivement la demande.</AlertDialogDescription>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(submission.id)}>Supprimer</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+      
+        <p className="text-sm text-muted-foreground border-t border-b py-2 my-2 border-border/50">{submission.projectDetails}</p>
+
+        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+            {submission.promoCode && (
+              <div className="flex items-center gap-1 font-mono text-sm"><Code className='w-4 h-4 text-muted-foreground'/>{submission.promoCode}</div>
+            )}
+            {submission.projectId !== "N/A" ? (
+                <Link href={`/projects/${submission.projectId}`} className="hover:underline text-primary flex items-center gap-1">
+                    Voir le projet <ExternalLink className="h-3 w-3" />
+                </Link>
+            ) : (
+                <span className='text-muted-foreground'>Aucun projet</span>
+            )}
+        </div>
+
+    </NeumorphicCard>
+  )
+}
+
 export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
@@ -41,7 +84,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
     const formatDate = (timestamp: ContractSubmission['createdAt'] | null) => {
         if (!timestamp) return 'Date inconnue';
         const date = new Date(timestamp.seconds * 1000);
-        return format(date, "d MMMM yyyy 'à' HH:mm", { locale: fr });
+        return format(date, "d MMM yy, HH:mm", { locale: fr });
     };
     
     const handleDelete = async (id: string) => {
@@ -56,21 +99,20 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
     };
 
     return (
-        <NeumorphicCard inset className="p-6">
-            <h2 className="text-2xl font-bold font-headline mb-4">Demandes des Clients</h2>
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-bold font-headline mb-4">Demandes des Clients</h2>
             {isLoading ? (
                 <div className="space-y-2">
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
                 </div>
             ) : (
-                <div className="overflow-x-auto">
+                <>
+                <div className="hidden sm:block overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Date</TableHead>
-                                <TableHead>Type</TableHead>
                                 <TableHead>Nom</TableHead>
                                 <TableHead>Email</TableHead>
                                 <TableHead>Code Promo</TableHead>
@@ -83,11 +125,6 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
                             {filteredSubmissions?.map((submission) => (
                                 <TableRow key={submission.id}>
                                     <TableCell className="font-medium whitespace-nowrap">{formatDate(submission.createdAt)}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={submission.type === 'Partenariat' ? 'default' : 'secondary'}>
-                                            {submission.type || 'Projet'}
-                                        </Badge>
-                                    </TableCell>
                                     <TableCell>{submission.fullName}</TableCell>
                                     <TableCell><a href={`mailto:${submission.email}`} className="hover:underline text-primary">{submission.email}</a></TableCell>
                                     <TableCell>
@@ -100,7 +137,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
                                     <TableCell>
                                         {submission.projectId !== "N/A" ? (
                                             <Link href={`/projects/${submission.projectId}`} className="hover:underline text-primary flex items-center gap-1">
-                                                Voir le projet <ExternalLink className="h-3 w-3" />
+                                                Voir <ExternalLink className="h-3 w-3" />
                                             </Link>
                                         ) : (
                                             '-'
@@ -127,6 +164,12 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
                         </TableBody>
                     </Table>
                 </div>
+                <div className="sm:hidden space-y-4">
+                  {filteredSubmissions?.map((submission) => (
+                    <SubmissionCard key={submission.id} submission={submission} formatDate={formatDate} handleDelete={handleDelete} />
+                  ))}
+                </div>
+                </>
             )}
             {!isLoading && filteredSubmissions?.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">

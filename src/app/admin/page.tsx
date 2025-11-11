@@ -142,12 +142,12 @@ function SlidesManager() {
     };
 
     return (
-        <NeumorphicCard inset className="p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold font-headline">Gestion des Slides</h2>
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Gestion des Slides</h2>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
                             <Plus className="mr-2 h-4 w-4" /> Ajouter un slide
                         </Button>
                     </DialogTrigger>
@@ -263,12 +263,12 @@ function ProjectsManager() {
     };
 
     return (
-        <NeumorphicCard inset className="p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold font-headline">Gestion des Projets</h2>
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Gestion des Projets</h2>
                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
                             <Plus className="mr-2 h-4 w-4" /> Ajouter un projet
                         </Button>
                     </DialogTrigger>
@@ -382,12 +382,12 @@ function VideosManager() {
     };
 
     return (
-        <NeumorphicCard inset className="p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold font-headline">Gestion des Vidéos</h2>
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Gestion des Vidéos</h2>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
                             <Plus className="mr-2 h-4 w-4" /> Ajouter une vidéo
                         </Button>
                     </DialogTrigger>
@@ -408,7 +408,7 @@ function VideosManager() {
                 <TableHeader>
                     <TableRow>
                         <TableHead>Titre</TableHead>
-                        <TableHead>Date de publication</TableHead>
+                        <TableHead>Date</TableHead>
                         <TableHead>Vues</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -496,12 +496,12 @@ function GamesManager() {
     };
 
     return (
-        <NeumorphicCard inset className="p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold font-headline">Gestion de la Gamme</h2>
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Gestion de la Gamme</h2>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
                             <Plus className="mr-2 h-4 w-4" /> Ajouter un jeu
                         </Button>
                     </DialogTrigger>
@@ -560,18 +560,18 @@ function AdminPageContent() {
     const [searchTerm, setSearchTerm] = useState('');
 
     return (
-        <div className="container mx-auto px-4 py-16 sm:py-24">
-            <NeumorphicCard className="max-w-7xl mx-auto">
-                <div className="flex items-center gap-4 mb-2">
+        <div className="container mx-auto px-0 sm:px-4 py-8 sm:py-16">
+            <div className="sm:p-6 sm:rounded-2xl sm:neumorphic-card-light sm:dark:neumorphic-card-dark">
+                <div className="flex items-center gap-4 mb-2 px-4 sm:px-0">
                     <Shield className="w-8 h-8 text-primary" />
-                    <h1 className="text-4xl font-bold font-headline">Panneau d'administration</h1>
+                    <h1 className="text-3xl sm:text-4xl font-bold font-headline">Panneau d'administration</h1>
                 </div>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground mb-4 px-4 sm:px-0">
                     Gérez le contenu de votre site web à partir de cet espace.
                 </p>
 
-                <div className="relative mb-8">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <div className="relative my-8 px-4 sm:px-0">
+                    <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Rechercher par nom, email, code promo..."
                         value={searchTerm}
@@ -581,41 +581,43 @@ function AdminPageContent() {
                 </div>
 
 
-                <Tabs defaultValue="slides">
-                    <TabsList className="mb-8 grid w-full grid-cols-6">
-                        <TabsTrigger value="slides">Slides</TabsTrigger>
-                        <TabsTrigger value="internet">Internet</TabsTrigger>
-                        <TabsTrigger value="tv">TV</TabsTrigger>
-                        <TabsTrigger value="games">Gamme</TabsTrigger>
-                        <TabsTrigger value="submissions">Demandes</TabsTrigger>
-                        <TabsTrigger value="partners">Partenaires</TabsTrigger>
+                <Tabs defaultValue="slides" className="w-full" orientation="vertical">
+                    <TabsList className="mb-8 w-full h-auto flex-col items-start gap-1 p-2 bg-transparent sm:bg-muted sm:rounded-lg sm:dark:bg-muted/50">
+                        <TabsTrigger value="slides" className="w-full justify-start data-[state=active]:bg-background">Slides</TabsTrigger>
+                        <TabsTrigger value="internet" className="w-full justify-start data-[state=active]:bg-background">Internet</TabsTrigger>
+                        <TabsTrigger value="tv" className="w-full justify-start data-[state=active]:bg-background">TV</TabsTrigger>
+                        <TabsTrigger value="games" className="w-full justify-start data-[state=active]:bg-background">Gamme</TabsTrigger>
+                        <TabsTrigger value="submissions" className="w-full justify-start data-[state=active]:bg-background">Demandes</TabsTrigger>
+                        <TabsTrigger value="partners" className="w-full justify-start data-[state=active]:bg-background">Partenaires</TabsTrigger>
                     </TabsList>
                     
-                    <TabsContent value="slides">
-                        <SlidesManager />
-                    </TabsContent>
+                    <div className="px-4 sm:px-0 sm:pl-4 w-full">
+                        <TabsContent value="slides" className="mt-0">
+                            <SlidesManager />
+                        </TabsContent>
 
-                    <TabsContent value="internet">
-                        <ProjectsManager />
-                    </TabsContent>
+                        <TabsContent value="internet" className="mt-0">
+                            <ProjectsManager />
+                        </TabsContent>
 
-                    <TabsContent value="tv">
-                        <VideosManager />
-                    </TabsContent>
+                        <TabsContent value="tv" className="mt-0">
+                            <VideosManager />
+                        </TabsContent>
 
-                    <TabsContent value="games">
-                        <GamesManager />
-                    </TabsContent>
+                        <TabsContent value="games" className="mt-0">
+                            <GamesManager />
+                        </TabsContent>
 
-                    <TabsContent value="submissions">
-                        <SubmissionsManager searchTerm={searchTerm} />
-                    </TabsContent>
+                        <TabsContent value="submissions" className="mt-0">
+                            <SubmissionsManager searchTerm={searchTerm} />
+                        </TabsContent>
 
-                    <TabsContent value="partners">
-                        <PartnersManager searchTerm={searchTerm} />
-                    </TabsContent>
+                        <TabsContent value="partners" className="mt-0">
+                            <PartnersManager searchTerm={searchTerm} />
+                        </TabsContent>
+                    </div>
                 </Tabs>
-            </NeumorphicCard>
+            </div>
         </div>
     );
 }

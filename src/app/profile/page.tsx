@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -117,7 +118,7 @@ function ReplyForm({ avisId, onReplySuccess }: { avisId: string, onReplySuccess:
   };
   
   return (
-     <form onSubmit={handleSubmit} className="mt-4 ml-8">
+     <form onSubmit={handleSubmit} className="mt-4 ml-4 sm:ml-8">
         <NeumorphicCard inset className="p-2">
             <Textarea
                 placeholder="Votre réponse..."
@@ -164,7 +165,7 @@ function AvisItem({ avis }: { avis: Avis }) {
       </div>
       
       {reponses && reponses.length > 0 && (
-         <div className="ml-8 mt-4 space-y-4">
+         <div className="ml-4 sm:ml-8 mt-4 space-y-4">
            {reponses.map(reponse => (
              <div key={reponse.id} className="flex items-start gap-3">
                 <CornerDownRight className="h-4 w-4 mt-1 text-muted-foreground shrink-0"/>
@@ -246,8 +247,8 @@ function ProfilePageContent() {
   const isAdmin = user?.email === 'grasdvirus@gmail.com';
 
   return (
-    <div className="container mx-auto px-4 py-16 sm:py-24 space-y-8">
-      <NeumorphicCard className="max-w-4xl mx-auto relative">
+    <div className="container mx-auto px-0 sm:px-4 py-8 sm:py-16 space-y-8">
+      <NeumorphicCard className="max-w-4xl mx-auto relative p-4 sm:p-6">
         {user && (
             <Button
             variant="ghost"
@@ -262,9 +263,9 @@ function ProfilePageContent() {
             <LogOut className="h-[1.2rem] w-[1.2rem]" />
             </Button>
         )}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
-          <div className="relative w-32 h-32 sm:w-40 sm:h-40 shrink-0">
-             <NeumorphicCard className="w-full h-full rounded-full p-2">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-8">
+          <div className="relative w-24 h-24 sm:w-40 sm:h-40 shrink-0">
+             <NeumorphicCard className="w-full h-full rounded-full p-1 sm:p-2">
                 <Avatar className='w-full h-full text-4xl'>
                     <AvatarImage src={user?.photoURL || '/favico.png'} alt={user?.displayName || 'Avatar'} />
                     <AvatarFallback className='bg-muted'>
@@ -273,8 +274,8 @@ function ProfilePageContent() {
                 </Avatar>
             </NeumorphicCard>
           </div>
-          <div className="text-center sm:text-left w-full">
-            <h1 className="text-4xl font-bold font-headline">{ user?.displayName || 'Jean Dupont' }</h1>
+          <div className="text-center sm:text-left w-full mt-4 sm:mt-0">
+            <h1 className="text-3xl sm:text-4xl font-bold font-headline">{ user?.displayName || 'Jean Dupont' }</h1>
             <div className="mt-4 flex flex-col items-center sm:items-start gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
@@ -292,13 +293,13 @@ function ProfilePageContent() {
       </NeumorphicCard>
 
       {isAdmin && (
-        <NeumorphicCard className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between">
+        <NeumorphicCard className="max-w-4xl mx-auto p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl font-bold font-headline">Administration</h2>
+                    <h2 className="text-lg sm:text-xl font-bold font-headline">Administration</h2>
                     <p className="text-muted-foreground text-sm mt-1">Accéder au panneau d'administration.</p>
                 </div>
-                <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
                     <Link href="/admin">
                         <Shield className="mr-2 h-4 w-4" />
                         Panneau d'administration
@@ -308,13 +309,13 @@ function ProfilePageContent() {
         </NeumorphicCard>
       )}
 
-      <NeumorphicCard className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between">
+      <NeumorphicCard className="max-w-4xl mx-auto p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h2 className="text-xl font-bold font-headline">Informations</h2>
+                <h2 className="text-lg sm:text-xl font-bold font-headline">Informations</h2>
                 <p className="text-muted-foreground text-sm mt-1">En savoir plus sur notre projet.</p>
             </div>
-            <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+            <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
                 <Link href="/about">
                     <Info className="mr-2 h-4 w-4" />
                     À propos de cristan
@@ -323,9 +324,9 @@ function ProfilePageContent() {
         </div>
       </NeumorphicCard>
 
-      <NeumorphicCard className="max-w-4xl mx-auto">
+      <NeumorphicCard className="max-w-4xl mx-auto p-4 sm:p-6">
         <div>
-          <h2 className="text-xl font-bold font-headline">Fonctionnalités & Avis</h2>
+          <h2 className="text-lg sm:text-xl font-bold font-headline">Fonctionnalités & Avis</h2>
           <p className="text-muted-foreground text-sm mt-1">Découvrez les nouveautés et partagez votre opinion.</p>
         </div>
         <Separator className="my-6" />

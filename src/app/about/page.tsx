@@ -11,10 +11,10 @@ import { BookOpen, HelpCircle, Zap } from 'lucide-react';
 
 export default function AboutPage() {
   return (
-    <div className="container mx-auto px-4 py-16 sm:py-24">
-      <NeumorphicCard className="max-w-5xl mx-auto">
+    <div className="container mx-auto px-0 sm:px-4 py-16 sm:py-24">
+      <NeumorphicCard className="max-w-5xl mx-auto p-4 sm:p-6 md:p-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold font-headline">À Propos de Cristan</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold font-headline">À Propos de Cristan</h1>
           <p className="text-muted-foreground mt-2">
             Découvrez notre histoire, notre mission et comment nous fonctionnons.
           </p>
@@ -27,7 +27,7 @@ export default function AboutPage() {
               <BookOpen className="w-8 h-8 text-primary" />
               <h2 className="text-2xl font-bold font-headline">Notre Histoire</h2>
             </div>
-            <NeumorphicCard inset className="p-6">
+            <NeumorphicCard inset className="p-4 sm:p-6">
               <p className="text-muted-foreground leading-relaxed">
                 Cristan est né de la passion pour le design épuré et la technologie performante. Notre mission est de fournir des solutions web esthétiques et fonctionnelles qui se démarquent par leur simplicité et leur élégance. Nous avons commencé comme un petit projet explorant le neumorphisme et avons évolué vers une plateforme complète offrant des sites vitrines, des applications e-commerce et des portfolios pour créatifs, le tout avec une identité visuelle unique.
               </p>
@@ -42,7 +42,7 @@ export default function AboutPage() {
               <Zap className="w-8 h-8 text-primary" />
               <h2 className="text-2xl font-bold font-headline">Comment ça marche ?</h2>
             </div>
-             <NeumorphicCard inset className="p-6">
+             <NeumorphicCard inset className="p-4 sm:p-6">
               <p className="text-muted-foreground leading-relaxed">
                 Notre processus est simple et transparent. Parcourez nos modèles de projets, choisissez celui qui correspond à vos besoins, puis remplissez le formulaire de commande. Notre équipe vous contactera pour affiner les détails et lancer la production. Nous vous tenons informé à chaque étape, de la conception au déploiement, pour garantir que le produit final dépasse vos attentes.
               </p>
@@ -55,7 +55,7 @@ export default function AboutPage() {
           <section>
              <div className="flex items-center gap-4 mb-4">
                 <HelpCircle className="w-8 h-8 text-primary" />
-                <h2 className="text-2xl font-bold font-headline">Questions Fréquemment Posées (FAQ)</h2>
+                <h2 className="text-2xl font-bold font-headline">Questions Fréquemment Posées</h2>
             </div>
             <NeumorphicCard inset className="p-4 sm:p-6">
                 <Accordion type="single" collapsible className="w-full">
