@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
@@ -9,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
-import { ExternalLink, Trash2 } from 'lucide-react';
+import { ExternalLink, Trash2, Code } from 'lucide-react';
 import { Button } from '../ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
@@ -59,7 +60,7 @@ export function SubmissionsManager() {
                                 <TableHead>Type</TableHead>
                                 <TableHead>Nom</TableHead>
                                 <TableHead>Email</TableHead>
-                                <TableHead>Téléphone</TableHead>
+                                <TableHead>Code Promo</TableHead>
                                 <TableHead>Projet Lié</TableHead>
                                 <TableHead>Détails</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
@@ -76,7 +77,13 @@ export function SubmissionsManager() {
                                     </TableCell>
                                     <TableCell>{submission.fullName}</TableCell>
                                     <TableCell><a href={`mailto:${submission.email}`} className="hover:underline text-primary">{submission.email}</a></TableCell>
-                                    <TableCell>{submission.phone}</TableCell>
+                                    <TableCell>
+                                        {submission.promoCode ? (
+                                            <span className='flex items-center gap-1 font-mono text-sm'><Code className='w-4 h-4 text-muted-foreground'/>{submission.promoCode}</span>
+                                        ) : (
+                                            '-'
+                                        )}
+                                    </TableCell>
                                     <TableCell>
                                         {submission.projectId !== "N/A" ? (
                                             <Link href={`/projects/${submission.projectId}`} className="hover:underline text-primary flex items-center gap-1">

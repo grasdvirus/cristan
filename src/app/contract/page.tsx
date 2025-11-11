@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense } from 'react';
@@ -5,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { ContractForm } from '@/components/contract-form';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Gift } from 'lucide-react';
 import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { AuthGuard } from '@/components/auth-guard';
@@ -74,7 +75,19 @@ function ContractPageContent() {
              </NeumorphicCard>
          )}
 
-        <div className="mt-8 sm:p-0">
+        <NeumorphicCard className="my-8 mx-4 sm:mx-0 bg-green-100/50 dark:bg-green-900/30 border-l-4 border-green-500">
+          <div className="flex items-start gap-4">
+            <Gift className="h-6 w-6 text-green-600 dark:text-green-400 mt-1"/>
+            <div>
+              <h3 className="font-semibold text-green-800 dark:text-green-200">Astuce Promotionnelle</h3>
+              <p className="text-sm text-green-700 dark:text-green-300">
+                Utilisez un code promotionnel de l'un de nos partenaires pour bénéficier d'une réduction de 10% sur votre projet.
+              </p>
+            </div>
+          </div>
+        </NeumorphicCard>
+
+        <div className="sm:p-0">
             <ContractForm projectId={projectId} />
         </div>
       </div>
