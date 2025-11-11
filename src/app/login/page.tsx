@@ -12,6 +12,7 @@ import {
   signInWithRedirect,
   getRedirectResult,
   GoogleAuthProvider,
+  Auth,
 } from 'firebase/auth';
 import { useFirebase, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -77,40 +78,42 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
+  const [isProcessingRedirect, setIsProcessingRedirect] = useState(true);
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Effect to handle redirect result from Google Sign-In
   useEffect(() => {
-    if (!auth) return;
+    if (!auth) {
+        setIsProcessingRedirect(false);
+        return;
+    };
+    
     getRedirectResult(auth)
       .then((result) => {
         if (result) {
-          toast({ variant: 'success', title: 'Connexion réussie via Google !' });
-          // User will be redirected by the other useEffect
+          toast({ variant: 'success', title: 'Connexion via Google réussie !' });
+          // Redirection will be handled by the next useEffect
         }
       })
       .catch((error) => {
-        console.error("Redirect Error:", error);
+        console.error("Erreur de redirection Google:", error);
         toast({
           variant: 'destructive',
           title: 'Erreur de connexion',
-          description: "Impossible de finaliser la connexion avec Google.",
+          description: "La connexion avec Google n'a pas pu être finalisée.",
         });
       })
       .finally(() => {
-        setIsCheckingRedirect(false);
+        setIsProcessingRedirect(false);
       });
-  }, [auth, toast, router]);
+  }, [auth, toast]);
 
-  // Effect handles redirecting the user if they are logged in
   useEffect(() => {
-    if (!isUserLoading && !isCheckingRedirect && user) {
+    if (!isUserLoading && !isProcessingRedirect && user) {
         router.replace('/profile');
     }
-  }, [user, isUserLoading, isCheckingRedirect, router]);
+  }, [user, isUserLoading, isProcessingRedirect, router]);
 
   const form = useForm<SignUpFormValues | LoginFormValues>({
     resolver: zodResolver(isSignUp ? signUpSchema : loginSchema),
@@ -139,7 +142,6 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
         toast({ variant: "success", title: "Connexion réussie !"});
       }
-      // The useEffect hook will now handle redirection
     } catch (err: any) {
       let friendlyMessage = 'Une erreur est survenue.';
       switch(err.code) {
@@ -171,8 +173,18 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     if (!auth) return;
     const provider = new GoogleAuthProvider();
-    setIsSubmitting(true); // Show loading state before redirect
-    await signInWithRedirect(auth, provider);
+    setIsSubmitting(true);
+    try {
+        await signInWithRedirect(auth, provider);
+    } catch (error) {
+        console.error("Erreur au lancement de la redirection Google:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Erreur',
+            description: "Impossible de démarrer la connexion avec Google.",
+        });
+        setIsSubmitting(false);
+    }
   };
   
   const handlePasswordReset = async () => {
@@ -214,7 +226,7 @@ export default function LoginPage() {
   
   const { register, handleSubmit, formState: { errors } } = form;
 
-  if (isUserLoading || isCheckingRedirect || isSubmitting) {
+  if (isUserLoading || isProcessingRedirect || isSubmitting) {
       return <LoadingSpinner />;
   }
 
