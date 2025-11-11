@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,7 +13,6 @@ import {
   signInWithRedirect,
   getRedirectResult,
   GoogleAuthProvider,
-  Auth,
 } from 'firebase/auth';
 import { useFirebase, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -85,31 +85,41 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!auth) {
-        setIsProcessingRedirect(false);
-        return;
-    };
+      setIsProcessingRedirect(false);
+      return;
+    }
     
+    // This is the crucial part: it checks for the result of a redirect sign-in.
+    // It runs only once when the component mounts.
     getRedirectResult(auth)
       .then((result) => {
         if (result) {
+          // User successfully signed in.
           toast({ variant: 'success', title: 'Connexion via Google réussie !' });
-          // Redirection will be handled by the next useEffect
+          // The other useEffect will handle the redirection to /profile.
         }
       })
       .catch((error) => {
+        // Handle errors here. This could be due to the user closing the popup,
+        // network errors, or configuration issues.
         console.error("Erreur de redirection Google:", error);
-        toast({
-          variant: 'destructive',
-          title: 'Erreur de connexion',
-          description: "La connexion avec Google n'a pas pu être finalisée.",
-        });
+        if (error.code !== 'auth/cancelled-popup-request') {
+          toast({
+            variant: 'destructive',
+            title: 'Erreur de connexion Google',
+            description: "La connexion n'a pas pu être finalisée. Veuillez vérifier la configuration.",
+          });
+        }
       })
       .finally(() => {
+        // We're done checking for a redirect result.
         setIsProcessingRedirect(false);
       });
   }, [auth, toast]);
 
   useEffect(() => {
+    // This effect redirects the user if they are logged in.
+    // It waits for both user loading and redirect processing to be false.
     if (!isUserLoading && !isProcessingRedirect && user) {
         router.replace('/profile');
     }
@@ -142,6 +152,7 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, loginValues.email, loginValues.password);
         toast({ variant: "success", title: "Connexion réussie !"});
       }
+      // Redirection is handled by the useEffect watching the user state.
     } catch (err: any) {
       let friendlyMessage = 'Une erreur est survenue.';
       switch(err.code) {
@@ -173,8 +184,10 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     if (!auth) return;
     const provider = new GoogleAuthProvider();
-    setIsSubmitting(true);
+    setIsSubmitting(true); // Show loading state
     try {
+        // This will redirect the user to Google's sign-in page.
+        // The result is handled by the getRedirectResult useEffect.
         await signInWithRedirect(auth, provider);
     } catch (error) {
         console.error("Erreur au lancement de la redirection Google:", error);
@@ -183,7 +196,7 @@ export default function LoginPage() {
             title: 'Erreur',
             description: "Impossible de démarrer la connexion avec Google.",
         });
-        setIsSubmitting(false);
+        setIsSubmitting(false); // Stop loading on error
     }
   };
   
@@ -226,8 +239,16 @@ export default function LoginPage() {
   
   const { register, handleSubmit, formState: { errors } } = form;
 
+  // Show a loading spinner during the redirect check, initial user loading, or any submission.
   if (isUserLoading || isProcessingRedirect || isSubmitting) {
       return <LoadingSpinner />;
+  }
+
+  // If the user is already logged in (and we are not processing a redirect), they should not see this page.
+  // This is handled by the useEffect that calls router.replace('/profile').
+  // A return null here is a safeguard.
+  if (user) {
+    return null;
   }
 
   return (
