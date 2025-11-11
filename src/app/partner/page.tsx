@@ -468,14 +468,14 @@ function PartnerPageContent() {
                     </p>
 
                     <form onSubmit={handleCodeSubmit} className="mt-10 max-w-sm mx-auto space-y-4">
-                        <div className="relative">
+                       <div className="relative neumorphic-card-inset-light dark:neumorphic-card-inset-dark rounded-md">
                         <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input
                             type="text"
                             placeholder="Entrez votre code partenaire"
                             value={code}
                             onChange={(e) => setCode(e.target.value)}
-                            className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark pl-10"
+                            className="bg-transparent border-none pl-10 focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                         </div>
 
