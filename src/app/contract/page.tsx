@@ -20,7 +20,8 @@ type Project = {
 function ContractPageContent() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
-  const type = searchParams.get('type') || (projectId ? 'Projet' : 'Contact');
+  // This page is now only for 'Projet' or general 'Contact'
+  const type = 'Projet'; 
   
   const { firestore } = useFirebase();
   const projectRef = useMemoFirebase(() => {
@@ -30,13 +31,11 @@ function ContractPageContent() {
   const { data: project, isLoading } = useDoc<Project>(projectRef);
 
   const getTitle = () => {
-    if (type === 'partner') return 'Demande de Partenariat';
     if (project) return 'Formulaire de Commande';
     return 'Formulaire de Contact';
   }
 
   const getDescription = () => {
-    if (type === 'partner') return 'Remplissez ce formulaire pour finaliser votre demande de partenariat.';
     if (project) return 'Veuillez remplir les informations ci-dessous pour démarrer votre projet.';
     return 'Laissez-nous un message et nous vous recontacterons rapidement.'
   }
@@ -52,7 +51,7 @@ function ContractPageContent() {
                 className="absolute left-4 top-0 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                 aria-label="Retour"
             >
-                <Link href={type === 'partner' ? '/partner' : (projectId ? `/projects/${projectId}` : '/')}>
+                <Link href={projectId ? `/projects/${projectId}` : '/'}>
                     <ArrowLeft className="h-5 w-5" />
                 </Link>
             </Button>
@@ -76,7 +75,7 @@ function ContractPageContent() {
          )}
 
         <div className="mt-8 sm:p-0">
-            <ContractForm projectId={projectId} type={type} />
+            <ContractForm projectId={projectId} />
         </div>
       </div>
     </div>

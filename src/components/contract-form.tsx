@@ -19,6 +19,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { NeumorphicCard } from "./neumorphic-card"
 import { useFirebase } from "@/firebase"
 import { addDoc, collection, serverTimestamp } from "firebase/firestore"
+import { Loader2 } from "lucide-react"
 
 const formSchema = z.object({
   fullName: z.string().min(2, {
@@ -36,16 +37,17 @@ const formSchema = z.object({
   }).max(500, {
     message: "La description ne doit pas dépasser 500 caractères."
   }),
+  promoCode: z.string().optional(),
 })
 
 interface ContractFormProps {
     projectId: string | null;
-    type: string | null;
 }
 
-export function ContractForm({ projectId, type }: ContractFormProps) {
+export function ContractForm({ projectId }: ContractFormProps) {
     const { toast } = useToast();
     const { firestore } = useFirebase();
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -55,6 +57,7 @@ export function ContractForm({ projectId, type }: ContractFormProps) {
             phone: "",
             companyName: "",
             projectDetails: "",
+            promoCode: "",
         },
     })
 
@@ -63,16 +66,15 @@ export function ContractForm({ projectId, type }: ContractFormProps) {
             toast({
                 variant: "destructive",
                 title: "Erreur de base de données",
-                description: "La connexion à la base de données n'est pas disponible.",
             });
             return;
         }
-
+        setIsSubmitting(true);
         try {
             const submissionData = {
                 ...values,
                 projectId: projectId || "N/A",
-                type: type === 'partner' ? 'Partenariat' : 'Projet',
+                type: 'Projet',
                 createdAt: serverTimestamp()
             };
             await addDoc(collection(firestore, "submissions"), submissionData);
@@ -90,6 +92,8 @@ export function ContractForm({ projectId, type }: ContractFormProps) {
                 title: "Erreur",
                 description: "Impossible d'enregistrer votre demande. Veuillez réessayer.",
             });
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -157,7 +161,7 @@ export function ContractForm({ projectId, type }: ContractFormProps) {
                     name="projectDetails"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Détails de votre projet/partenariat</FormLabel>
+                        <FormLabel>Détails de votre projet</FormLabel>
                         <FormControl>
                             <Textarea
                                 placeholder="Décrivez brièvement vos besoins, vos objectifs, et toute autre information pertinente..."
@@ -173,11 +177,27 @@ export function ContractForm({ projectId, type }: ContractFormProps) {
                     )}
                     />
              </div>
+             <div className="mt-6">
+                <FormField
+                    control={form.control}
+                    name="promoCode"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Code Promo (Optionnel)</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Vous avez un code promo ?" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+             </div>
         </NeumorphicCard>
 
         <div className="flex justify-end px-4 sm:px-0">
-            <Button type="submit" size="lg" className="w-full sm:w-auto btn-neumorphic-light dark:btn-neumorphic-dark">
-                Soumettre la demande
+            <Button type="submit" size="lg" className="w-full sm:w-auto btn-neumorphic-light dark:btn-neumorphic-dark" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting ? 'Envoi...' : 'Soumettre la demande'}
             </Button>
         </div>
       </form>

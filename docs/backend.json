@@ -196,9 +196,16 @@
         "type": {
             "type": "string",
             "description": "Type of submission, e.g., 'Projet' or 'Partenariat'"
+        },
+        "socialLinks": {
+          "type": "array",
+          "items": { "type": "string", "format": "uri" }
+        },
+        "promoCode": {
+          "type": "string"
         }
       },
-      "required": ["id", "fullName", "email", "phone", "projectDetails", "projectId", "createdAt", "type"]
+      "required": ["fullName", "email", "phone", "createdAt", "type"]
     },
      "Avis": {
       "$schema": "http://json-schema.org/draft-07/schema#",
