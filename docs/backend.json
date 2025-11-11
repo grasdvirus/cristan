@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -42,13 +43,21 @@
         "googleId": {
           "type": "string",
           "description": "Google ID from google OAuth"
+        },
+        "displayName": {
+            "type": "string",
+            "description": "The user's display name, often from a social provider."
+        },
+        "photoURL": {
+            "type": "string",
+            "description": "The URL of the user's profile picture, often from a social provider.",
+            "format": "uri"
         }
       },
       "required": [
         "id",
         "name",
-        "email",
-        "bio"
+        "email"
       ]
     },
     "Video": {
@@ -182,12 +191,36 @@
         "description",
         "imageUrl"
       ]
+    },
+    "ContractSubmission": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ContractSubmission",
+        "type": "object",
+        "description": "Represents a submission from a contract or partner form.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the submission." },
+            "fullName": { "type": "string", "description": "Full name of the person submitting." },
+            "email": { "type": "string", "format": "email", "description": "Email address." },
+            "phone": { "type": "string", "description": "Phone number." },
+            "companyName": { "type": "string", "description": "Company name (optional)." },
+            "projectDetails": { "type": "string", "description": "Details about the project or partnership." },
+            "projectId": { "type": "string", "description": "ID of the related project, if applicable." },
+            "promoCode": { "type": "string", "description": "Promotional code used or suggested." },
+            "promoCodeUses": { "type": "number", "description": "Number of times the promo code has been used." },
+            "socialLinks": { "type": "array", "items": { "type": "string", "format": "uri" }, "description": "Social media links for partners." },
+            "type": { "type": "string", "description": "Type of submission, e.g., 'Projet' or 'Partenariat'." },
+            "status": { "type": "string", "enum": ["en attente", "confirmé", "refusé"], "description": "Status of the partnership request." },
+            "userId": { "type": "string", "description": "The Firebase Auth UID of the user who submitted the request." },
+            "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of the submission." }
+        },
+        "required": ["id", "fullName", "email", "phone", "projectDetails", "type", "createdAt", "status", "userId"]
     }
   },
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "google.com"
     ]
   },
   "firestore": {
@@ -281,6 +314,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to support a portfolio website with user profiles, videos, comments, likes, and frameworks. It emphasizes authorization independence and clear security rules. User profiles are stored in `/users/{userId}`, enabling path-based ownership for private user data. Videos and frameworks are stored in root-level collections (`/videos` and `/frameworks`) as they are not directly owned by individual users and are intended to be more globally accessible. Comments and Likes are stored as subcollections under `/videos/{videoId}` to represent the 1:N relationships. This structure avoids hierarchical authorization dependencies, ensuring that rules can be written without requiring `get()` calls to parent documents. For example, comment documents include `userProfileId` to check write access control. Security rules are simplified due to the structural segregation of user-specific data and global data. List operations are secured by ensuring that only authenticated users can access certain collections (e.g., `/users`)."
+    "reasoning": "The Firestore structure is designed to support a portfolio website with user profiles, videos, comments, likes, and frameworks. It emphasizes authorization independence and clear security rules. User profiles are stored in `/users/{userId}`, enabling path-based ownership for private user data. Videos and frameworks are stored in root-level collections (`/videos` and `/frameworks`) as they are not directly owned by individual users and are intended to be more globally accessible. Comments and Likes are stored as subcollections under `/videos/{videoId}` to represent the 1:N relationships. This structure avoids hierarchical authorization dependencies, ensuring that rules can be written without requiring `get()` calls to parent documents. For example, comment documents include `userProfileId` to check write access control. Security rules are simplified due to the structural segregation of user-specific data and global data. List operations are secured by ensuring that only authenticated users can access certain collections (e.g., `/users`). A new `ContractSubmission` entity has been added to handle both project contracts and partner requests, differentiated by a `type` field and managed by a `status` field for partner approvals."
   }
 }

@@ -3,16 +3,18 @@
 
 import { useState } from 'react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, increment } from 'firebase/firestore';
 import { ContractSubmission } from '@/app/admin/page';
 import { NeumorphicCard } from '../neumorphic-card';
 import { Skeleton } from '../ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Button } from '../ui/button';
 import { useToast } from '../ui/use-toast';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
-import { Minus, Plus, Trash2, Link as LinkIcon, User, Mail, Phone, Code } from 'lucide-react';
+import { Minus, Plus, Link as LinkIcon, User, Mail, Phone, Code, Check, X, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Badge } from '../ui/badge';
+import { cn } from '@/lib/utils';
 
 function PartnerDetails({ partner }: { partner: ContractSubmission }) {
     const { firestore } = useFirebase();
@@ -21,21 +23,13 @@ function PartnerDetails({ partner }: { partner: ContractSubmission }) {
     const handleUpdateUses = async (amount: number) => {
         if (!firestore) return;
         const partnerRef = doc(firestore, 'submissions', partner.id);
+        const currentUses = partner.promoCodeUses || 0;
+        if (currentUses + amount < 0) return;
+
         await updateDoc(partnerRef, {
             promoCodeUses: increment(amount)
         });
         toast({ variant: "success", title: "Compteur mis à jour!" });
-    };
-
-    const handleDelete = async (id: string) => {
-        if (!firestore) return;
-        try {
-            await deleteDoc(doc(firestore, 'submissions', id));
-            toast({ variant: 'success', title: 'Partenaire supprimé.' });
-        } catch (error) {
-            console.error('Error deleting partner', error);
-            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer le partenaire.' });
-        }
     };
 
     return (
@@ -69,32 +63,42 @@ function PartnerDetails({ partner }: { partner: ContractSubmission }) {
                     </Button>
                 </div>
             </div>
-            <div className="flex justify-end">
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Supprimer</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
-                        <AlertDialogDescription>Cette action est irréversible et supprimera définitivement ce partenaire.</AlertDialogDescription>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(partner.id)}>Supprimer</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </div>
         </NeumorphicCard>
     );
 }
 
+const statusColors = {
+    "en attente": "bg-yellow-500",
+    "confirmé": "bg-green-500",
+    "refusé": "bg-red-500",
+};
+
+const statusIcons = {
+    "en attente": <Clock className="h-4 w-4" />,
+    "confirmé": <Check className="h-4 w-4" />,
+    "refusé": <X className="h-4 w-4" />,
+};
+
 export function PartnersManager() {
     const { firestore } = useFirebase();
+    const { toast } = useToast();
     const partnersQuery = useMemoFirebase(
         () => firestore ? query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat')) : null,
         [firestore]
     );
     const { data: partners, isLoading } = useCollection<ContractSubmission>(partnersQuery);
+    
+    const handleStatusChange = async (id: string, status: 'en attente' | 'confirmé' | 'refusé') => {
+        if (!firestore) return;
+        const partnerRef = doc(firestore, 'submissions', id);
+        try {
+            await updateDoc(partnerRef, { status });
+            toast({ variant: 'success', title: 'Statut mis à jour !'});
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour le statut.' });
+        }
+    };
+
 
     return (
         <NeumorphicCard inset className="p-6">
@@ -105,21 +109,72 @@ export function PartnersManager() {
                     <Skeleton className="h-12 w-full" />
                 </div>
             ) : partners && partners.length > 0 ? (
-                <Accordion type="single" collapsible className="w-full">
-                    {partners.map((partner) => (
-                        <AccordionItem value={partner.id} key={partner.id}>
-                            <AccordionTrigger>
-                                <div className="flex justify-between w-full pr-4">
-                                    <span className="font-medium">{partner.fullName}</span>
-                                    <span className="text-muted-foreground font-mono">{partner.promoCode}</span>
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <PartnerDetails partner={partner} />
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Nom</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Code Promo Suggéré</TableHead>
+                                <TableHead>Statut</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {partners.map((partner) => (
+                            <Accordion key={partner.id} type="single" collapsible asChild>
+                                <AccordionItem value={partner.id} asChild>
+                                    <>
+                                    <TableRow className="w-full">
+                                        <TableCell className="font-medium">{partner.fullName}</TableCell>
+                                        <TableCell>{partner.email}</TableCell>
+                                        <TableCell><span className="font-mono">{partner.promoCode}</span></TableCell>
+                                        <TableCell>
+                                            <Badge className={cn(
+                                                "capitalize",
+                                                partner.status === 'confirmé' && 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300',
+                                                partner.status === 'en attente' && 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-yellow-300',
+                                                partner.status === 'refusé' && 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300'
+                                            )} variant="outline">
+                                                {partner.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right flex items-center justify-end gap-2">
+                                             <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="outline" size="sm">Gérer</Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'confirmé')}>
+                                                        <Check className="mr-2 h-4 w-4 text-green-500"/> Confirmer
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'refusé')}>
+                                                        <X className="mr-2 h-4 w-4 text-red-500"/> Refuser
+                                                    </DropdownMenuItem>
+                                                     <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'en attente')}>
+                                                        <Clock className="mr-2 h-4 w-4 text-yellow-500"/> Mettre en attente
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                            <AccordionTrigger className="p-2 hover:bg-accent rounded-md [&[data-state=open]>svg]:rotate-90">
+                                                <span className="sr-only">Voir les détails</span>
+                                            </AccordionTrigger>
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="p-0">
+                                            <AccordionContent>
+                                                <PartnerDetails partner={partner} />
+                                            </AccordionContent>
+                                        </TableCell>
+                                    </TableRow>
+                                    </>
+                                </AccordionItem>
+                            </Accordion>
+                        ))}
+                        </TableBody>
+                    </Table>
+                </div>
             ) : (
                 <p className="text-center text-muted-foreground py-8">Aucune demande de partenariat pour le moment.</p>
             )}

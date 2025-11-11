@@ -83,6 +83,8 @@ export type ContractSubmission = {
     promoCodeUses?: number;
     socialLinks?: string[];
     type?: string;
+    status: 'en attente' | 'confirmé' | 'refusé';
+    userId: string;
 };
 
 
