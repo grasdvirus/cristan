@@ -21,7 +21,7 @@
  * - User profiles are strictly private.
  * - Public content (videos, projects, slides, games) is readable by anyone.
  * - Write operations on public content are disallowed from the client.
- * - Form submissions are write-only for authenticated users.
+ * - Form submissions are write-only for authenticated users, but readable by admin.
  * - Comments and likes can be created by any authenticated user.
  */
 rules_version = '2';
@@ -30,6 +30,10 @@ service cloud.firestore {
 
     function isSignedIn() {
       return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return request.auth.token.email == 'grasdvirus@gmail.com';
     }
 
     match /users/{userId}/{document=**} {
@@ -60,7 +64,7 @@ service cloud.firestore {
     }
 
     match /submissions/{submissionId} {
-        allow read, delete: if false;
+        allow read, delete: if isAdmin();
         allow create: if isSignedIn();
         allow update: if false;
     }
