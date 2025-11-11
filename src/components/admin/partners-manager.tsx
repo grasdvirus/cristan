@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import React from 'react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, updateDoc, increment } from 'firebase/firestore';
 import { ContractSubmission } from '@/app/admin/page';
@@ -15,7 +16,7 @@ import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 function PartnerDetails({ partner }: { partner: ContractSubmission }) {
     const { firestore } = useFirebase();
@@ -80,15 +81,11 @@ const statusIcons = {
     "refusé": <X className="h-4 w-4" />,
 };
 
-export function PartnersManager() {
+function PartnerRow({ partner }: { partner: ContractSubmission }) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
-    const partnersQuery = useMemoFirebase(
-        () => firestore ? query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat')) : null,
-        [firestore]
-    );
-    const { data: partners, isLoading } = useCollection<ContractSubmission>(partnersQuery);
-    
+    const [isOpen, setIsOpen] = useState(false);
+
     const handleStatusChange = async (id: string, status: 'en attente' | 'confirmé' | 'refusé') => {
         if (!firestore) return;
         const partnerRef = doc(firestore, 'submissions', id);
@@ -100,7 +97,75 @@ export function PartnersManager() {
         }
     };
 
+    return (
+        <React.Fragment>
+            <TableRow data-state={isOpen ? 'open' : 'closed'}>
+                <TableCell className="font-medium">{partner.fullName}</TableCell>
+                <TableCell>{partner.email}</TableCell>
+                <TableCell><span className="font-mono">{partner.promoCode}</span></TableCell>
+                <TableCell>
+                    <Badge className={cn(
+                        "capitalize",
+                        partner.status === 'confirmé' && 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300',
+                        partner.status === 'en attente' && 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-yellow-300',
+                        partner.status === 'refusé' && 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300'
+                    )} variant="outline">
+                        {partner.status}
+                    </Badge>
+                </TableCell>
+                <TableCell className="text-right flex items-center justify-end gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">Gérer</Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'confirmé')}>
+                                <Check className="mr-2 h-4 w-4 text-green-500"/> Confirmer
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'refusé')}>
+                                <X className="mr-2 h-4 w-4 text-red-500"/> Refuser
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'en attente')}>
+                                <Clock className="mr-2 h-4 w-4 text-yellow-500"/> Mettre en attente
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="p-2 hover:bg-accent rounded-md [&[data-state=open]>svg]:rotate-90"
+                    >
+                         <svg className="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="sr-only">Voir les détails</span>
+                    </Button>
+                </TableCell>
+            </TableRow>
+            {isOpen && (
+                <TableRow>
+                    <TableCell colSpan={5} className="p-0">
+                        <div className="p-4">
+                            <PartnerDetails partner={partner} />
+                        </div>
+                    </TableCell>
+                </TableRow>
+            )}
+        </React.Fragment>
+    );
+}
 
+
+export function PartnersManager() {
+    const { firestore } = useFirebase();
+    
+    const partnersQuery = useMemoFirebase(
+        () => firestore ? query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat')) : null,
+        [firestore]
+    );
+    const { data: partners, isLoading } = useCollection<ContractSubmission>(partnersQuery);
+    
     return (
         <NeumorphicCard inset className="p-6">
             <h2 className="text-2xl font-bold font-headline mb-4">Demandes de Partenariat</h2>
@@ -123,55 +188,7 @@ export function PartnersManager() {
                         </TableHeader>
                         <TableBody>
                         {partners.map((partner) => (
-                            <Accordion key={partner.id} type="single" collapsible asChild>
-                                <AccordionItem value={partner.id} asChild>
-                                    <div className="contents">
-                                        <TableRow className="w-full">
-                                            <TableCell className="font-medium">{partner.fullName}</TableCell>
-                                            <TableCell>{partner.email}</TableCell>
-                                            <TableCell><span className="font-mono">{partner.promoCode}</span></TableCell>
-                                            <TableCell>
-                                                <Badge className={cn(
-                                                    "capitalize",
-                                                    partner.status === 'confirmé' && 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300',
-                                                    partner.status === 'en attente' && 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-yellow-300',
-                                                    partner.status === 'refusé' && 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300'
-                                                )} variant="outline">
-                                                    {partner.status}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right flex items-center justify-end gap-2">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="outline" size="sm">Gérer</Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent>
-                                                        <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'confirmé')}>
-                                                            <Check className="mr-2 h-4 w-4 text-green-500"/> Confirmer
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'refusé')}>
-                                                            <X className="mr-2 h-4 w-4 text-red-500"/> Refuser
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'en attente')}>
-                                                            <Clock className="mr-2 h-4 w-4 text-yellow-500"/> Mettre en attente
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                                <AccordionTrigger className="p-2 hover:bg-accent rounded-md [&[data-state=open]>svg]:rotate-90">
-                                                    <span className="sr-only">Voir les détails</span>
-                                                </AccordionTrigger>
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell colSpan={5} className="p-0">
-                                                <AccordionContent>
-                                                    <PartnerDetails partner={partner} />
-                                                </AccordionContent>
-                                            </TableCell>
-                                        </TableRow>
-                                    </div>
-                                </AccordionItem>
-                            </Accordion>
+                            <PartnerRow key={partner.id} partner={partner} />
                         ))}
                         </TableBody>
                     </Table>
