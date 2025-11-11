@@ -3,7 +3,8 @@
  *
  * Core Philosophy:
  * This ruleset enforces a user-ownership model for user profiles, allowing each authenticated user to manage their own profile data.
- * Videos are publicly accessible, but creating, updating, or deleting them is not allowed through client-side rules.
+ * Videos, Projects, Slides, and Games are publicly accessible for reading.
+ * Creating, updating, or deleting content is restricted to prevent unauthorized client-side modifications.
  * Comments and likes are associated with videos and are secured by requiring a valid user ID.
  *
  * Data Structure:
@@ -11,92 +12,74 @@
  * - /videos/{videoId}: Stores video metadata.
  * - /videos/{videoId}/comments/{commentId}: Stores comments for each video.
  * - /videos/{videoId}/likes/{likeId}: Stores likes for each video.
+ * - /slides/{slideId}: Stores hero carousel slides.
+ * - /projects/{projectId}: Stores project details.
+ * - /games/{gameId}: Stores game/affiliate information.
+ * - /submissions/{submissionId}: Stores user-submitted forms.
  *
  * Key Security Decisions:
- * - User profiles are strictly private; only the owning user can read or write their profile data.
- * - Videos are publicly readable.
- * - Comments and likes can be created by any authenticated user for any video.
- * - Listing of comments and likes is allowed for any user.
- *
- * Denormalization for Authorization:
- * The 'Comment' and 'Like' entities include the 'userProfileId' field to enable direct association with a user, avoiding the need for complex `get()` calls to the `/users/{userId}/userProfile` collection during authorization checks.
+ * - User profiles are strictly private.
+ * - Public content (videos, projects, slides, games) is readable by anyone.
+ * - Write operations on public content are disallowed from the client.
+ * - Form submissions are write-only for authenticated users.
+ * - Comments and likes can be created by any authenticated user.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Secures user profile data, ensuring only the owning user can access it.
-     * @path /users/{userId}/userProfile
-     * @allow (get, create, update, delete, list) if the request is made by the user with matching {userId}.
-     * @deny (get, create, update, delete, list) if the request is made by a different user.
-     * @principle Enforces document ownership for all operations.
-     */
-    match /users/{userId}/userProfile {
-      function isOwner(userId) {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    match /users/{userId}/{document=**} {
+      function isOwner() {
         return request.auth != null && request.auth.uid == userId;
       }
-
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow read, write: if isOwner();
+    }
+    
+    match /slides/{slideId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
     }
 
-    /**
-     * @description Allows public read access to video metadata. Write operations are forbidden through client-side rules.
-     * @path /videos/{videoId}
-     * @allow (get, list) to everyone.
-     * @deny (create, update, delete) to everyone.
-     * @principle Allows public read access while restricting write access.
-     */
+    match /projects/{projectId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+    
     match /videos/{videoId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
 
-    /**
-     * @description Secures comments for a specific video, allowing any authenticated user to create comments.
-     * @path /videos/{videoId}/comments/{commentId}
-     * @allow (get, list, create) to any authenticated user.
-     * @deny (update, delete) to everyone.
-     */
+    match /games/{gameId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
+    match /submissions/{submissionId} {
+        allow read, delete: if false;
+        allow create: if isSignedIn();
+        allow update: if false;
+    }
+
+    match /avis/{avisId}/{document=**} {
+       allow read: if true;
+       allow create, update, delete: if isSignedIn();
+    }
+
     match /videos/{videoId}/comments/{commentId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
       allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
+      allow update, delete: if false;
     }
 
-    /**
-     * @description Secures likes for a specific video, allowing any authenticated user to create likes.
-     * @path /videos/{videoId}/likes/{likeId}
-     * @allow (get, list, create) to any authenticated user.
-     * @deny (update, delete) to everyone.
-     */
     match /videos/{videoId}/likes/{likeId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
       allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
+      allow update, delete: if false;
     }
   }
 }
