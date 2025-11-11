@@ -125,51 +125,51 @@ export function PartnersManager() {
                         {partners.map((partner) => (
                             <Accordion key={partner.id} type="single" collapsible asChild>
                                 <AccordionItem value={partner.id} asChild>
-                                    <>
-                                    <TableRow className="w-full">
-                                        <TableCell className="font-medium">{partner.fullName}</TableCell>
-                                        <TableCell>{partner.email}</TableCell>
-                                        <TableCell><span className="font-mono">{partner.promoCode}</span></TableCell>
-                                        <TableCell>
-                                            <Badge className={cn(
-                                                "capitalize",
-                                                partner.status === 'confirmé' && 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300',
-                                                partner.status === 'en attente' && 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-yellow-300',
-                                                partner.status === 'refusé' && 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300'
-                                            )} variant="outline">
-                                                {partner.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right flex items-center justify-end gap-2">
-                                             <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="outline" size="sm">Gérer</Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'confirmé')}>
-                                                        <Check className="mr-2 h-4 w-4 text-green-500"/> Confirmer
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'refusé')}>
-                                                        <X className="mr-2 h-4 w-4 text-red-500"/> Refuser
-                                                    </DropdownMenuItem>
-                                                     <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'en attente')}>
-                                                        <Clock className="mr-2 h-4 w-4 text-yellow-500"/> Mettre en attente
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                            <AccordionTrigger className="p-2 hover:bg-accent rounded-md [&[data-state=open]>svg]:rotate-90">
-                                                <span className="sr-only">Voir les détails</span>
-                                            </AccordionTrigger>
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="p-0">
-                                            <AccordionContent>
-                                                <PartnerDetails partner={partner} />
-                                            </AccordionContent>
-                                        </TableCell>
-                                    </TableRow>
-                                    </>
+                                    <div className="contents">
+                                        <TableRow className="w-full">
+                                            <TableCell className="font-medium">{partner.fullName}</TableCell>
+                                            <TableCell>{partner.email}</TableCell>
+                                            <TableCell><span className="font-mono">{partner.promoCode}</span></TableCell>
+                                            <TableCell>
+                                                <Badge className={cn(
+                                                    "capitalize",
+                                                    partner.status === 'confirmé' && 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300',
+                                                    partner.status === 'en attente' && 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-yellow-300',
+                                                    partner.status === 'refusé' && 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300'
+                                                )} variant="outline">
+                                                    {partner.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right flex items-center justify-end gap-2">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="outline" size="sm">Gérer</Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent>
+                                                        <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'confirmé')}>
+                                                            <Check className="mr-2 h-4 w-4 text-green-500"/> Confirmer
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'refusé')}>
+                                                            <X className="mr-2 h-4 w-4 text-red-500"/> Refuser
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'en attente')}>
+                                                            <Clock className="mr-2 h-4 w-4 text-yellow-500"/> Mettre en attente
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                                <AccordionTrigger className="p-2 hover:bg-accent rounded-md [&[data-state=open]>svg]:rotate-90">
+                                                    <span className="sr-only">Voir les détails</span>
+                                                </AccordionTrigger>
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="p-0">
+                                                <AccordionContent>
+                                                    <PartnerDetails partner={partner} />
+                                                </AccordionContent>
+                                            </TableCell>
+                                        </TableRow>
+                                    </div>
                                 </AccordionItem>
                             </Accordion>
                         ))}
