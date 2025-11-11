@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { addDoc, collection, serverTimestamp, query, where, doc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, query, where, doc, updateDoc, increment } from 'firebase/firestore';
 import Link from 'next/link';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
@@ -19,7 +19,7 @@ import { AuthGuard } from '@/components/auth-guard';
 import { ContractSubmission } from '@/app/admin/page';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -502,3 +502,5 @@ export default function PartnerPage() {
         </AuthGuard>
     )
 }
+
+    
