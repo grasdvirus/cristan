@@ -1,7 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, updateDoc, increment } from 'firebase/firestore';
 import { ContractSubmission } from '@/app/admin/page';
@@ -92,18 +92,6 @@ function PartnerDetails({ partner }: { partner: ContractSubmission }) {
     );
 }
 
-const statusColors = {
-    "en attente": "bg-yellow-500",
-    "confirmé": "bg-green-500",
-    "refusé": "bg-red-500",
-};
-
-const statusIcons = {
-    "en attente": <Clock className="h-4 w-4" />,
-    "confirmé": <Check className="h-4 w-4" />,
-    "refusé": <X className="h-4 w-4" />,
-};
-
 function PartnerRow({ partner }: { partner: ContractSubmission }) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
@@ -121,7 +109,7 @@ function PartnerRow({ partner }: { partner: ContractSubmission }) {
     };
 
     return (
-        <>
+        <React.Fragment>
             <TableRow data-state={isOpen ? 'open' : 'closed'} className="cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
                 <TableCell className="font-medium">{partner.fullName}</TableCell>
                 <TableCell>{partner.email}</TableCell>
@@ -159,19 +147,19 @@ function PartnerRow({ partner }: { partner: ContractSubmission }) {
             </TableRow>
             {isOpen && (
                 <TableRow>
-                    <TableCell colSpan={5} className="p-0">
+                    <TableCell colSpan={5} className="p-0 bg-muted/50">
                         <div className="p-4">
                             <PartnerDetails partner={partner} />
                         </div>
                     </TableCell>
                 </TableRow>
             )}
-        </>
+        </React.Fragment>
     );
 }
 
 
-export function PartnersManager() {
+export function PartnersManager({ searchTerm }: { searchTerm: string }) {
     const { firestore } = useFirebase();
     
     const partnersQuery = useMemoFirebase(
@@ -180,6 +168,18 @@ export function PartnersManager() {
     );
     const { data: partners, isLoading } = useCollection<ContractSubmission>(partnersQuery);
     
+    const filteredPartners = useMemo(() => {
+        if (!partners) return [];
+        if (!searchTerm) return partners;
+
+        return partners.filter(p =>
+            p.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (p.promoCode && p.promoCode.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+    }, [partners, searchTerm]);
+
+
     return (
         <NeumorphicCard inset className="p-6">
             <h2 className="text-2xl font-bold font-headline mb-4">Demandes de Partenariat</h2>
@@ -188,7 +188,7 @@ export function PartnersManager() {
                     <Skeleton className="h-12 w-full" />
                     <Skeleton className="h-12 w-full" />
                 </div>
-            ) : partners && partners.length > 0 ? (
+            ) : filteredPartners && filteredPartners.length > 0 ? (
                 <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
@@ -201,14 +201,16 @@ export function PartnersManager() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                        {partners.map((partner) => (
+                        {filteredPartners.map((partner) => (
                             <PartnerRow key={partner.id} partner={partner} />
                         ))}
                         </TableBody>
                     </Table>
                 </div>
             ) : (
-                <p className="text-center text-muted-foreground py-8">Aucune demande de partenariat pour le moment.</p>
+                <p className="text-center text-muted-foreground py-8">
+                    {searchTerm ? "Aucun partenaire ne correspond à votre recherche." : "Aucune demande de partenariat pour le moment."}
+                </p>
             )}
         </NeumorphicCard>
     );

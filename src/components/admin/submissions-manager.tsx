@@ -1,6 +1,7 @@
 
 'use client';
 
+import React, { useMemo } from 'react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { ContractSubmission } from '@/app/admin/page';
@@ -16,7 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '../ui/badge';
 
-export function SubmissionsManager() {
+export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
     const submissionsQuery = useMemoFirebase(
@@ -24,6 +25,18 @@ export function SubmissionsManager() {
         [firestore]
     );
     const { data: submissions, isLoading } = useCollection<ContractSubmission & { type?: string }>(submissionsQuery);
+
+    const filteredSubmissions = useMemo(() => {
+        if (!submissions) return [];
+        const projectSubmissions = submissions.filter(s => s.type !== 'Partenariat');
+        if (!searchTerm) return projectSubmissions;
+
+        return projectSubmissions.filter(s => 
+            s.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (s.promoCode && s.promoCode.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+    }, [submissions, searchTerm]);
 
     const formatDate = (timestamp: ContractSubmission['createdAt'] | null) => {
         if (!timestamp) return 'Date inconnue';
@@ -67,7 +80,7 @@ export function SubmissionsManager() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {submissions?.map((submission) => (
+                            {filteredSubmissions?.map((submission) => (
                                 <TableRow key={submission.id}>
                                     <TableCell className="font-medium whitespace-nowrap">{formatDate(submission.createdAt)}</TableCell>
                                     <TableCell>
@@ -115,8 +128,10 @@ export function SubmissionsManager() {
                     </Table>
                 </div>
             )}
-            {!isLoading && submissions?.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">Aucune demande pour le moment.</p>
+            {!isLoading && filteredSubmissions?.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">
+                    {searchTerm ? "Aucune demande ne correspond à votre recherche." : "Aucune demande pour le moment."}
+                </p>
             )}
         </NeumorphicCard>
     );

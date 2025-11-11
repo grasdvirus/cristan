@@ -11,7 +11,7 @@ import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit, Plus, Shield, Trash2 } from 'lucide-react';
+import { Edit, Plus, Shield, Trash2, Search } from 'lucide-react';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -25,6 +25,7 @@ import { SubmissionsManager } from '@/components/admin/submissions-manager';
 import { PartnersManager } from '@/components/admin/partners-manager';
 import { convertToEmbedUrl } from '@/lib/utils';
 import { AuthGuard } from '@/components/auth-guard';
+import { Input } from '@/components/ui/input';
 
 // Define types based on backend.json
 export type Slide = {
@@ -556,16 +557,29 @@ function GamesManager() {
 }
 
 function AdminPageContent() {
+    const [searchTerm, setSearchTerm] = useState('');
+
     return (
         <div className="container mx-auto px-4 py-16 sm:py-24">
             <NeumorphicCard className="max-w-7xl mx-auto">
-                <div className="flex items-center gap-4 mb-8">
+                <div className="flex items-center gap-4 mb-2">
                     <Shield className="w-8 h-8 text-primary" />
                     <h1 className="text-4xl font-bold font-headline">Panneau d'administration</h1>
                 </div>
-                <p className="text-muted-foreground mb-8">
+                <p className="text-muted-foreground mb-4">
                     Gérez le contenu de votre site web à partir de cet espace.
                 </p>
+
+                <div className="relative mb-8">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Rechercher par nom, email, code promo..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9 neumorphic-card-inset-light dark:neumorphic-card-inset-dark"
+                    />
+                </div>
+
 
                 <Tabs defaultValue="slides">
                     <TabsList className="mb-8 grid w-full grid-cols-6">
@@ -594,11 +608,11 @@ function AdminPageContent() {
                     </TabsContent>
 
                     <TabsContent value="submissions">
-                        <SubmissionsManager />
+                        <SubmissionsManager searchTerm={searchTerm} />
                     </TabsContent>
 
                     <TabsContent value="partners">
-                        <PartnersManager />
+                        <PartnersManager searchTerm={searchTerm} />
                     </TabsContent>
                 </Tabs>
             </NeumorphicCard>

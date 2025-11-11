@@ -8,9 +8,6 @@ import ProjectsGrid from '@/components/sections/projects-grid';
 import VideosGrid from '@/components/sections/videos-grid';
 import GamesGrid from '@/components/sections/games-grid';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { Plus } from 'lucide-react';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('sites');
@@ -23,15 +20,6 @@ export default function Home() {
       setActiveTab(value);
     }
   };
-
-  const getSeeMoreLink = () => {
-    switch (activeTab) {
-        case 'sites': return '/internet';
-        case 'videos': return '/tv';
-        case 'games': return '/gamme';
-        default: return '/';
-    }
-  }
 
   return (
     <div>
@@ -75,15 +63,6 @@ export default function Home() {
           {activeTab === 'sites' && <ProjectsGrid />}
           {activeTab === 'videos' && <VideosGrid />}
           {activeTab === 'games' && <GamesGrid />}
-
-           <div className="mt-12 text-center">
-                <Button asChild className="btn-neumorphic-light dark:btn-neumorphic-dark">
-                    <Link href={getSeeMoreLink()}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Voir plus
-                    </Link>
-                </Button>
-            </div>
         </div>
       </div>
     </div>
