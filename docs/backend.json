@@ -1,279 +1,154 @@
-
 {
   "entities": {
-    "Slide": {
+    "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Slide",
+      "title": "UserProfile",
       "type": "object",
-      "description": "Represents a slide in the hero carousel.",
+      "description": "Represents a user's profile information.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the slide."
+          "description": "Unique identifier for the UserProfile entity."
         },
-        "description": {
+        "bio": {
           "type": "string",
-          "description": "The main text/title displayed on the slide."
+          "description": "A short biography of the user."
         },
-        "imageUrl": {
+        "skills": {
           "type": "string",
-          "description": "URL of the background image for the slide.",
-          "format": "uri"
+          "description": "A list of skills that the user possesses."
         },
-        "imageHint": {
+        "contactInformation": {
           "type": "string",
-          "description": "AI hint for the image."
+          "description": "Contact information for the user."
+        },
+        "themePreference": {
+          "type": "string",
+          "description": "The user's preferred theme (e.g., light, dark, system)."
         }
       },
-      "required": ["id", "description", "imageUrl"]
-    },
-    "Project": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Project",
-      "type": "object",
-      "description": "Represents a project in the 'Internet' section.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the project."
-        },
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "longDescription": {
-          "type": "string"
-        },
-        "price": {
-          "type": "string"
-        },
-        "technologies": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "liveUrl": {
-          "type": "string",
-          "format": "uri"
-        },
-        "imageUrl": {
-          "type": "string",
-          "format": "uri"
-        },
-        "imageHint": {
-          "type": "string"
-        }
-      },
-      "required": ["id", "title", "description", "longDescription", "price", "technologies", "imageUrl"]
+      "required": [
+        "id"
+      ]
     },
     "Video": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Video",
       "type": "object",
-      "description": "Represents a video in the 'TV' section.",
+      "description": "Represents an embedded video.",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "description": "Unique identifier for the Video entity."
         },
         "title": {
-          "type": "string"
+          "type": "string",
+          "description": "The title of the video."
         },
-        "uploadDate": {
-          "type": "string"
-        },
-        "views": {
-          "type": "string"
+        "embedUrl": {
+          "type": "string",
+          "description": "The URL of the embedded video.",
+          "format": "uri"
         },
         "description": {
-          "type": "string"
-        },
-        "videoUrl": {
           "type": "string",
-          "format": "uri"
-        },
-        "thumbnailUrl": {
-          "type": "string",
-          "format": "uri"
-        },
-        "thumbnailHint": {
-          "type": "string"
+          "description": "A description of the video."
         }
       },
-      "required": ["id", "title", "description", "videoUrl", "thumbnailUrl"]
+      "required": [
+        "id",
+        "title",
+        "embedUrl"
+      ]
     },
-    "Game": {
+    "Comment": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Game",
+      "title": "Comment",
       "type": "object",
-      "description": "Represents a game for affiliation.",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "category": {
-          "type": "string"
-        },
-        "affiliateUrl": {
-          "type": "string",
-          "format": "uri"
-        },
-        "imageUrl": {
-          "type": "string",
-          "format": "uri"
-        },
-        "imageHint": {
-          "type": "string"
-        }
-      },
-      "required": ["id", "title", "description", "category", "affiliateUrl", "imageUrl"]
-    },
-    "UserProfile": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "UserProfile",
-      "type": "object",
-      "description": "Represents a user's profile.",
-      "properties": {
-        "bio": {
-          "type": "string",
-          "description": "User's biography."
-        },
-        "skills": {
-          "type": "array",
-          "description": "List of user's skills.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "contactInfo": {
-          "type": "string",
-          "description": "User's contact information."
-        }
-      },
-      "required": ["bio", "skills", "contactInfo"]
-    },
-    "ContractSubmission": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ContractSubmission",
-      "type": "object",
-      "description": "Represents a submission from the contract form.",
+      "description": "Represents a comment on a video.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the submission."
+          "description": "Unique identifier for the Comment entity."
         },
-        "fullName": {
-          "type": "string"
-        },
-        "email": {
+        "videoId": {
           "type": "string",
-          "format": "email"
+          "description": "Reference to Video. (Relationship: Video 1:N Comment)"
         },
-        "phone": {
-          "type": "string"
+        "userProfileId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Comment)"
         },
-        "companyName": {
-          "type": "string"
-        },
-        "projectDetails": {
-          "type": "string"
-        },
-        "projectId": {
-          "type": "string"
+        "text": {
+          "type": "string",
+          "description": "The text of the comment."
         },
         "createdAt": {
-            "type": "string",
-            "format": "date-time"
-        },
-        "type": {
-            "type": "string",
-            "description": "Type of submission, e.g., 'Projet' or 'Partenariat'"
-        },
-        "socialLinks": {
-          "type": "array",
-          "items": { "type": "string", "format": "uri" }
-        },
-        "promoCode": {
-          "type": "string"
+          "type": "string",
+          "description": "The date and time the comment was created.",
+          "format": "date-time"
         }
       },
-      "required": ["fullName", "email", "phone", "createdAt", "type"]
+      "required": [
+        "id",
+        "videoId",
+        "userProfileId",
+        "text",
+        "createdAt"
+      ]
     },
-     "Avis": {
+    "Like": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Avis",
+      "title": "Like",
       "type": "object",
-      "description": "Represents a review/comment left by a user.",
+      "description": "Represents a like on a video.",
       "properties": {
-        "id": { "type": "string" },
-        "text": { "type": "string" },
-        "userId": { "type": "string" },
-        "userName": { "type": "string" },
-        "userPhotoURL": { "type": "string", "format": "uri" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Like entity."
+        },
+        "videoId": {
+          "type": "string",
+          "description": "Reference to Video. (Relationship: Video 1:N Like)"
+        },
+        "userProfileId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Like)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time the like was created.",
+          "format": "date-time"
+        }
       },
-      "required": ["id", "text", "userId", "userName", "createdAt"]
-    },
-    "ReponseAvis": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ReponseAvis",
-      "type": "object",
-      "description": "Represents a reply to a review/comment.",
-      "properties": {
-        "id": { "type": "string" },
-        "avisId": { "type": "string" },
-        "text": { "type": "string" },
-        "userId": { "type": "string" },
-        "userName": { "type": "string" },
-        "userPhotoURL": { "type": "string", "format": "uri" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "avisId", "text", "userId", "userName", "createdAt"]
+      "required": [
+        "id",
+        "videoId",
+        "userProfileId",
+        "createdAt"
+      ]
     }
   },
   "auth": {
     "providers": [
       "password",
-      "anonymous",
-      "google.com"
+      "anonymous"
     ]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/slides/{slideId}",
+        "path": "/users/{userId}/userProfile",
         "definition": {
+          "entityName": "UserProfile",
           "schema": {
-            "$ref": "#/entities/Slide"
+            "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores hero carousel slides.",
+          "description": "Stores user profile information. Uses path-based ownership; only the user with the matching userId can access the profile.",
           "params": [
             {
-              "name": "slideId",
-              "description": "Unique identifier for the slide."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/projects/{projectId}",
-        "definition": {
-          "schema": {
-            "$ref": "#/entities/Project"
-          },
-          "description": "Stores internet projects.",
-          "params": [
-            {
-              "name": "projectId",
-              "description": "Unique identifier for the project."
+              "name": "userId",
+              "description": "The unique identifier of the user."
             }
           ]
         }
@@ -281,86 +156,60 @@
       {
         "path": "/videos/{videoId}",
         "definition": {
+          "entityName": "Video",
           "schema": {
-            "$ref": "#/entities/Video"
+            "$ref": "#/backend/entities/Video"
           },
-          "description": "Stores TV videos.",
+          "description": "Stores video information.",
           "params": [
             {
               "name": "videoId",
-              "description": "Unique identifier for the video."
+              "description": "The unique identifier of the video."
             }
           ]
         }
       },
       {
-        "path": "/games/{gameId}",
+        "path": "/videos/{videoId}/comments/{commentId}",
         "definition": {
+          "entityName": "Comment",
           "schema": {
-            "$ref": "#/entities/Game"
+            "$ref": "#/backend/entities/Comment"
           },
-          "description": "Stores affiliate games.",
+          "description": "Stores comments for a specific video. Includes denormalized 'userProfileId' for authorization independence.",
           "params": [
             {
-              "name": "gameId",
-              "description": "Unique identifier for the game."
+              "name": "videoId",
+              "description": "The unique identifier of the video."
+            },
+            {
+              "name": "commentId",
+              "description": "The unique identifier of the comment."
             }
           ]
         }
       },
       {
-        "path": "/users/{userId}",
+        "path": "/videos/{videoId}/likes/{likeId}",
         "definition": {
+          "entityName": "Like",
           "schema": {
-            "$ref": "#/entities/UserProfile"
+            "$ref": "#/backend/entities/Like"
           },
-          "description": "Stores user profile information.",
+          "description": "Stores likes for a specific video. Includes denormalized 'userProfileId' for authorization independence.",
           "params": [
             {
-              "name": "userId",
-              "description": "Unique identifier for the user."
+              "name": "videoId",
+              "description": "The unique identifier of the video."
+            },
+            {
+              "name": "likeId",
+              "description": "The unique identifier of the like."
             }
           ]
         }
-      },
-       {
-        "path": "/submissions/{submissionId}",
-        "definition": {
-          "schema": {
-            "$ref": "#/entities/ContractSubmission"
-          },
-          "description": "Stores contract form submissions.",
-          "params": [
-            {
-              "name": "submissionId",
-              "description": "Unique identifier for the submission."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/avis/{avisId}",
-        "definition": {
-          "schema": { "$ref": "#/entities/Avis" },
-          "description": "Stores user reviews/comments.",
-          "params": [
-            { "name": "avisId", "description": "Unique identifier for the review." }
-          ]
-        },
-        "subcollections": [
-            {
-                "path": "/avis/{avisId}/reponses/{reponseId}",
-                "definition": {
-                    "schema": { "$ref": "#/entities/ReponseAvis"},
-                    "description": "Stores replies to a specific review.",
-                    "params": [
-                        { "name": "avisId", "description": "ID of the parent review." },
-                        { "name": "reponseId", "description": "Unique identifier for the reply."}
-                    ]
-                }
-            }
-        ]
       }
-    ]
+    ],
+    "reasoning": "The Firestore structure is designed to support a personal portfolio site with video showcasing, user profiles, and interactive elements like likes and comments. Authorization independence is achieved through path-based ownership for user profiles and denormalization of userProfileId in comments and likes, allowing secure data access without complex `get()` calls. Segregation is achieved by separating user-specific data (profiles) from video-related data, simplifying security rules. The structure facilitates QAPs by enabling direct listing of videos and comments/likes associated with each video, secured by path-based rules. Path-based ownership is used for user profiles (`/users/{userId}/userProfile`) ensuring only the authenticated user can access their profile."
   }
 }
