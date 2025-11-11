@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -20,7 +21,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { NeumorphicCard } from "./neumorphic-card"
-import { useFirebase } from "@/firebase"
+import { useFirebase, useUser } from "@/firebase"
 import { addDoc, collection, serverTimestamp } from "firebase/firestore"
 import { Loader2, PartyPopper } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -50,7 +51,7 @@ interface ContractFormProps {
 
 export function ContractForm({ projectId }: ContractFormProps) {
     const { toast } = useToast();
-    const { firestore } = useFirebase();
+    const { firestore, user } = useFirebase();
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [showSuccessDialog, setShowSuccessDialog] = React.useState(false);
@@ -68,10 +69,11 @@ export function ContractForm({ projectId }: ContractFormProps) {
     })
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        if (!firestore) {
+        if (!firestore || !user) {
             toast({
                 variant: "destructive",
                 title: "Erreur de base de données",
+                description: "Utilisateur non authentifié.",
             });
             return;
         }
@@ -81,6 +83,8 @@ export function ContractForm({ projectId }: ContractFormProps) {
                 ...values,
                 projectId: projectId || "N/A",
                 type: 'Projet',
+                userId: user.uid,
+                status: 'Nouveau',
                 createdAt: serverTimestamp()
             };
             await addDoc(collection(firestore, "submissions"), submissionData);

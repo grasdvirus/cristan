@@ -210,7 +210,7 @@
             "promoCodeTotalUses": { "type": "number", "description": "Lifetime total uses of the promo code." },
             "socialLinks": { "type": "array", "items": { "type": "string", "format": "uri" }, "description": "Social media links for partners." },
             "type": { "type": "string", "description": "Type of submission, e.g., 'Projet' or 'Partenariat'." },
-            "status": { "type": "string", "enum": ["en attente", "confirmé", "refusé"], "description": "Status of the partnership request." },
+            "status": { "type": "string", "enum": ["en attente", "confirmé", "refusé", "Nouveau", "Vu", "En cours", "Terminé"], "description": "Status of the partnership or project request." },
             "userId": { "type": "string", "description": "The Firebase Auth UID of the user who submitted the request." },
             "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of the submission." }
         },

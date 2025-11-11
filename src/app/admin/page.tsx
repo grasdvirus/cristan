@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -85,7 +86,7 @@ export type ContractSubmission = {
     promoCodeTotalUses?: number;
     socialLinks?: string[];
     type?: string;
-    status: 'en attente' | 'confirmé' | 'refusé';
+    status: 'en attente' | 'confirmé' | 'refusé' | 'Nouveau' | 'Vu' | 'En cours' | 'Terminé';
     userId: string;
 };
 
