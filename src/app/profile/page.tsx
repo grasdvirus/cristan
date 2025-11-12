@@ -2,7 +2,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Mail, LogOut, KeyRound, Info, MessageSquare, Send, Shield, CornerDownRight } from 'lucide-react';
+import { Mail, LogOut, KeyRound, Info, MessageSquare, Send, Shield, CornerDownRight, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
@@ -244,7 +244,7 @@ function ProfilePageContent() {
     return name[0].toUpperCase();
   }
 
-  const isAdmin = user?.email === 'grasdvirus@gmail.com';
+  const isAdmin = user?.email === 'grasdvirus@gmail.com' || user?.email === 'christianvirus77@gmail.com';
 
   return (
     <div className="container mx-auto px-0 sm:px-4 py-8 sm:py-16 space-y-8">
@@ -331,12 +331,20 @@ function ProfilePageContent() {
         </div>
         <Separator className="my-6" />
 
-        <div className="space-y-6">
+        <div className="space-y-8">
             <div>
-                <h3 className="font-semibold mb-2">Nouvelle fonctionnalité : Thème Sombre Intelligent</h3>
-                <p className="text-sm text-muted-foreground">
-                    Votre application choisit désormais automatiquement entre le thème clair et le thème sombre en fonction de l'heure de la journée pour un confort visuel optimal.
-                </p>
+                <h3 className="font-semibold mb-4 flex items-center gap-2"><Zap className="w-5 h-5 text-primary"/> Dernières fonctionnalités</h3>
+                <ul className="space-y-3 text-sm text-muted-foreground list-disc list-inside">
+                    <li>
+                        <span className="font-semibold text-foreground">Programme Partenaire :</span> Devenez partenaire, obtenez un code promo et suivez vos gains depuis un tableau de bord dédié.
+                    </li>
+                    <li>
+                        <span className="font-semibold text-foreground">Système d'Avis Interactif :</span> Laissez votre avis sur nos services et répondez aux commentaires des autres utilisateurs.
+                    </li>
+                    <li>
+                        <span className="font-semibold text-foreground">Thème Sombre Intelligent :</span> L'application choisit désormais automatiquement entre le thème clair et le thème sombre en fonction de l'heure de la journée pour un confort visuel optimal.
+                    </li>
+                </ul>
             </div>
              <Separator className="my-4" />
             <AvisForm />

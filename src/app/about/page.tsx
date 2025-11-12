@@ -7,7 +7,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
-import { BookOpen, HelpCircle, Zap, ArrowLeft } from 'lucide-react';
+import { BookOpen, HelpCircle, Zap, ArrowLeft, Handshake } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -60,6 +60,35 @@ export default function AboutPage() {
               <p className="text-muted-foreground leading-relaxed">
                 Notre processus est simple et transparent. Parcourez nos modèles de projets, choisissez celui qui correspond à vos besoins, puis remplissez le formulaire de commande. Notre équipe vous contactera pour affiner les détails et lancer la production. Nous vous tenons informé à chaque étape, de la conception au déploiement, pour garantir que le produit final dépasse vos attentes.
               </p>
+            </NeumorphicCard>
+          </section>
+
+          <Separator />
+
+           {/* Section Partenariat */}
+          <section>
+            <div className="flex items-center gap-4 mb-4">
+              <Handshake className="w-8 h-8 text-primary" />
+              <h2 className="text-2xl font-bold font-headline">Devenir Partenaire</h2>
+            </div>
+             <NeumorphicCard inset className="p-4 sm:p-6">
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                    Rejoignez notre programme de partenariat pour bénéficier d'avantages exclusifs et collaborer avec nous. Voici comment procéder :
+                </p>
+                <ol className="list-decimal list-inside space-y-3 text-muted-foreground">
+                    <li>
+                        <span className="font-semibold text-foreground">Accédez à la section Partenariat :</span> Depuis la page d'accueil, cliquez sur l'onglet "Partenariat" pour commencer.
+                    </li>
+                    <li>
+                        <span className="font-semibold text-foreground">Entrez le code d'accès :</span> Pour accéder au formulaire, vous devrez entrer le code d'accès partenaire. Le code est <span className="font-mono text-primary p-1 rounded-md bg-muted">CRISTAN-PAT</span>.
+                    </li>
+                    <li>
+                        <span className="font-semibold text-foreground">Remplissez le formulaire :</span> Fournissez vos informations, vos liens vers les réseaux sociaux et le code promotionnel que vous aimeriez utiliser.
+                    </li>
+                    <li>
+                        <span className="font-semibold text-foreground">Attendez la confirmation :</span> Notre équipe examinera votre demande. Une fois approuvée, vous aurez accès à votre tableau de bord partenaire pour suivre les utilisations de votre code et vos récompenses.
+                    </li>
+                </ol>
             </NeumorphicCard>
           </section>
 
