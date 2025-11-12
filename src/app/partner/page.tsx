@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useForm as useHookForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
@@ -24,6 +24,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
 
+const partnerCodeSchema = z.object({
+  code: z.string().min(1, "Le code est requis."),
+});
+
 const partnerFormSchema = z.object({
   fullName: z.string().min(2, 'Le nom est requis.'),
   email: z.string().email('Email invalide.'),
@@ -32,15 +36,18 @@ const partnerFormSchema = z.object({
   promoCode: z.string().min(3, 'Le code doit avoir au moins 3 caractères.').max(15, 'Le code ne doit pas dépasser 15 caractères.'),
 });
 
+type PartnerCodeValues = z.infer<typeof partnerCodeSchema>;
 type PartnerFormValues = z.infer<typeof partnerFormSchema>;
 
 function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
-    const [code, setCode] = useState('');
     const { toast } = useToast();
+    const form = useHookForm<PartnerCodeValues>({
+        resolver: zodResolver(partnerCodeSchema),
+        defaultValues: { code: "" }
+    });
 
-    const handleCodeSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (code === PARTNER_CODE) {
+    const handleCodeSubmit = (values: PartnerCodeValues) => {
+        if (values.code === PARTNER_CODE) {
             onCodeVerified();
             toast({
                 variant: 'success',
@@ -53,6 +60,7 @@ function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
                 title: 'Code invalide',
                 description: 'Le code que vous avez entré est incorrect.',
             });
+            form.setError("code", { message: "Code incorrect." });
         }
     };
 
@@ -69,22 +77,34 @@ function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
                     Pour accéder au formulaire de partenariat, veuillez entrer le code d'accès qui vous a été fourni.
                 </p>
 
-                <form onSubmit={handleCodeSubmit} className="mt-10 max-w-sm mx-auto space-y-4">
-                    <div className="relative neumorphic-card-inset-light dark:neumorphic-card-inset-dark rounded-md">
-                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            placeholder="Entrez votre code partenaire"
-                            value={code}
-                            onChange={(e) => setCode(e.target.value)}
-                            className="bg-transparent border-none pl-10 focus-visible:ring-0 focus-visible:ring-offset-0"
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleCodeSubmit)} className="mt-10 max-w-sm mx-auto space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="code"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <div className="relative neumorphic-card-inset-light dark:neumorphic-card-inset-dark rounded-md">
+                                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                        <FormControl>
+                                            <Input
+                                                type="text"
+                                                placeholder="Entrez votre code partenaire"
+                                                className="bg-transparent border-none pl-10 focus-visible:ring-0 focus-visible:ring-offset-0"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                    </div>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
                         />
-                    </div>
-                    <Button type="submit" size="lg" className="w-full btn-neumorphic-light dark:btn-neumorphic-dark font-bold text-lg">
-                        Vérifier le code
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                </form>
+                        <Button type="submit" size="lg" className="w-full btn-neumorphic-light dark:btn-neumorphic-dark font-bold text-lg">
+                            Vérifier le code
+                            <ArrowRight className="ml-2 h-5 w-5" />
+                        </Button>
+                    </form>
+                </Form>
             </div>
         </div>
     );
@@ -511,3 +531,4 @@ export default function PartnerPage() {
 }
 
     
+
