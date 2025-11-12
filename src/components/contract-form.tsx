@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -23,9 +22,8 @@ import { useToast } from "@/components/ui/use-toast"
 import { NeumorphicCard } from "./neumorphic-card"
 import { useFirebase, useCollection, useMemoFirebase } from "@/firebase"
 import { addDoc, collection, serverTimestamp, query, where } from "firebase/firestore"
-import { Loader2, PartyPopper, ChevronDown } from "lucide-react"
+import { Loader2, PartyPopper } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ContractSubmission } from "@/app/admin/page"
 
 const formSchema = z.object({
@@ -57,7 +55,7 @@ export function ContractForm({ projectId }: ContractFormProps) {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [showSuccessDialog, setShowSuccessDialog] = React.useState(false);
-
+    
     const partnersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(
@@ -67,6 +65,7 @@ export function ContractForm({ projectId }: ContractFormProps) {
         );
     }, [firestore]);
     const { data: partners, isLoading: isLoadingPartners } = useCollection<ContractSubmission>(partnersQuery);
+
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -209,21 +208,24 @@ export function ContractForm({ projectId }: ContractFormProps) {
                     name="promoCode"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Code Promo (Optionnel)</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingPartners}>
+                            <FormLabel>Code Promo (Optionnel)</FormLabel>
                             <FormControl>
-                            <SelectTrigger className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark">
-                                <SelectValue placeholder={isLoadingPartners ? "Chargement des codes..." : "Sélectionner un code partenaire"} />
-                            </SelectTrigger>
+                                <>
+                                    <Input 
+                                        placeholder={isLoadingPartners ? "Chargement..." : "Entrez un code promo"} 
+                                        {...field}
+                                        list="promo-codes"
+                                        className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" 
+                                        disabled={isLoadingPartners}
+                                    />
+                                    <datalist id="promo-codes">
+                                        {partners?.map(partner => (
+                                            partner.promoCode && <option key={partner.id} value={partner.promoCode} />
+                                        ))}
+                                    </datalist>
+                                </>
                             </FormControl>
-                            <SelectContent>
-                                <SelectItem value="">Aucun code</SelectItem>
-                                {partners?.map(partner => (
-                                    partner.promoCode && <SelectItem key={partner.id} value={partner.promoCode}>{partner.promoCode}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
+                            <FormMessage />
                         </FormItem>
                     )}
                 />
