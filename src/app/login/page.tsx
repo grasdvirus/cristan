@@ -112,6 +112,7 @@ export default function LoginPage() {
   }, [auth, toast]);
 
   useEffect(() => {
+    // Redirect if user object is available and redirect processing is done.
     if (!isUserLoading && !isProcessingRedirect && user) {
         router.replace('/profile');
     }
@@ -176,7 +177,6 @@ export default function LoginPage() {
     if (!auth) return;
     const provider = new GoogleAuthProvider();
     try {
-        // No need to set isSubmitting to true here, as the page will redirect away.
         await signInWithRedirect(auth, provider);
     } catch (error) {
         console.error("Erreur au lancement de la redirection Google:", error);
@@ -231,11 +231,13 @@ export default function LoginPage() {
       return <LoadingSpinner />;
   }
 
-  // If user exists after loading states are resolved, the other useEffect will redirect.
-  // We can return null here to avoid a flash of the login form.
+  // If user object becomes available, the useEffect hook will redirect.
+  // We can return a loading spinner here to avoid a flash of the login form
+  // if the user is already logged in.
   if (user) {
     return <LoadingSpinner />;
   }
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
