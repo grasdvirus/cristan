@@ -29,7 +29,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     function isAdmin() {
-      return request.auth != null && (request.auth.token.email == 'grasdvirus@gmail.com' || request.auth.token.email == 'christianvirus77@gmail.com');
+      return request.auth != null && (request.auth.token.email == 'grasdvirus@gmail.com' || request.auth.token.email == 'christianvirus77@gmail.com' || request.auth.token.email == 'devcristan3@gmail.com');
     }
 
     match /users/{userId} {
