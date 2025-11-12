@@ -210,21 +210,19 @@ export function ContractForm({ projectId }: ContractFormProps) {
                         <FormItem>
                             <FormLabel>Code Promo (Optionnel)</FormLabel>
                             <FormControl>
-                                <>
-                                    <Input 
-                                        placeholder={isLoadingPartners ? "Chargement..." : "Entrez un code promo"} 
-                                        {...field}
-                                        list="promo-codes"
-                                        className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" 
-                                        disabled={isLoadingPartners}
-                                    />
-                                    <datalist id="promo-codes">
-                                        {partners?.map(partner => (
-                                            partner.promoCode && <option key={partner.id} value={partner.promoCode} />
-                                        ))}
-                                    </datalist>
-                                </>
+                                <Input 
+                                    placeholder={isLoadingPartners ? "Chargement..." : "Entrez un code promo"} 
+                                    {...field}
+                                    list="promo-codes"
+                                    className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" 
+                                    disabled={isLoadingPartners}
+                                />
                             </FormControl>
+                            <datalist id="promo-codes">
+                                {partners?.map(partner => (
+                                    partner.promoCode && <option key={partner.id} value={partner.promoCode} />
+                                ))}
+                            </datalist>
                             <FormMessage />
                         </FormItem>
                     )}
