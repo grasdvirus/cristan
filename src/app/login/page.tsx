@@ -92,6 +92,7 @@ export default function LoginPage() {
     getRedirectResult(auth)
       .then((result) => {
         if (result) {
+          // User is signed in. Let the other useEffect handle the redirect.
           toast({ variant: 'success', title: 'Connexion via Google réussie !' });
         }
       })
@@ -175,6 +176,7 @@ export default function LoginPage() {
     if (!auth) return;
     const provider = new GoogleAuthProvider();
     try {
+        // No need to set isSubmitting to true here, as the page will redirect away.
         await signInWithRedirect(auth, provider);
     } catch (error) {
         console.error("Erreur au lancement de la redirection Google:", error);
@@ -229,8 +231,10 @@ export default function LoginPage() {
       return <LoadingSpinner />;
   }
 
+  // If user exists after loading states are resolved, the other useEffect will redirect.
+  // We can return null here to avoid a flash of the login form.
   if (user) {
-    return null;
+    return <LoadingSpinner />;
   }
 
   return (
@@ -248,8 +252,8 @@ export default function LoginPage() {
             className="w-full btn-neumorphic-light dark:btn-neumorphic-dark"
             size="lg"
         >
-            {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5" />}
-            {isSubmitting ? 'Redirection...' : 'Continuer avec Google'}
+            <GoogleIcon className="mr-2 h-5 w-5" />
+            Continuer avec Google
         </Button>
 
         <div className="flex items-center my-6">
@@ -345,7 +349,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
-
-    
