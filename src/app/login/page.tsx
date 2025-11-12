@@ -174,7 +174,6 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     if (!auth) return;
     const provider = new GoogleAuthProvider();
-    setIsSubmitting(true);
     try {
         await signInWithRedirect(auth, provider);
     } catch (error) {
@@ -184,7 +183,6 @@ export default function LoginPage() {
             title: 'Erreur',
             description: "Impossible de démarrer la connexion avec Google.",
         });
-        setIsSubmitting(false);
     }
   };
   
@@ -347,5 +345,7 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
 
     
