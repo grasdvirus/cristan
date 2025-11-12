@@ -34,6 +34,62 @@ const partnerFormSchema = z.object({
 
 type PartnerFormValues = z.infer<typeof partnerFormSchema>;
 
+function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
+    const [code, setCode] = useState('');
+    const { toast } = useToast();
+
+    const handleCodeSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (code === PARTNER_CODE) {
+            onCodeVerified();
+            toast({
+                variant: 'success',
+                title: 'Code valide !',
+                description: 'Vous pouvez maintenant remplir le formulaire.',
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Code invalide',
+                description: 'Le code que vous avez entré est incorrect.',
+            });
+        }
+    };
+
+    return (
+        <div className="text-center px-4 sm:px-0">
+            <div className="sm:neumorphic-card-light sm:dark:neumorphic-card-dark max-w-2xl mx-auto sm:p-8 rounded-2xl">
+                <div className="flex justify-center mb-6">
+                    <NeumorphicCard className="rounded-full p-4">
+                        <Handshake className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
+                    </NeumorphicCard>
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-bold font-headline">Devenez Partenaire</h1>
+                <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
+                    Pour accéder au formulaire de partenariat, veuillez entrer le code d'accès qui vous a été fourni.
+                </p>
+
+                <form onSubmit={handleCodeSubmit} className="mt-10 max-w-sm mx-auto space-y-4">
+                    <div className="relative neumorphic-card-inset-light dark:neumorphic-card-inset-dark rounded-md">
+                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            placeholder="Entrez votre code partenaire"
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            className="bg-transparent border-none pl-10 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                    </div>
+                    <Button type="submit" size="lg" className="w-full btn-neumorphic-light dark:btn-neumorphic-dark font-bold text-lg">
+                        Vérifier le code
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                </form>
+            </div>
+        </div>
+    );
+}
+
 function PartnerForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: PartnerFormValues) => void, isSubmitting: boolean }) {
   const form = useForm<PartnerFormValues>({
     resolver: zodResolver(partnerFormSchema),
@@ -327,7 +383,6 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
 }
 
 function PartnerPageContent() {
-  const [code, setCode] = useState('');
   const [isCodeVerified, setIsCodeVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -348,25 +403,6 @@ function PartnerPageContent() {
   const pendingPartner = partnerData?.find(p => p.status === 'en attente');
   const refusedPartner = partnerData?.find(p => p.status === 'refusé');
 
-
-  const handleCodeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (code === PARTNER_CODE) {
-      setIsCodeVerified(true);
-      toast({
-        variant: 'success',
-        title: 'Code valide !',
-        description: 'Vous pouvez maintenant remplir le formulaire.',
-      });
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Code invalide',
-        description: 'Le code que vous avez entré est incorrect.',
-      });
-    }
-  };
-
   const handleFormSubmit = async (values: PartnerFormValues) => {
       if (!firestore || !user) {
         toast({ title: 'Erreur: utilisateur non connecté', variant: 'destructive' });
@@ -386,7 +422,6 @@ function PartnerPageContent() {
         });
         toast({ variant: 'success', title: 'Demande envoyée !', description: 'Nous examinerons votre demande bientôt.' });
         setIsCodeVerified(false);
-        setCode('');
       } catch (error) {
         toast({ title: 'Erreur', description: 'Impossible d\'envoyer le formulaire.', variant: 'destructive'});
         console.error(error);
@@ -450,42 +485,12 @@ function PartnerPageContent() {
         </div>
       </PageWrapper>
     )
-}
+  }
 
   if (!isCodeVerified) {
       return (
         <PageWrapper>
-            <div className="text-center px-4 sm:px-0">
-                <div className="sm:neumorphic-card-light sm:dark:neumorphic-card-dark max-w-2xl mx-auto sm:p-8 rounded-2xl">
-                    <div className="flex justify-center mb-6">
-                        <NeumorphicCard className="rounded-full p-4">
-                        <Handshake className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
-                        </NeumorphicCard>
-                    </div>
-                    <h1 className="text-3xl sm:text-4xl font-bold font-headline">Devenez Partenaire</h1>
-                    <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-                        Pour accéder au formulaire de partenariat, veuillez entrer le code d'accès qui vous a été fourni.
-                    </p>
-
-                    <form onSubmit={handleCodeSubmit} className="mt-10 max-w-sm mx-auto space-y-4">
-                       <div className="relative neumorphic-card-inset-light dark:neumorphic-card-inset-dark rounded-md">
-                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            placeholder="Entrez votre code partenaire"
-                            value={code}
-                            onChange={(e) => setCode(e.target.value)}
-                            className="bg-transparent border-none pl-10 focus-visible:ring-0 focus-visible:ring-offset-0"
-                        />
-                        </div>
-
-                        <Button type="submit" size="lg" className="w-full btn-neumorphic-light dark:btn-neumorphic-dark font-bold text-lg">
-                        Vérifier le code
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                        </Button>
-                    </form>
-                </div>
-            </div>
+            <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
         </PageWrapper>
       )
   }
@@ -504,3 +509,5 @@ export default function PartnerPage() {
         </AuthGuard>
     )
 }
+
+    
