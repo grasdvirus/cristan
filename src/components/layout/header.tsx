@@ -2,11 +2,11 @@
 'use client';
 
 import Link from 'next/link';
-import { ThemeToggleButton } from '@/components/theme-toggle-button';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { Home, User } from 'lucide-react';
 import { useFirebase } from '@/firebase';
+import { CustomThemeSwitch } from '../custom-theme-switch';
 
 export default function Header() {
   const { user } = useFirebase();
@@ -15,7 +15,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm">
       <div className={cn('container flex h-16 items-center')}>
         <div className="flex flex-1 items-center justify-start">
-          <ThemeToggleButton />
+          <CustomThemeSwitch />
         </div>
         <div className="flex-1 text-center">
           <Link href="/" className="flex items-center justify-center gap-2">
