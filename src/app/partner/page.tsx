@@ -20,6 +20,7 @@ import { ContractSubmission } from '@/app/admin/page';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { LoadingSpinner } from '@/components/loading-spinner';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -470,7 +471,7 @@ function PartnerPageContent() {
   );
 
   if (isLoadingPartner) {
-    return <PageWrapper><div className="text-center">Chargement de votre statut...</div></PageWrapper>
+    return <LoadingSpinner />;
   }
 
   if (confirmedPartner) {
@@ -531,4 +532,5 @@ export default function PartnerPage() {
 }
 
     
+
 
