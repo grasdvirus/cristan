@@ -625,7 +625,7 @@ function AdminPageContent() {
 
 export default function AdminPage() {
     return (
-        <AuthGuard>
+        <AuthGuard adminOnly>
             <AdminPageContent />
         </AuthGuard>
     )
