@@ -262,7 +262,7 @@ export function PartnersManager({ searchTerm }: { searchTerm: string }) {
     const isAdmin = user?.email === 'grasdvirus@gmail.com';
 
     const partnersQuery = useMemoFirebase(() => {
-        if (!firestore || !isAdmin) return null;
+        if (!firestore || !isAdmin) return null; // Important: Do not query if not admin
         return query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat'));
     }, [firestore, isAdmin]);
 
@@ -294,7 +294,7 @@ export function PartnersManager({ searchTerm }: { searchTerm: string }) {
     return (
         <NeumorphicCard inset className="p-4 sm:p-6">
             <h2 className="text-xl sm:text-2xl font-bold font-headline mb-4">Demandes de Partenariat</h2>
-            {isLoading ? (
+            {isLoading && isAdmin ? ( // Show skeleton only if we are supposed to be loading data
                 <div className="space-y-2">
                     <Skeleton className="h-24 w-full" />
                     <Skeleton className="h-24 w-full" />
@@ -333,5 +333,3 @@ export function PartnersManager({ searchTerm }: { searchTerm: string }) {
         </NeumorphicCard>
     );
 }
-
-    

@@ -99,7 +99,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
 
     const submissionsQuery = useMemoFirebase(
         () => {
-            if (!firestore || !isAdmin) return null;
+            if (!firestore || !isAdmin) return null; // Important: Do not query if not admin
             return query(collection(firestore, 'submissions'), orderBy('createdAt', 'desc'));
         },
         [firestore, isAdmin]
@@ -150,7 +150,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
     return (
         <NeumorphicCard inset className="p-4 sm:p-6">
             <h2 className="text-xl sm:text-2xl font-bold font-headline mb-4">Demandes des Clients</h2>
-            {isLoading ? (
+            {isLoading && isAdmin ? ( // Show skeleton only if we are supposed to be loading data
                 <div className="space-y-2">
                     <Skeleton className="h-24 w-full" />
                     <Skeleton className="h-24 w-full" />
@@ -254,7 +254,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
                 </div>
                 </>
             )}
-            {!isLoading && filteredSubmissions?.length === 0 && (
+            {(!isLoading || !isAdmin) && filteredSubmissions?.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">
                     {searchTerm ? "Aucune demande ne correspond à votre recherche." : "Aucune demande pour le moment."}
                 </p>
@@ -262,5 +262,3 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
         </NeumorphicCard>
     );
 }
-
-    
