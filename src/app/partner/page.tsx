@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { useRouter } from 'next/navigation';
+import { AuthGuard } from '@/components/auth-guard';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -112,15 +113,6 @@ function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
 }
 
 function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: PartnerFormValues) => void, isSubmitting: boolean }) {
-  const { user } = useFirebase();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!user) {
-      router.push('/login?redirect=/partner');
-    }
-  }, [user, router]);
-  
   const form = useForm<PartnerFormValues>({
     resolver: zodResolver(partnerFormSchema),
     defaultValues: {
@@ -137,118 +129,116 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
     name: 'socialLinks',
   });
 
-  if (!user) {
-    return <LoadingSpinner />;
-  }
-
   return (
-    <NeumorphicCard className="w-full max-w-2xl mx-auto mt-12">
-      <h2 className="text-2xl font-bold font-headline text-center mb-6">Formulaire de Partenariat</h2>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom complet</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Jean Dupont" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="promoCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Code Promo Suggeré</FormLabel>
-                  <FormControl>
-                    <Input placeholder="EX: CRISTAN10" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="votre@email.com" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Téléphone</FormLabel>
-                  <FormControl>
-                    <Input type="tel" placeholder="+33 6..." {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div>
-            <FormLabel>Réseaux Sociaux</FormLabel>
-            <div className="space-y-2 mt-2">
-              {fields.map((field, index) => (
+      <AuthGuard>
+        <NeumorphicCard className="w-full max-w-2xl mx-auto mt-12">
+        <h2 className="text-2xl font-bold font-headline text-center mb-6">Formulaire de Partenariat</h2>
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
-                  key={field.id}
-                  control={form.control}
-                  name={`socialLinks.${index}.value`}
-                  render={({ field }) => (
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
                     <FormItem>
-                      <div className="flex items-center gap-2">
-                        <FormControl>
-                          <Input placeholder="https://linkedin.com/in/..." {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"/>
-                        </FormControl>
-                        {fields.length > 1 && (
-                          <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                      <FormMessage />
+                    <FormLabel>Nom complet</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Jean Dupont" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
+                    </FormControl>
+                    <FormMessage />
                     </FormItem>
-                  )}
+                )}
                 />
-              ))}
+                <FormField
+                control={form.control}
+                name="promoCode"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Code Promo Suggeré</FormLabel>
+                    <FormControl>
+                        <Input placeholder="EX: CRISTAN10" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={() => append({ value: '' })}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Ajouter un lien
-            </Button>
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                        <Input type="email" placeholder="votre@email.com" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Téléphone</FormLabel>
+                    <FormControl>
+                        <Input type="tel" placeholder="+33 6..." {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+            
+            <div>
+                <FormLabel>Réseaux Sociaux</FormLabel>
+                <div className="space-y-2 mt-2">
+                {fields.map((field, index) => (
+                    <FormField
+                    key={field.id}
+                    control={form.control}
+                    name={`socialLinks.${index}.value`}
+                    render={({ field }) => (
+                        <FormItem>
+                        <div className="flex items-center gap-2">
+                            <FormControl>
+                            <Input placeholder="https://linkedin.com/in/..." {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"/>
+                            </FormControl>
+                            {fields.length > 1 && (
+                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                            )}
+                        </div>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                ))}
+                </div>
+                <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => append({ value: '' })}
+                >
+                <Plus className="mr-2 h-4 w-4" /> Ajouter un lien
+                </Button>
+            </div>
 
-          <div className="flex justify-end pt-4">
-            <Button type="submit" size="lg" className="w-full sm:w-auto btn-neumorphic-light dark:btn-neumorphic-dark" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4" />}
-              {isSubmitting ? 'Envoi en cours...' : 'Envoyer la demande'}
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </NeumorphicCard>
+            <div className="flex justify-end pt-4">
+                <Button type="submit" size="lg" className="w-full sm:w-auto btn-neumorphic-light dark:btn-neumorphic-dark" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4" />}
+                {isSubmitting ? 'Envoi en cours...' : 'Envoyer la demande'}
+                </Button>
+            </div>
+            </form>
+        </Form>
+        </NeumorphicCard>
+      </AuthGuard>
   );
 }
 
@@ -601,5 +591,3 @@ export default function PartnerPage() {
         </Suspense>
     )
 }
-
-    

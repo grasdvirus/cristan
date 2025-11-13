@@ -24,10 +24,7 @@ export function AuthGuard({ children, adminOnly = false }: AuthGuardProps) {
     }
 
     if (!user) {
-      // If the page is protected and requires a user, redirect to login
-      if (adminOnly || pathname === '/profile' || pathname === '/partner') {
-        router.replace(`/login?redirect=${pathname}`);
-      }
+      router.replace(`/login?redirect=${pathname}`);
       return;
     }
     
@@ -39,17 +36,12 @@ export function AuthGuard({ children, adminOnly = false }: AuthGuardProps) {
   }, [user, isUserLoading, router, pathname, adminOnly]);
 
   // While checking user auth state, show a spinner.
-  if (isUserLoading) {
-    return <LoadingSpinner />;
-  }
-
-  // If page requires auth and there is no user, show spinner during redirect.
-  if ((adminOnly || pathname === '/profile' || pathname === '/partner') && !user) {
+  if (isUserLoading || !user) {
     return <LoadingSpinner />;
   }
 
   // If admin-only page and user is not an admin, show spinner during redirect.
-  if (adminOnly && (!user || !user.email || !ADMIN_EMAILS.includes(user.email))) {
+  if (adminOnly && (!user.email || !ADMIN_EMAILS.includes(user.email))) {
     return <LoadingSpinner />;
   }
 
