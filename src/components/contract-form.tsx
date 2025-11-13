@@ -20,11 +20,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { NeumorphicCard } from "./neumorphic-card"
-import { useFirebase, useCollection, useMemoFirebase } from "@/firebase"
-import { addDoc, collection, serverTimestamp, query, where } from "firebase/firestore"
+import { useFirebase } from "@/firebase"
+import { addDoc, collection, serverTimestamp } from "firebase/firestore"
 import { Loader2, PartyPopper } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ContractSubmission } from "@/app/admin/page"
 
 const formSchema = z.object({
   fullName: z.string().min(2, {
@@ -55,18 +54,6 @@ export function ContractForm({ projectId }: ContractFormProps) {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [showSuccessDialog, setShowSuccessDialog] = React.useState(false);
-    
-    // Only query for partners if a user is logged in
-    const partnersQuery = useMemoFirebase(() => {
-        if (!firestore || !user) return null;
-        return query(
-            collection(firestore, 'submissions'),
-            where('type', '==', 'Partenariat'),
-            where('status', '==', 'confirmé')
-        );
-    }, [firestore, user]);
-    const { data: partners, isLoading: isLoadingPartners } = useCollection<ContractSubmission>(partnersQuery);
-
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -212,20 +199,11 @@ export function ContractForm({ projectId }: ContractFormProps) {
                             <FormLabel>Code Promo (Optionnel)</FormLabel>
                             <FormControl>
                                 <Input 
-                                    placeholder={(isLoadingPartners && user) ? "Chargement..." : "Entrez un code promo"} 
+                                    placeholder={"Entrez un code promo"} 
                                     {...field}
-                                    list="promo-codes"
                                     className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" 
-                                    disabled={isLoadingPartners && !!user}
                                 />
                             </FormControl>
-                            {user && partners && (
-                              <datalist id="promo-codes">
-                                  {partners.map(partner => (
-                                      partner.promoCode && <option key={partner.id} value={partner.promoCode} />
-                                  ))}
-                              </datalist>
-                            )}
                             <FormMessage />
                         </FormItem>
                     )}
