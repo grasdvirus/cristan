@@ -1,4 +1,3 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -46,14 +45,23 @@ service cloud.firestore {
     }
     
     match /submissions/{submissionId} {
-      // Admins can do anything.
-      allow read, write: if isAdmin();
+      // Permet à l'admin de tout voir, ou à l'utilisateur de voir sa propre soumission
+      allow get: if isAdmin() || (request.auth != null && request.auth.uid == submissionId);
       
-      // Anyone can create a submission (contact form, partner application).
-      allow create: if true;
+      // Seul l'admin peut lister toutes les soumissions
+      allow list: if isAdmin();
       
-      // A user can get or update their own submission document if they are logged in.
-      allow get, update: if request.auth != null && request.auth.uid == submissionId;
+      // N'importe quel utilisateur authentifié peut créer une soumission
+      // avec son propre userId comme ID de document
+      allow create: if request.auth != null && 
+                      request.resource.data.userId == request.auth.uid && 
+                      submissionId == request.auth.uid;
+      
+      // Seul l'admin peut mettre à jour (pour changer le statut, promoCodeUses, etc.)
+      allow update: if isAdmin();
+      
+      // Seul l'admin peut supprimer
+      allow delete: if isAdmin();
     }
     
     match /avis/{avisId} {
