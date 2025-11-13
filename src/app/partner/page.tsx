@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -426,51 +427,6 @@ function PendingApprovalView() {
     );
 }
 
-type PartnerStatus = {
-    status: 'loading' | 'partner' | 'pending' | 'not_partner';
-    partnerData: ContractSubmission | null;
-}
-
-function PartnerStatusChecker({ onResult }: { onResult: (result: PartnerStatus) => void }) {
-    const { firestore, user } = useFirebase();
-
-    const partnerQuery = useMemoFirebase(() => {
-        if (!firestore || !user) return null;
-        return query(
-            collection(firestore, 'submissions'),
-            where('userId', '==', user.uid),
-            where('type', '==', 'Partenariat')
-        );
-    }, [firestore, user]);
-    
-    const { data: partnerSubmissions, isLoading } = useCollection<ContractSubmission>(partnerQuery);
-    
-    useEffect(() => {
-        if (!isLoading) {
-            const confirmedPartner = partnerSubmissions?.find(s => s.status === 'confirmé');
-            if (confirmedPartner) {
-                onResult({ status: 'partner', partnerData: confirmedPartner });
-                return;
-            }
-            
-            const pendingPartner = partnerSubmissions?.find(s => s.status === 'en attente');
-            if (pendingPartner) {
-                onResult({ status: 'pending', partnerData: pendingPartner });
-                return;
-            }
-
-            onResult({ status: 'not_partner', partnerData: null });
-        }
-    }, [isLoading, partnerSubmissions, onResult]);
-
-    if (isLoading) {
-        return <LoadingSpinner />;
-    }
-
-    return null;
-}
-
-
 const PageWrapper = ({ children, showBackButton = true }: { children: React.ReactNode, showBackButton?: boolean }) => (
     <div className="container mx-auto px-4 py-16 sm:py-24 relative">
         {showBackButton && (
@@ -490,6 +446,7 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
     </div>
 );
 
+type PartnerStatus = 'loading' | 'partner' | 'pending' | 'not_partner';
 
 function PartnerPageContent() {
   const [isCodeVerified, setIsCodeVerified] = useState(false);
@@ -497,9 +454,43 @@ function PartnerPageContent() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const { toast } = useToast();
   const { firestore, user, isUserLoading } = useFirebase();
-  const [partnerStatus, setPartnerStatus] = useState<PartnerStatus>({ status: 'loading', partnerData: null });
+  const [partnerStatus, setPartnerStatus] = useState<PartnerStatus>('loading');
+  const [partnerData, setPartnerData] = useState<ContractSubmission | null>(null);
   const router = useRouter();
+
+  const partnerQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+        collection(firestore, 'submissions'),
+        where('userId', '==', user.uid),
+        where('type', '==', 'Partenariat')
+    );
+  }, [firestore, user]);
+
+  const { data: partnerSubmissions, isLoading: isPartnerLoading } = useCollection<ContractSubmission>(partnerQuery);
   
+  useEffect(() => {
+    if (!user || isPartnerLoading) return;
+
+    if (partnerSubmissions && partnerSubmissions.length > 0) {
+        const confirmedPartner = partnerSubmissions.find(s => s.status === 'confirmé');
+        if (confirmedPartner) {
+            setPartnerStatus('partner');
+            setPartnerData(confirmedPartner);
+            return;
+        }
+        
+        const pendingPartner = partnerSubmissions.find(s => s.status === 'en attente');
+        if (pendingPartner) {
+            setPartnerStatus('pending');
+            return;
+        }
+    }
+    setPartnerStatus('not_partner');
+
+  }, [user, partnerSubmissions, isPartnerLoading]);
+
+
   const handleFormSubmit = async (values: PartnerFormValues) => {
       if (!firestore) {
         toast({ title: 'Erreur de base de données', variant: 'destructive' });
@@ -530,39 +521,24 @@ function PartnerPageContent() {
         setIsSubmitting(false);
       }
   };
-
-  const handlePartnerCheckResult = (result: PartnerStatus) => {
-      setPartnerStatus(result);
-  };
-
+  
   const handleDialogClose = (isOpen: boolean) => {
       setShowSuccessDialog(isOpen);
       if (!isOpen) {
-          // After submitting, force the state to 'pending' to show the waiting view
-          setPartnerStatus({ status: 'pending', partnerData: null });
-          setIsCodeVerified(false);
+          setPartnerStatus('pending');
       }
   }
 
-  if (isUserLoading || partnerStatus.status === 'loading') {
+  if (isUserLoading || partnerStatus === 'loading') {
       return <LoadingSpinner />;
   }
 
-  // If user is logged in but we haven't checked their status yet
-  if (user && partnerStatus.status === 'loading') {
-      return <PartnerStatusChecker onResult={handlePartnerCheckResult} />;
+  if (partnerStatus === 'partner' && partnerData) {
+    return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerData} /></PageWrapper>;
   }
-  
-  if (user) {
-      if (partnerStatus.status === 'loading') {
-          return <PartnerStatusChecker onResult={handlePartnerCheckResult} />;
-      }
-      if (partnerStatus.status === 'partner' && partnerStatus.partnerData) {
-          return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerStatus.partnerData} /></PageWrapper>;
-      }
-      if (partnerStatus.status === 'pending') {
-          return <PageWrapper><PendingApprovalView /></PageWrapper>;
-      }
+
+  if (partnerStatus === 'pending') {
+      return <PageWrapper><PendingApprovalView /></PageWrapper>;
   }
   
   // This view is for:
