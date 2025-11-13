@@ -1,30 +1,4 @@
 
-/**
- * @fileoverview Firestore Security Rules for the portfolio website.
- *
- * Core Philosophy:
- * This ruleset enforces a user-ownership model for user profiles, allowing users to manage their own profiles.
- * Videos, Frameworks, and Projects are publicly readable, with write access restricted.
- * Comments and Likes are linked to videos and are user-creatable under videos.
- *
- * Data Structure:
- * - /users/{userId}: Stores user profile data. Only the user can read/write their own profile.
- * - /videos/{videoId}: Stores video data. Publicly readable.
- * - /videos/{videoId}/comments/{commentId}: Stores comments on videos. Authenticated users can create comments.
- * - /videos/{videoId}/likes/{likeId}: Stores likes on videos. Authenticated users can create/delete likes.
- * - /frameworks/{frameworkId}: Stores framework data. Publicly readable.
- * - /projects/{projectId}: Stores project data. Publicly readable.
- * - /slides/{slideId}: Stores hero slider data. Publicly readable.
- * - /submissions/{submissionId}: Stores contact/partner form submissions. Restricted to admin.
- *
- * Key Security Decisions:
- * - User listing is disallowed.
- * - Data validation is minimized to focus on authorization.
- * - Write access to Videos, Frameworks, Projects, and Slides is restricted to admin.
- *
- * Denormalization for Authorization:
- * - Comments and Likes include the `userProfileId` to enable direct authorization without needing to fetch the user profile.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -34,24 +8,8 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return isSignedIn() && request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
+      allow read, write: if request.auth != null && request.auth.uid == userId;
       allow list: if false;
-
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
     }
 
     match /videos/{videoId} {
@@ -59,24 +17,16 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
 
       match /comments/{commentId} {
-        function isSignedIn() {
-          return request.auth != null;
-        }
-
         allow get, list: if true;
-        allow create: if isSignedIn() && request.resource.data.userProfileId == request.auth.uid && request.resource.data.videoId == videoId;
-        allow update, delete: if false;
+        allow create: if request.auth != null;
+        allow update, delete: if false; 
       }
 
       match /likes/{likeId} {
-        function isSignedIn() {
-          return request.auth != null;
-        }
-
         allow get, list: if true;
-        allow create: if isSignedIn() && request.resource.data.userProfileId == request.auth.uid && request.resource.data.videoId == videoId;
+        allow create: if request.auth != null;
+        allow delete: if request.auth != null && resource.data.userProfileId == request.auth.uid;
         allow update: if false;
-        allow delete: if isSignedIn() && resource.data.userProfileId == request.auth.uid && resource != null;
       }
     }
 
@@ -96,10 +46,14 @@ service cloud.firestore {
     }
     
     match /submissions/{submissionId} {
-      allow list: if isAdmin();
-      allow get, update: if (request.auth != null && request.auth.uid == submissionId) || isAdmin();
+      // Admins can do anything.
+      allow read, write: if isAdmin();
+      
+      // Anyone can create a submission (contact form, partner application).
       allow create: if true;
-      allow delete: if isAdmin();
+      
+      // A user can get or update their own submission document if they are logged in.
+      allow get, update: if request.auth != null && request.auth.uid == submissionId;
     }
     
     match /avis/{avisId} {

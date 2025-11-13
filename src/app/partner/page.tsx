@@ -469,18 +469,16 @@ function PartnerPageContent() {
   const { firestore, user, isUserLoading } = useFirebase();
   const [updateTrigger, setUpdateTrigger] = useState(0);
 
-  // This is the key change: useDoc with a predictable ID (user.uid)
   const partnerDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'submissions', user.uid);
   }, [firestore, user, updateTrigger]);
-
-  // useDoc is a simple `get` operation, not a `list`
+  
   const { data: partnerData, isLoading: isPartnerLoading, error } = useDoc<ContractSubmission>(partnerDocRef);
   
   useEffect(() => {
       if(error) {
-         if ((error as any).code !== 'permission-denied') { // Ignore permission-denied as it can be expected for new users
+         if ((error as any).code !== 'permission-denied' && (error as any).code !== 'not-found') {
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de vérifier votre statut de partenaire.' });
          }
       }
@@ -494,7 +492,6 @@ function PartnerPageContent() {
       }
       setIsSubmitting(true);
       try {
-        // Use user.uid as the document ID
         const submissionDocRef = doc(firestore, 'submissions', user.uid);
         await setDoc(submissionDocRef, {
           ...values,
@@ -519,7 +516,7 @@ function PartnerPageContent() {
   const handleDialogClose = (isOpen: boolean) => {
       setShowSuccessDialog(isOpen);
       if (!isOpen) {
-          setUpdateTrigger(t => t + 1); // Trigger a re-fetch
+          setUpdateTrigger(t => t + 1);
       }
   }
 
@@ -527,7 +524,7 @@ function PartnerPageContent() {
     if (isUserLoading || (user && isPartnerLoading)) {
         return <LoadingSpinner />;
     }
-
+    
     if (partnerData && partnerData.type === 'Partenariat') {
         if (partnerData.status === 'confirmé') {
             return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerData} onUpdate={() => setUpdateTrigger(t => t + 1)} /></PageWrapper>;
@@ -536,7 +533,6 @@ function PartnerPageContent() {
         }
     }
     
-    // User is logged in but has no partner submission document yet.
     if (user) {
       if (isCodeVerified) {
         return <PageWrapper><PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} /></PageWrapper>;
@@ -545,7 +541,6 @@ function PartnerPageContent() {
       }
     }
 
-    // User is not logged in.
     return <PageWrapper><PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} /></PageWrapper>;
   }
 
@@ -588,5 +583,3 @@ export default function PartnerPage() {
         </Suspense>
     )
 }
-
-    
