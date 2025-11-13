@@ -612,7 +612,7 @@ function AdminPageContent() {
                     </TabsContent>
 
                     <TabsContent value="partners">
-                        <PartnersManager searchTerm={searchTerm} />
+                       <PartnersManager searchTerm={searchTerm} />
                     </TabsContent>
                 </Tabs>
             </NeumorphicCard>

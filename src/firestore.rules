@@ -1,0 +1,121 @@
+/**
+ * @fileoverview Firestore Security Rules for the portfolio website.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a user-ownership model for user profiles, allowing users to manage their own profiles.
+ * Videos, Frameworks, and Projects are publicly readable, with write access restricted.
+ * Comments and Likes are linked to videos and are user-creatable under videos.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profile data. Only the user can read/write their own profile.
+ * - /videos/{videoId}: Stores video data. Publicly readable.
+ * - /videos/{videoId}/comments/{commentId}: Stores comments on videos. Authenticated users can create comments.
+ * - /videos/{videoId}/likes/{likeId}: Stores likes on videos. Authenticated users can create/delete likes.
+ * - /frameworks/{frameworkId}: Stores framework data. Publicly readable.
+ * - /projects/{projectId}: Stores project data. Publicly readable.
+ * - /slides/{slideId}: Stores hero slider data. Publicly readable.
+ * - /submissions/{submissionId}: Stores contact/partner form submissions. Restricted to admin.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed.
+ * - Data validation is minimized to focus on authorization.
+ * - Write access to Videos, Frameworks, Projects, and Slides is restricted to admin.
+ *
+ * Denormalization for Authorization:
+ * - Comments and Likes include the `userProfileId` to enable direct authorization without needing to fetch the user profile.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'grasdvirus@gmail.com';
+    }
+
+    match /users/{userId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return isSignedIn() && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    match /videos/{videoId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+
+      match /comments/{commentId} {
+        function isSignedIn() {
+          return request.auth != null;
+        }
+
+        allow get, list: if true;
+        allow create: if isSignedIn() && request.resource.data.userProfileId == request.auth.uid && request.resource.data.videoId == videoId;
+        allow update, delete: if false;
+      }
+
+      match /likes/{likeId} {
+        function isSignedIn() {
+          return request.auth != null;
+        }
+
+        allow get, list: if true;
+        allow create: if isSignedIn() && request.resource.data.userProfileId == request.auth.uid && request.resource.data.videoId == videoId;
+        allow update: if false;
+        allow delete: if isSignedIn() && resource.data.userProfileId == request.auth.uid && resource != null;
+      }
+    }
+
+    match /frameworks/{frameworkId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    
+    match /projects/{projectId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /slides/{slideId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    
+    match /submissions/{submissionId} {
+      allow get: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.userId);
+      allow list: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+    
+    match /avis/{avisId} {
+      allow get, list: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+      
+      match /reponses/{reponseId} {
+         allow get, list: if true;
+         allow create: if request.auth != null;
+         allow update, delete: if false;
+      }
+    }
+
+    match /games/{gameId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
