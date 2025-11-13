@@ -130,7 +130,7 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
   });
 
   return (
-      <AuthGuard>
+    <AuthGuard>
         <NeumorphicCard className="w-full max-w-2xl mx-auto mt-12">
         <h2 className="text-2xl font-bold font-headline text-center mb-6">Formulaire de Partenariat</h2>
         <Form {...form}>
