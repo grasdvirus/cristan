@@ -270,7 +270,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
                 </div>
                 </>
             )}
-            {(!isLoading) && filteredSubmissions?.length === 0 && (
+            {(!isLoading && !isAdmin) ? null : (!isLoading && filteredSubmissions?.length === 0) && (
                 <p className="text-center text-muted-foreground py-8">
                     {searchTerm ? "Aucune demande ne correspond à votre recherche." : "Aucune demande pour le moment."}
                 </p>

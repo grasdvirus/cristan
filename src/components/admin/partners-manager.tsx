@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -258,10 +259,8 @@ export function PartnersManager({ searchTerm }: { searchTerm: string }) {
     const { firestore, user } = useFirebase();
     const { toast } = useToast();
     
-    // Strict admin check at the beginning of the component.
     const isAdmin = user?.email === 'grasdvirus@gmail.com';
 
-    // The query will only be defined if the user is an admin.
     const partnersQuery = useMemoFirebase(() => {
         if (!firestore || !isAdmin) {
             return null;
@@ -269,7 +268,6 @@ export function PartnersManager({ searchTerm }: { searchTerm: string }) {
         return query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat'));
     }, [firestore, isAdmin]);
 
-    // This hook will only run the query if it's not null.
     const { data: partners, isLoading } = useCollection<ContractSubmission>(partnersQuery);
     
     const filteredPartners = useMemo(() => {
@@ -294,8 +292,6 @@ export function PartnersManager({ searchTerm }: { searchTerm: string }) {
         }
     };
     
-    // If not an admin, render an access denied message and stop.
-    // This prevents any hooks or queries from running for non-admins.
     if (!isAdmin) {
       return (
         <NeumorphicCard inset className="p-4 sm:p-6 text-center">
