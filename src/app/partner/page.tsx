@@ -6,7 +6,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
-import { useFirebase } from '@/firebase';
+import { useFirebase, useMemoFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp, query, where, doc, updateDoc, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -461,7 +461,7 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
     </div>
 );
 
-type PartnerStatus = 'loading' | 'partner_confirmed' | 'partner_pending' | 'not_partner' | 'anonymous';
+type PartnerStatus = 'loading' | 'partner_confirmed' | 'partner_pending' | 'not_partner';
 
 function PartnerPageContent() {
   const [isCodeVerified, setIsCodeVerified] = useState(false);
@@ -480,7 +480,7 @@ function PartnerPageContent() {
     };
 
     if (!user) {
-        setPartnerStatus('anonymous');
+        setPartnerStatus('not_partner');
         return;
     }
     
@@ -597,7 +597,6 @@ function PartnerPageContent() {
                 </>
              );
 
-        case 'anonymous':
         case 'not_partner':
             return (
                 <PageWrapper>
@@ -624,3 +623,5 @@ export default function PartnerPage() {
         </Suspense>
     )
 }
+
+    
