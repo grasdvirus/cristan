@@ -1,9 +1,7 @@
-
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirebase } from '@/firebase';
 import { collection, query, where, doc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 import { ContractSubmission } from '@/app/admin/page';
 import { NeumorphicCard } from '../neumorphic-card';
@@ -17,6 +15,8 @@ import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
+import { useAdminQuery } from '@/hooks/useAdminQuery';
+import { LoadingSpinner } from '../loading-spinner';
 
 
 function PartnerDetails({ partner }: { partner: ContractSubmission }) {
@@ -256,17 +256,13 @@ function PartnerCard({ partner, onDelete }: { partner: ContractSubmission, onDel
 }
 
 export function PartnersManager({ searchTerm }: { searchTerm: string }) {
-    const { firestore, user } = useFirebase();
+    const { firestore, user, isUserLoading } = useFirebase();
     const { toast } = useToast();
     
-    const isAdmin = user?.email === 'grasdvirus@gmail.com';
-
-    const partnersQuery = useMemoFirebase(() => {
-        if (!firestore || !isAdmin) {
-            return null;
-        }
+    const partnersQuery = useAdminQuery(() => {
+        if (!firestore) return null;
         return query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat'));
-    }, [firestore, isAdmin]);
+    }, [firestore]);
 
     const { data: partners, isLoading } = useCollection<ContractSubmission>(partnersQuery);
     
@@ -292,14 +288,8 @@ export function PartnersManager({ searchTerm }: { searchTerm: string }) {
         }
     };
     
-    if (!isAdmin) {
-      return (
-        <NeumorphicCard inset className="p-4 sm:p-6 text-center">
-            <h2 className="text-xl sm:text-2xl font-bold font-headline mb-2">Accès refusé</h2>
-            <p className="text-muted-foreground">Vous n'avez pas les autorisations nécessaires pour voir cette section.</p>
-        </NeumorphicCard>
-      )
-    }
+    if (isUserLoading) return <LoadingSpinner />;
+    if (user?.email !== 'grasdvirus@gmail.com') return null;
 
     return (
         <NeumorphicCard inset className="p-4 sm:p-6">

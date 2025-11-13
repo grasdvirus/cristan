@@ -1,4 +1,3 @@
-
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
@@ -46,6 +45,7 @@ export function AuthGuard({ children, adminOnly = false }: AuthGuardProps) {
   }
 
   // If this is an admin page and the logged-in user is not the admin, show a spinner during redirect.
+  // Or simply return null to prevent rendering the children which might trigger queries.
   if (adminOnly && user.email !== ADMIN_EMAIL) {
     return <LoadingSpinner />;
   }

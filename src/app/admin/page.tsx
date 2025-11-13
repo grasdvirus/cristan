@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -26,6 +25,8 @@ import { PartnersManager } from '@/components/admin/partners-manager';
 import { convertToEmbedUrl } from '@/lib/utils';
 import { AuthGuard } from '@/components/auth-guard';
 import { Input } from '@/components/ui/input';
+import { useAdminQuery } from '@/hooks/useAdminQuery';
+import { LoadingSpinner } from '@/components/loading-spinner';
 
 // Define types based on backend.json
 export type Slide = {
@@ -91,13 +92,21 @@ export type ContractSubmission = {
 
 
 function SlidesManager() {
-    const { firestore } = useFirebase();
-    const slidesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'slides')) : null, [firestore]);
-    const { data: slides, isLoading } = useCollection<Slide>(slidesQuery);
+    const { firestore, user, isUserLoading } = useFirebase();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingSlide, setEditingSlide] = useState<Slide | null>(null);
+
+    const slidesQuery = useAdminQuery(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'slides'));
+    }, [firestore]);
+
+    const { data: slides, isLoading } = useCollection<Slide>(slidesQuery);
+
+    if (isUserLoading) return <Skeleton className="h-40 w-full" />;
+    if (user?.email !== 'grasdvirus@gmail.com') return null;
 
     const handleFormSubmit = async (values: { description: string, imageUrl: string, imageHint?: string }) => {
         if (!firestore) return;
@@ -207,13 +216,21 @@ function SlidesManager() {
 }
 
 function ProjectsManager() {
-    const { firestore } = useFirebase();
-    const projectsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'projects')) : null, [firestore]);
-    const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
+    const { firestore, user, isUserLoading } = useFirebase();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
+
+    const projectsQuery = useAdminQuery(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'projects'));
+    }, [firestore]);
+
+    const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
+
+    if (isUserLoading) return <Skeleton className="h-40 w-full" />;
+    if (user?.email !== 'grasdvirus@gmail.com') return null;
 
     const handleFormSubmit = async (values: ProjectFormValues) => {
         if (!firestore) return;
@@ -326,13 +343,21 @@ function ProjectsManager() {
 }
 
 function VideosManager() {
-    const { firestore } = useFirebase();
-    const videosQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'videos')) : null, [firestore]);
-    const { data: videos, isLoading } = useCollection<Video>(videosQuery);
+    const { firestore, user, isUserLoading } = useFirebase();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingVideo, setEditingVideo] = useState<Video | null>(null);
+
+    const videosQuery = useAdminQuery(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'videos'));
+    }, [firestore]);
+
+    const { data: videos, isLoading } = useCollection<Video>(videosQuery);
+    
+    if (isUserLoading) return <Skeleton className="h-40 w-full" />;
+    if (user?.email !== 'grasdvirus@gmail.com') return null;
 
     const handleFormSubmit = async (values: VideoFormValues) => {
         if (!firestore) return;
@@ -445,13 +470,21 @@ function VideosManager() {
 }
 
 function GamesManager() {
-    const { firestore } = useFirebase();
-    const gamesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'games')) : null, [firestore]);
-    const { data: games, isLoading } = useCollection<Game>(gamesQuery);
+    const { firestore, user, isUserLoading } = useFirebase();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingGame, setEditingGame] = useState<Game | null>(null);
+
+    const gamesQuery = useAdminQuery(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'games'));
+    }, [firestore]);
+
+    const { data: games, isLoading } = useCollection<Game>(gamesQuery);
+
+    if (isUserLoading) return <Skeleton className="h-40 w-full" />;
+    if (user?.email !== 'grasdvirus@gmail.com') return null;
 
     const handleFormSubmit = async (values: GameFormValues) => {
         if (!firestore) return;
