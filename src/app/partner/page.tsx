@@ -402,11 +402,11 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
     );
 }
 
-function LoggedInPartnerView({ isCodeVerified, onCodeVerified, onFormSubmit, isSubmitting }: { isCodeVerified: boolean; onCodeVerified: () => void; onFormSubmit: (values: PartnerFormValues) => void; isSubmitting: boolean;}) {
+function UserPartnerStatusView() {
     const { firestore, user } = useFirebase();
 
     const partnerQuery = useMemoFirebase(() => {
-        if (!firestore || !user) return null;
+        if (!firestore || !user) return null; // Important: no user, no query
         return query(
             collection(firestore, 'submissions'),
             where('userId', '==', user.uid),
@@ -425,54 +425,35 @@ function LoggedInPartnerView({ isCodeVerified, onCodeVerified, onFormSubmit, isS
     const refusedPartner = partnerData?.find(p => p.status === 'refusé');
 
     if (confirmedPartner) {
-        return (
-            <PageWrapper showBackButton={false}>
-                <PartnerDashboard partner={confirmedPartner} />
-            </PageWrapper>
-        )
+        return <PartnerDashboard partner={confirmedPartner} />
     }
 
     if (pendingPartner) {
         return (
-            <PageWrapper>
-                <div className="text-center">
-                    <NeumorphicCard className="max-w-2xl mx-auto">
-                        <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
-                        <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
-                    </NeumorphicCard>
-                </div>
-            </PageWrapper>
+            <div className="text-center">
+                <NeumorphicCard className="max-w-2xl mx-auto">
+                    <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
+                    <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
+                </NeumorphicCard>
+            </div>
         )
     }
     
     if (refusedPartner) {
         return (
-            <PageWrapper>
-                <div className="text-center">
-                    <NeumorphicCard className="max-w-2xl mx-auto">
-                        <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
-                        <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
-                    </NeumorphicCard>
-                </div>
-            </PageWrapper>
-        )
-    }
-    
-    // User is logged in but is not a partner yet.
-    if (!isCodeVerified) {
-        return (
-            <PageWrapper>
-                <PartnerCodeForm onCodeVerified={onCodeVerified} />
-            </PageWrapper>
+             <div className="text-center">
+                <NeumorphicCard className="max-w-2xl mx-auto">
+                    <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
+                    <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
+                </NeumorphicCard>
+            </div>
         )
     }
 
-    return (
-        <PageWrapper>
-            <PartnerApplicationForm onFormSubmit={onFormSubmit} isSubmitting={isSubmitting} />
-        </PageWrapper>
-    );
+    // User is logged in but has no partner submission yet.
+    return null;
 }
+
 
 const PageWrapper = ({ children, showBackButton = true }: { children: React.ReactNode, showBackButton?: boolean }) => (
     <div className="container mx-auto px-4 py-16 sm:py-24 relative">
@@ -505,7 +486,6 @@ function PartnerPageContent() {
         toast({ title: 'Erreur de base de données', variant: 'destructive' });
         return;
       }
-      // Require user to be logged in to submit
       if (!user) {
         toast({ title: 'Connexion requise', description: 'Veuillez vous connecter pour devenir partenaire.', variant: 'destructive' });
         return;
@@ -523,7 +503,7 @@ function PartnerPageContent() {
           createdAt: serverTimestamp(),
         });
         toast({ variant: 'success', title: 'Demande envoyée !', description: 'Nous examinerons votre demande bientôt.' });
-        // The component will re-render and show the pending status view
+        // Let the UserPartnerStatusView take over
       } catch (error) {
         toast({ title: 'Erreur', description: 'Impossible d\'envoyer le formulaire.', variant: 'destructive'});
         console.error(error);
@@ -535,30 +515,30 @@ function PartnerPageContent() {
   if (isUserLoading) {
     return <LoadingSpinner />;
   }
-
+  
   if (user) {
-      return (
-        <LoggedInPartnerView
-            isCodeVerified={isCodeVerified}
-            onCodeVerified={() => setIsCodeVerified(true)}
-            onFormSubmit={handleFormSubmit}
-            isSubmitting={isSubmitting}
-        />
-      );
+      // For logged-in users, first check their partner status.
+      // UserPartnerStatusView will return null if they are not a partner yet.
+      const partnerStatusView = <UserPartnerStatusView />;
+      if (partnerStatusView.props.children !== null && !isLoadingPartner) {
+          // This check is a bit of a hack, but the idea is if UserPartnerStatusView renders something, show it.
+          // A better approach would involve moving the state up.
+          const status = <UserPartnerStatusView />;
+          if (status) return <PageWrapper showBackButton={false}>{status}</PageWrapper>
+      }
   }
 
-  // Fallback for anonymous users
-  if (isCodeVerified) {
-    return (
-        <PageWrapper>
-            <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
-        </PageWrapper>
-    )
-  }
-
+  // This is the view for:
+  // 1. Anonymous users.
+  // 2. Logged-in users who are not partners and have not yet verified the code.
+  // 3. Logged-in users who have verified the code and are ready to apply.
   return (
     <PageWrapper>
+      {isCodeVerified ? (
+        <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
+      ) : (
         <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
+      )}
     </PageWrapper>
   );
 }
@@ -570,3 +550,5 @@ export default function PartnerPage() {
       </Suspense>
     )
 }
+
+    

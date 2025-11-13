@@ -99,8 +99,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
 
     const submissionsQuery = useMemoFirebase(
         () => {
-            // CRITICAL: Only create the query if the user is an admin. Otherwise, return null.
-            if (!firestore || !user || !isAdmin) {
+            if (!firestore || !isAdmin) {
                 return null;
             }
             return query(collection(firestore, 'submissions'), orderBy('createdAt', 'desc'));
@@ -149,11 +148,20 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour le statut.' });
         }
     };
+    
+    if (!isAdmin) {
+      return (
+        <NeumorphicCard inset className="p-4 sm:p-6 text-center">
+            <h2 className="text-xl sm:text-2xl font-bold font-headline mb-2">Accès refusé</h2>
+            <p className="text-muted-foreground">Vous n'avez pas les autorisations nécessaires pour voir cette section.</p>
+        </NeumorphicCard>
+      )
+    }
 
     return (
         <NeumorphicCard inset className="p-4 sm:p-6">
             <h2 className="text-xl sm:text-2xl font-bold font-headline mb-4">Demandes des Clients</h2>
-            {isLoading && isAdmin ? (
+            {isLoading ? (
                 <div className="space-y-2">
                     <Skeleton className="h-24 w-full" />
                     <Skeleton className="h-24 w-full" />
@@ -257,7 +265,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
                 </div>
                 </>
             )}
-            {(!isLoading || !isAdmin) && filteredSubmissions?.length === 0 && (
+            {(!isLoading) && filteredSubmissions?.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">
                     {searchTerm ? "Aucune demande ne correspond à votre recherche." : "Aucune demande pour le moment."}
                 </p>
@@ -265,3 +273,5 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
         </NeumorphicCard>
     );
 }
+
+    
