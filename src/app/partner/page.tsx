@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from 'react';
@@ -402,55 +401,31 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
     );
 }
 
-function UserPartnerStatusView() {
+function PartnerStatusChecker({ onResult }: { onResult: (partner: ContractSubmission | null) => void }) {
     const { firestore, user } = useFirebase();
 
     const partnerQuery = useMemoFirebase(() => {
-        if (!firestore || !user) return null; // Important: no user, no query
+        if (!firestore || !user) return null;
         return query(
             collection(firestore, 'submissions'),
             where('userId', '==', user.uid),
             where('type', '==', 'Partenariat'),
+            where('status', '==', 'confirmé')
         );
     }, [firestore, user]);
     
-    const { data: partnerData, isLoading: isLoadingPartner } = useCollection<ContractSubmission>(partnerQuery);
+    const { data: partnerData, isLoading } = useCollection<ContractSubmission>(partnerQuery);
     
-    if (isLoadingPartner) {
+    useEffect(() => {
+        if (!isLoading) {
+            onResult(partnerData?.[0] || null);
+        }
+    }, [isLoading, partnerData, onResult]);
+
+    if (isLoading) {
         return <LoadingSpinner />;
     }
 
-    const confirmedPartner = partnerData?.find(p => p.status === 'confirmé');
-    const pendingPartner = partnerData?.find(p => p.status === 'en attente');
-    const refusedPartner = partnerData?.find(p => p.status === 'refusé');
-
-    if (confirmedPartner) {
-        return <PartnerDashboard partner={confirmedPartner} />
-    }
-
-    if (pendingPartner) {
-        return (
-            <div className="text-center">
-                <NeumorphicCard className="max-w-2xl mx-auto">
-                    <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
-                    <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
-                </NeumorphicCard>
-            </div>
-        )
-    }
-    
-    if (refusedPartner) {
-        return (
-             <div className="text-center">
-                <NeumorphicCard className="max-w-2xl mx-auto">
-                    <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
-                    <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
-                </NeumorphicCard>
-            </div>
-        )
-    }
-
-    // User is logged in but has no partner submission yet.
     return null;
 }
 
@@ -480,19 +455,9 @@ function PartnerPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { firestore, user, isUserLoading } = useFirebase();
-
-  const partnerQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(
-        collection(firestore, 'submissions'),
-        where('userId', '==', user.uid),
-        where('type', '==', 'Partenariat')
-    );
-  }, [firestore, user]);
-
-  const { data: partnerData, isLoading: isLoadingPartner } = useCollection<ContractSubmission>(partnerQuery);
-
-
+  const [partnerStatus, setPartnerStatus] = useState<'loading' | 'partner' | 'not_partner'>('loading');
+  const [confirmedPartner, setConfirmedPartner] = useState<ContractSubmission | null>(null);
+  
   const handleFormSubmit = async (values: PartnerFormValues) => {
       if (!firestore) {
         toast({ title: 'Erreur de base de données', variant: 'destructive' });
@@ -500,6 +465,7 @@ function PartnerPageContent() {
       }
       if (!user) {
         toast({ title: 'Connexion requise', description: 'Veuillez vous connecter pour devenir partenaire.', variant: 'destructive' });
+        router.push('/login?redirect=/partner');
         return;
       }
       setIsSubmitting(true);
@@ -515,7 +481,7 @@ function PartnerPageContent() {
           createdAt: serverTimestamp(),
         });
         toast({ variant: 'success', title: 'Demande envoyée !', description: 'Nous examinerons votre demande bientôt.' });
-        // Let the UserPartnerStatusView take over
+        setPartnerStatus('not_partner'); // Re-check status or show pending view
       } catch (error) {
         toast({ title: 'Erreur', description: 'Impossible d\'envoyer le formulaire.', variant: 'destructive'});
         console.error(error);
@@ -524,47 +490,32 @@ function PartnerPageContent() {
       }
   };
 
-  if (isUserLoading || isLoadingPartner) {
-    return <LoadingSpinner />;
+  const handlePartnerCheckResult = (partner: ContractSubmission | null) => {
+      if (partner) {
+          setConfirmedPartner(partner);
+          setPartnerStatus('partner');
+      } else {
+          setPartnerStatus('not_partner');
+      }
+  };
+
+  if (isUserLoading) {
+      return <LoadingSpinner />;
+  }
+
+  // If user is logged in, check their partner status first.
+  if (user && partnerStatus === 'loading') {
+      return <PartnerStatusChecker onResult={handlePartnerCheckResult} />;
+  }
+
+  // If user is a confirmed partner, show dashboard.
+  if (user && partnerStatus === 'partner' && confirmedPartner) {
+      return <PageWrapper showBackButton={false}><PartnerDashboard partner={confirmedPartner} /></PageWrapper>;
   }
   
-  if (user && partnerData) {
-    const confirmedPartner = partnerData.find(p => p.status === 'confirmé');
-    const pendingPartner = partnerData.find(p => p.status === 'en attente');
-    const refusedPartner = partnerData.find(p => p.status === 'refusé');
-
-    let content;
-    if (confirmedPartner) {
-        content = <PartnerDashboard partner={confirmedPartner} />;
-    } else if (pendingPartner) {
-        content = (
-            <div className="text-center">
-                <NeumorphicCard className="max-w-2xl mx-auto">
-                    <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
-                    <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
-                </NeumorphicCard>
-            </div>
-        );
-    } else if (refusedPartner) {
-        content = (
-             <div className="text-center">
-                <NeumorphicCard className="max-w-2xl mx-auto">
-                    <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
-                    <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
-                </NeumorphicCard>
-            </div>
-        );
-    }
-
-    if(content) {
-        return <PageWrapper showBackButton={false}>{content}</PageWrapper>
-    }
-  }
-
-  // This is the view for:
+  // This view is for:
   // 1. Anonymous users.
-  // 2. Logged-in users who are not partners and have not yet verified the code.
-  // 3. Logged-in users who have verified the code and are ready to apply.
+  // 2. Logged-in users who are not partners (status is 'not_partner').
   return (
     <PageWrapper>
       {isCodeVerified ? (
