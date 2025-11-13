@@ -18,7 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { ContractSubmission } from '@/app/admin/page';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { useRouter } from 'next/navigation';
 
@@ -460,11 +460,8 @@ function PartnerPageContent() {
 
   const partnerQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(
-        collection(firestore, 'submissions'),
-        where('userId', '==', user.uid)
-    );
-  }, [firestore, user]);
+    return query(collection(firestore, 'submissions'), where('userId', '==', user.uid));
+}, [firestore, user]);
 
   const { data: userSubmissions, isLoading: isPartnerLoading } = useCollection<ContractSubmission>(partnerQuery);
   
