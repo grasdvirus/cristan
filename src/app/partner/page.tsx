@@ -457,7 +457,6 @@ function PartnerPageContent() {
   const { firestore, user } = useFirebase();
   const [partnerStatus, setPartnerStatus] = useState<PartnerStatus>('loading');
   const [partnerData, setPartnerData] = useState<ContractSubmission | null>(null);
-  const router = useRouter();
 
   const partnerQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
