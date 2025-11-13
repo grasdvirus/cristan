@@ -99,10 +99,13 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
 
     const submissionsQuery = useMemoFirebase(
         () => {
-            if (!firestore || !isAdmin) return null; // Important: Do not query if not admin
+            // CRITICAL: Only create the query if the user is an admin. Otherwise, return null.
+            if (!firestore || !user || !isAdmin) {
+                return null;
+            }
             return query(collection(firestore, 'submissions'), orderBy('createdAt', 'desc'));
         },
-        [firestore, isAdmin]
+        [firestore, user, isAdmin]
     );
 
     const { data: submissions, isLoading } = useCollection<ContractSubmission & { type?: string }>(submissionsQuery);
@@ -150,7 +153,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
     return (
         <NeumorphicCard inset className="p-4 sm:p-6">
             <h2 className="text-xl sm:text-2xl font-bold font-headline mb-4">Demandes des Clients</h2>
-            {isLoading && isAdmin ? ( // Show skeleton only if we are supposed to be loading data
+            {isLoading && isAdmin ? (
                 <div className="space-y-2">
                     <Skeleton className="h-24 w-full" />
                     <Skeleton className="h-24 w-full" />
