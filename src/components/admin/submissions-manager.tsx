@@ -255,3 +255,5 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
         </NeumorphicCard>
     );
 }
+
+    

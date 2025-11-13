@@ -34,21 +34,19 @@ export function AuthGuard({ children, adminOnly = false }: AuthGuardProps) {
 
   }, [user, isUserLoading, router, pathname, adminOnly]);
 
+  // While checking user auth state, show a spinner.
   if (isUserLoading) {
     return <LoadingSpinner />;
   }
 
-  // Si on attend un utilisateur mais qu'il n'y en a pas, on affiche le spinner
-  // en attendant la redirection de l'useEffect.
-  if (!user) {
-    return <LoadingSpinner />;
-  }
-  
-  if (adminOnly && (!user.email || !ADMIN_EMAILS.includes(user.email))) {
-    // Affiche le spinner pendant la redirection pour éviter un flash de contenu non autorisé.
+  // If the logic determined a redirect is needed, show a spinner
+  // while the browser navigates to the new page.
+  if (!user || (adminOnly && (!user.email || !ADMIN_EMAILS.includes(user.email)))) {
     return <LoadingSpinner />;
   }
 
-
+  // If all checks pass, render the protected children.
   return <>{children}</>;
 }
+
+    

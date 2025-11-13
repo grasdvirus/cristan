@@ -255,18 +255,14 @@ function PartnerCard({ partner, onDelete }: { partner: ContractSubmission, onDel
 }
 
 export function PartnersManager({ searchTerm }: { searchTerm: string }) {
-    const { firestore, user } = useFirebase();
+    const { firestore } = useFirebase();
     const { toast } = useToast();
     
     const partnersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        // Only admins should be able to query all partners
-        if (user?.email === 'grasdvirus@gmail.com') {
-            return query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat'));
-        }
-        // Non-admins get an empty query to prevent permission errors
-        return null;
-    }, [firestore, user]);
+        return query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat'));
+    }, [firestore]);
+
     const { data: partners, isLoading } = useCollection<ContractSubmission>(partnersQuery);
     
     const filteredPartners = useMemo(() => {

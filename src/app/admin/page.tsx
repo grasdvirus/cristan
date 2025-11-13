@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -562,7 +561,7 @@ function AdminPageContent() {
 
     return (
         <div className="container mx-auto px-0 sm:px-4 py-8 sm:py-16">
-            <div className="sm:p-6 sm:rounded-2xl sm:neumorphic-card-light sm:dark:neumorphic-card-dark">
+            <NeumorphicCard>
                 <div className="flex items-center gap-4 mb-2 px-4 sm:px-0">
                     <Shield className="w-8 h-8 text-primary" />
                     <h1 className="text-3xl sm:text-4xl font-bold font-headline">Panneau d'administration</h1>
@@ -582,43 +581,41 @@ function AdminPageContent() {
                 </div>
 
 
-                <Tabs defaultValue="slides" className="w-full" orientation="vertical">
-                    <TabsList className="mb-8 w-full h-auto flex-col items-start gap-1 p-2 bg-transparent sm:bg-muted sm:rounded-lg sm:dark:bg-muted/50">
-                        <TabsTrigger value="slides" className="w-full justify-start data-[state=active]:bg-background">Slides</TabsTrigger>
-                        <TabsTrigger value="internet" className="w-full justify-start data-[state=active]:bg-background">Internet</TabsTrigger>
-                        <TabsTrigger value="tv" className="w-full justify-start data-[state=active]:bg-background">TV</TabsTrigger>
-                        <TabsTrigger value="games" className="w-full justify-start data-[state=active]:bg-background">Gamme</TabsTrigger>
-                        <TabsTrigger value="submissions" className="w-full justify-start data-[state=active]:bg-background">Demandes</TabsTrigger>
-                        <TabsTrigger value="partners" className="w-full justify-start data-[state=active]:bg-background">Partenaires</TabsTrigger>
+                <Tabs defaultValue="slides" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 mb-8">
+                        <TabsTrigger value="slides">Slides</TabsTrigger>
+                        <TabsTrigger value="internet">Internet</TabsTrigger>
+                        <TabsTrigger value="tv">TV</TabsTrigger>
+                        <TabsTrigger value="games">Gamme</TabsTrigger>
+                        <TabsTrigger value="submissions">Demandes</TabsTrigger>
+                        <TabsTrigger value="partners">Partenaires</TabsTrigger>
                     </TabsList>
                     
-                    <div className="px-4 sm:px-0 sm:pl-4 w-full">
-                        <TabsContent value="slides" className="mt-0">
-                            <SlidesManager />
-                        </TabsContent>
+                    <TabsContent value="slides">
+                        <SlidesManager />
+                    </TabsContent>
 
-                        <TabsContent value="internet" className="mt-0">
-                            <ProjectsManager />
-                        </TabsContent>
+                    <TabsContent value="internet">
+                        <ProjectsManager />
+                    </TabsContent>
 
-                        <TabsContent value="tv" className="mt-0">
-                            <VideosManager />
-                        </TabsContent>
+                    <TabsContent value="tv">
+                        <VideosManager />
+                    </TabsContent>
 
-                        <TabsContent value="games" className="mt-0">
-                            <GamesManager />
-                        </TabsContent>
+                    <TabsContent value="games">
+                        <GamesManager />
+                    </TabsContent>
 
-                        <TabsContent value="submissions" className="mt-0">
-                            <SubmissionsManager searchTerm={searchTerm} />
-                        </TabsContent>
+                    <TabsContent value="submissions">
+                        <SubmissionsManager searchTerm={searchTerm} />
+                    </TabsContent>
 
-                        <TabsContent value="partners" className="mt-0">
-                            <PartnersManager searchTerm={searchTerm} />
-                        </TabsContent>
-                    </div>
+                    <TabsContent value="partners">
+                        <PartnersManager searchTerm={searchTerm} />
+                    </TabsContent>
                 </Tabs>
-            </div>
+            </NeumorphicCard>
         </div>
     );
 }
@@ -630,3 +627,5 @@ export default function AdminPage() {
         </AuthGuard>
     )
 }
+
+    
