@@ -480,8 +480,6 @@ function PartnerPageContent() {
     };
 
     if (!user) {
-        // If user is not logged in, they are not a partner.
-        // They will be prompted to log in when trying to submit the form.
         setPartnerStatus('not_partner');
         return;
     }
@@ -492,17 +490,17 @@ function PartnerPageContent() {
       
       const q = query(
         collection(firestore, 'submissions'),
-        where('userId', '==', user.uid),
-        where('type', '==', 'Partenariat')
+        where('userId', '==', user.uid)
       );
       
       try {
         const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-            const partnerSubmissionDoc = querySnapshot.docs[0];
-            const submissionData = { id: partnerSubmissionDoc.id, ...partnerSubmissionDoc.data() } as ContractSubmission;
-            setPartnerData(submissionData);
-            if (submissionData.status === 'confirmé') {
+        const userSubmissions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ContractSubmission[];
+        const partnerSubmission = userSubmissions.find(sub => sub.type === 'Partenariat');
+
+        if (partnerSubmission) {
+            setPartnerData(partnerSubmission);
+            if (partnerSubmission.status === 'confirmé') {
                 setPartnerStatus('partner_confirmed');
             } else {
                 setPartnerStatus('partner_pending');
@@ -512,11 +510,10 @@ function PartnerPageContent() {
         }
       } catch (error) {
           console.error("Error fetching partner status:", error);
-          // Don't show a toast for permission errors, just fallback gracefully
           if ((error as any).code !== 'permission-denied') {
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de vérifier votre statut de partenaire.' });
           }
-          setPartnerStatus('not_partner'); // Fallback
+          setPartnerStatus('not_partner');
       }
     };
     
