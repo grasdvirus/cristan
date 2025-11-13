@@ -482,9 +482,9 @@ function PartnerPageContent() {
         const partnerSubmission = userSubmissions.find(s => s.type === 'Partenariat');
 
         if(partnerSubmission) {
+            setPartnerData(partnerSubmission);
             if (partnerSubmission.status === 'confirmé') {
                 setPartnerStatus('partner');
-                setPartnerData(partnerSubmission);
             } else {
                 setPartnerStatus('pending');
             }
