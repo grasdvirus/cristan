@@ -6,7 +6,7 @@ import { useEffect, type ReactNode } from 'react';
 import { useUser } from '@/firebase';
 import { LoadingSpinner } from './loading-spinner';
 
-const ADMIN_EMAILS = ['grasdvirus@gmail.com'];
+const ADMIN_EMAIL = 'grasdvirus@gmail.com';
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -28,20 +28,25 @@ export function AuthGuard({ children, adminOnly = false }: AuthGuardProps) {
       return;
     }
     
-    // If the page is admin-only and the user is not an admin, redirect
-    if (adminOnly && (!user.email || !ADMIN_EMAILS.includes(user.email))) {
+    // If the page is admin-only and the user is not the specific admin, redirect.
+    if (adminOnly && user.email !== ADMIN_EMAIL) {
         router.replace('/profile'); // Redirect non-admins away from admin pages
     }
 
   }, [user, isUserLoading, router, pathname, adminOnly]);
 
   // While checking user auth state, show a spinner.
-  if (isUserLoading || !user) {
+  if (isUserLoading) {
+    return <LoadingSpinner />;
+  }
+  
+  // If user is not logged in yet, show spinner while redirecting.
+  if (!user) {
     return <LoadingSpinner />;
   }
 
-  // If admin-only page and user is not an admin, show spinner during redirect.
-  if (adminOnly && (!user.email || !ADMIN_EMAILS.includes(user.email))) {
+  // If this is an admin page and the logged-in user is not the admin, show a spinner during redirect.
+  if (adminOnly && user.email !== ADMIN_EMAIL) {
     return <LoadingSpinner />;
   }
 
