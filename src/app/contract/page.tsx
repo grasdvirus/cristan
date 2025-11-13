@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense } from 'react';
@@ -10,7 +9,6 @@ import { ArrowLeft, Gift } from 'lucide-react';
 import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import Link from 'next/link';
-import { AuthGuard } from '@/components/auth-guard';
 
 type Project = {
     id: string;
@@ -21,8 +19,6 @@ type Project = {
 function ContractPageContent() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get('projectId');
-  // This page is now only for 'Projet' or general 'Contact'
-  const type = 'Projet'; 
   
   const { firestore } = useFirebase();
   const projectRef = useMemoFirebase(() => {
@@ -88,9 +84,7 @@ function ContractPageContent() {
         </NeumorphicCard>
 
         <div className="sm:p-0">
-            <AuthGuard>
-                <ContractForm projectId={projectId} />
-            </AuthGuard>
+            <ContractForm projectId={projectId} />
         </div>
       </div>
     </div>

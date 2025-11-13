@@ -20,7 +20,6 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
-import { AuthGuard } from '@/components/auth-guard';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -407,7 +406,7 @@ function PartnerPageContent() {
   const [isCodeVerified, setIsCodeVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { firestore, user } = useFirebase();
+  const { firestore, user, isUserLoading } = useFirebase();
 
   // Check if user is already a confirmed partner
   const partnerQuery = useMemoFirebase(() => {
@@ -470,30 +469,35 @@ function PartnerPageContent() {
     </div>
   );
   
+  // Public access part
+  if (isUserLoading) {
+    return <LoadingSpinner />;
+  }
+
   if (user) {
-    if (isLoadingPartner) {
-        return <LoadingSpinner />;
-    }
-    if (confirmedPartner) {
-        return (
-            <PageWrapper showBackButton={false}>
-                <PartnerDashboard partner={confirmedPartner} />
-            </PageWrapper>
-        )
-    }
-    if (pendingPartner) {
-        return (
-            <PageWrapper>
-                <div className="text-center">
-                    <NeumorphicCard className="max-w-2xl mx-auto">
-                        <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
-                        <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
-                    </NeumorphicCard>
-                </div>
-            </PageWrapper>
-        )
-    }
-    if (refusedPartner) {
+      if (isLoadingPartner) {
+          return <LoadingSpinner />;
+      }
+      if (confirmedPartner) {
+          return (
+              <PageWrapper showBackButton={false}>
+                  <PartnerDashboard partner={confirmedPartner} />
+              </PageWrapper>
+          )
+      }
+      if (pendingPartner) {
+          return (
+              <PageWrapper>
+                  <div className="text-center">
+                      <NeumorphicCard className="max-w-2xl mx-auto">
+                          <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
+                          <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
+                      </NeumorphicCard>
+                  </div>
+              </PageWrapper>
+          )
+      }
+      if (refusedPartner) {
         return (
             <PageWrapper>
                 <div className="text-center">
@@ -504,8 +508,11 @@ function PartnerPageContent() {
                 </div>
             </PageWrapper>
         )
-    }
+      }
   }
+  
+  // At this point, user is either not logged in, or is not a partner yet.
+  // The logic for displaying the forms can proceed.
 
   if (!isCodeVerified) {
       return (
@@ -514,14 +521,22 @@ function PartnerPageContent() {
         </PageWrapper>
       )
   }
-
+  
+  // If code is verified, show the form. We need to wrap it in AuthGuard because submitting requires a user.
   return (
     <PageWrapper>
-        <AuthGuard>
-            <PartnerForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
-        </AuthGuard>
+        <NeumorphicCard className="max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold text-center mb-2">Presque là !</h2>
+            <p className="text-center text-muted-foreground mb-6">Connectez-vous ou créez un compte pour soumettre votre demande de partenariat.</p>
+            <Button asChild className="w-full btn-neumorphic-light dark:btn-neumorphic-dark">
+                <Link href="/login?redirect=/partner">
+                    Se connecter pour continuer
+                </Link>
+            </Button>
+        </NeumorphicCard>
     </PageWrapper>
   );
+
 }
 
 export default function PartnerPage() {
