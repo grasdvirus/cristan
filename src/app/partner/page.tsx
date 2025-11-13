@@ -510,6 +510,7 @@ function PartnerPageContent() {
         }
       } catch (error) {
           console.error("Error fetching partner status:", error);
+          // Don't show toast for permission denied, as it's expected for users with no submissions
           if ((error as any).code !== 'permission-denied') {
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de vérifier votre statut de partenaire.' });
           }
@@ -625,5 +626,7 @@ export default function PartnerPage() {
         </Suspense>
     )
 }
+
+    
 
     
