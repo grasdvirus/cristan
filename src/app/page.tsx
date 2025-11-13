@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import HeroSection from '@/components/sections/hero-section';
 import ProjectsGrid from '@/components/sections/projects-grid';
-import VideosGrid from '@/components/sections/videos-grid';
+import { HomeTVSection } from '@/components/sections/videos-grid';
 import GamesGrid from '@/components/sections/games-grid';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -61,7 +61,7 @@ export default function Home() {
           </div>
 
           {activeTab === 'sites' && <ProjectsGrid />}
-          {activeTab === 'videos' && <VideosGrid />}
+          {activeTab === 'videos' && <HomeTVSection />}
           {activeTab === 'games' && <GamesGrid />}
         </div>
       </div>

@@ -3,18 +3,20 @@
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 import { ContractSubmission } from '@/app/admin/page';
 import { NeumorphicCard } from '../neumorphic-card';
 import { Skeleton } from '../ui/skeleton';
 import { Button } from '../ui/button';
 import { useToast } from '../ui/use-toast';
-import { Minus, Plus, Link as LinkIcon, User, Mail, Phone, Code, Check, X, Clock, RefreshCw, BarChart, Trophy, MoreVertical } from 'lucide-react';
+import { Minus, Plus, Link as LinkIcon, User, Mail, Phone, Code, Check, X, Clock, RefreshCw, BarChart, Trophy, MoreVertical, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
+
 
 function PartnerDetails({ partner }: { partner: ContractSubmission }) {
     const { firestore } = useFirebase();
@@ -92,7 +94,7 @@ function PartnerDetails({ partner }: { partner: ContractSubmission }) {
     );
 }
 
-function PartnerRow({ partner }: { partner: ContractSubmission }) {
+function PartnerRow({ partner, onDelete }: { partner: ContractSubmission, onDelete: (id: string) => void }) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isOpen, setIsOpen] = useState(false);
@@ -140,6 +142,22 @@ function PartnerRow({ partner }: { partner: ContractSubmission }) {
                                 <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'en attente')}>
                                     <Clock className="mr-2 h-4 w-4 text-yellow-500"/> Mettre en attente
                                 </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors text-destructive focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                             <Trash2 className="mr-2 h-4 w-4"/> Supprimer
+                                        </div>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
+                                        <AlertDialogDescription>Cette action est irréversible et supprimera définitivement ce partenaire.</AlertDialogDescription>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => onDelete(partner.id)}>Supprimer</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -158,7 +176,7 @@ function PartnerRow({ partner }: { partner: ContractSubmission }) {
     );
 }
 
-function PartnerCard({ partner }: { partner: ContractSubmission }) {
+function PartnerCard({ partner, onDelete }: { partner: ContractSubmission, onDelete: (id: string) => void }) {
   const { firestore } = useFirebase();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
@@ -206,6 +224,22 @@ function PartnerCard({ partner }: { partner: ContractSubmission }) {
                     <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'en attente')}>
                         <Clock className="mr-2 h-4 w-4 text-yellow-500"/> Mettre en attente
                     </DropdownMenuItem>
+                     <DropdownMenuSeparator />
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors text-destructive focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                <Trash2 className="mr-2 h-4 w-4"/> Supprimer
+                            </div>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
+                            <AlertDialogDescription>Cette action est irréversible et supprimera définitivement ce partenaire.</AlertDialogDescription>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDelete(partner.id)}>Supprimer</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -222,6 +256,7 @@ function PartnerCard({ partner }: { partner: ContractSubmission }) {
 
 export function PartnersManager({ searchTerm }: { searchTerm: string }) {
     const { firestore } = useFirebase();
+    const { toast } = useToast();
     
     const partnersQuery = useMemoFirebase(
         () => firestore ? query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat')) : null,
@@ -239,6 +274,17 @@ export function PartnersManager({ searchTerm }: { searchTerm: string }) {
             (p.promoCode && p.promoCode.toLowerCase().includes(searchTerm.toLowerCase()))
         );
     }, [partners, searchTerm]);
+
+    const handleDelete = async (id: string) => {
+        if (!firestore) return;
+        try {
+            await deleteDoc(doc(firestore, "submissions", id));
+            toast({ variant: 'success', title: 'Partenaire supprimé.'});
+        } catch (error) {
+            console.error("Error deleting partner: ", error);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer le partenaire.'});
+        }
+    };
 
 
     return (
@@ -264,14 +310,14 @@ export function PartnersManager({ searchTerm }: { searchTerm: string }) {
                           </TableHeader>
                           <TableBody>
                           {filteredPartners.map((partner) => (
-                              <PartnerRow key={partner.id} partner={partner} />
+                              <PartnerRow key={partner.id} partner={partner} onDelete={handleDelete} />
                           ))}
                           </TableBody>
                       </Table>
                   </div>
                   <div className="sm:hidden space-y-4">
                       {filteredPartners.map((partner) => (
-                        <PartnerCard key={partner.id} partner={partner} />
+                        <PartnerCard key={partner.id} partner={partner} onDelete={handleDelete} />
                       ))}
                   </div>
                 </>

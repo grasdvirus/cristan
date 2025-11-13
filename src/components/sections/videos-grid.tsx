@@ -3,6 +3,13 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from '@/components/ui/carousel';
+import Autoplay from 'embla-carousel-autoplay';
+import React from 'react';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { CardTitle } from '../ui/card';
@@ -10,6 +17,7 @@ import { Calendar, Eye, PlayCircle } from 'lucide-react';
 import { collection, query } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '../ui/skeleton';
+import { Button } from '../ui/button';
 
 type Video = {
     id: string;
@@ -37,6 +45,67 @@ function VideoGridSkeleton() {
             ))}
         </div>
     );
+}
+
+export function HomeTVSection() {
+  const { firestore } = useFirebase();
+  const videosQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'videos')) : null, [firestore]);
+  const { data: videos, isLoading } = useCollection<Video>(videosQuery);
+  const autoplay = React.useRef(
+      Autoplay({ delay: 2000, stopOnInteraction: false, stopOnMouseEnter: true })
+  );
+
+  if (isLoading) {
+      return <Skeleton className="h-64 w-full" />;
+  }
+
+  if (!videos || videos.length === 0) {
+      return null;
+  }
+
+  return (
+    <NeumorphicCard className="p-4 sm:p-6 md:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+            <div className="lg:col-span-1">
+                <h3 className="text-2xl sm:text-3xl font-bold font-headline mb-4">Programme TV</h3>
+                <p className="text-muted-foreground mb-6">
+                    Découvrez nos dernières émissions, tutoriels et analyses. Plongez dans un univers de contenu tech et créatif.
+                </p>
+                <Button asChild size="lg" className="w-full sm:w-auto btn-neumorphic-light dark:btn-neumorphic-dark">
+                    <a href="https://tristan-del.vercel.app/decouvrir" target="_blank" rel="noopener noreferrer">
+                        Suivre le programme
+                    </a>
+                </Button>
+            </div>
+            <div className="lg:col-span-2">
+                <Carousel
+                    className="w-full"
+                    plugins={[autoplay.current]}
+                    opts={{
+                        loop: true,
+                        align: 'start',
+                    }}
+                >
+                    <CarouselContent className="-ml-4">
+                        {videos.map((video) => (
+                            <CarouselItem key={video.id} className="pl-4 basis-1/2 md:basis-1/3">
+                                <NeumorphicCard inset className="overflow-hidden">
+                                     <Image
+                                        src={video.thumbnailUrl}
+                                        alt={video.title}
+                                        width={300}
+                                        height={170}
+                                        className="w-full h-auto object-cover aspect-video"
+                                    />
+                                </NeumorphicCard>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                </Carousel>
+            </div>
+        </div>
+    </NeumorphicCard>
+  );
 }
 
 export default function VideosGrid() {

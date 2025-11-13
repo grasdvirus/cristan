@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useForm, useFieldArray, useForm as useHookForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2, User, Trophy, Copy, Edit, ArrowLeft } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { AuthGuard } from '@/components/auth-guard';
 import { ContractSubmission } from '@/app/admin/page';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -426,7 +425,7 @@ function PartnerPageContent() {
 
   const handleFormSubmit = async (values: PartnerFormValues) => {
       if (!firestore || !user) {
-        toast({ title: 'Erreur: utilisateur non connecté', variant: 'destructive' });
+        toast({ title: 'Erreur: utilisateur non connecté', description: 'Veuillez vous connecter pour devenir partenaire.', variant: 'destructive' });
         return;
       }
       setIsSubmitting(true);
@@ -469,6 +468,15 @@ function PartnerPageContent() {
       {children}
     </div>
   );
+  
+  // If user is not logged in, they can still see the initial form
+  if (!user) {
+      return (
+        <PageWrapper>
+            <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
+        </PageWrapper>
+      )
+  }
 
   if (isLoadingPartner) {
     return <LoadingSpinner />;
@@ -525,12 +533,8 @@ function PartnerPageContent() {
 
 export default function PartnerPage() {
     return (
-        <AuthGuard>
-            <PartnerPageContent />
-        </AuthGuard>
+      <Suspense fallback={<LoadingSpinner />}>
+        <PartnerPageContent />
+      </Suspense>
     )
 }
-
-    
-
-

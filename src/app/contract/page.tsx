@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Gift } from 'lucide-react';
 import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { AuthGuard } from '@/components/auth-guard';
 import Link from 'next/link';
 
 type Project = {
@@ -99,9 +98,7 @@ function ContractPageContent() {
 export default function ContractPage() {
     return (
         <Suspense fallback={<div>Chargement...</div>}>
-            <AuthGuard>
-                <ContractPageContent />
-            </AuthGuard>
+            <ContractPageContent />
         </Suspense>
     )
 }
