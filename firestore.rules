@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Firestore Security Rules for the portfolio website.
  *
@@ -95,10 +96,16 @@ service cloud.firestore {
     }
     
     match /submissions/{submissionId} {
-      allow get: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.userId);
-      allow list: if isAdmin() || (request.auth != null && request.query.where.size() == 1 && request.query.where[0].field == 'userId' && request.query.where[0].op == '==' && request.query.where[0].value == request.auth.uid);
+      // An admin can get any submission. A user can get their own.
+      allow get: if isAdmin() || (request.auth != null && request.auth.uid == submissionId);
+      // An admin can list all submissions. No one else can.
+      allow list: if isAdmin();
+      // Anyone can create a submission.
       allow create: if true;
-      allow update, delete: if isAdmin();
+      // An admin can update any submission. A user can update their own if it exists.
+      allow update: if isAdmin() || (request.auth != null && request.auth.uid == submissionId);
+      // Only an admin can delete a submission.
+      allow delete: if isAdmin();
     }
     
     match /avis/{avisId} {

@@ -6,8 +6,8 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
-import { useFirebase, useMemoFirebase } from '@/firebase';
-import { addDoc, collection, serverTimestamp, query, where, doc, updateDoc, getDocs } from 'firebase/firestore';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -461,66 +461,28 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
     </div>
 );
 
-type PartnerStatus = 'loading' | 'partner_confirmed' | 'partner_pending' | 'not_partner';
-
 function PartnerPageContent() {
   const [isCodeVerified, setIsCodeVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const { toast } = useToast();
   const { firestore, user, isUserLoading } = useFirebase();
-  const [partnerStatus, setPartnerStatus] = useState<PartnerStatus>('loading');
-  const [partnerData, setPartnerData] = useState<ContractSubmission | null>(null);
   const [updateTrigger, setUpdateTrigger] = useState(0);
 
+  const partnerDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'submissions', user.uid);
+  }, [firestore, user, updateTrigger]);
+
+  const { data: partnerData, isLoading: isPartnerLoading, error } = useDoc<ContractSubmission>(partnerDocRef);
+  
   useEffect(() => {
-    if (isUserLoading) {
-        setPartnerStatus('loading');
-        return;
-    };
-
-    if (!user) {
-        setPartnerStatus('not_partner');
-        return;
-    }
-    
-    const fetchPartnerStatus = async () => {
-      if (!firestore || !user) return;
-      setPartnerStatus('loading');
-      
-      const q = query(
-        collection(firestore, 'submissions'),
-        where('userId', '==', user.uid)
-      );
-      
-      try {
-        const querySnapshot = await getDocs(q);
-        const userSubmissions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ContractSubmission[];
-        const partnerSubmission = userSubmissions.find(sub => sub.type === 'Partenariat');
-
-        if (partnerSubmission) {
-            setPartnerData(partnerSubmission);
-            if (partnerSubmission.status === 'confirmé') {
-                setPartnerStatus('partner_confirmed');
-            } else {
-                setPartnerStatus('partner_pending');
-            }
-        } else {
-            setPartnerStatus('not_partner');
-        }
-      } catch (error) {
-          console.error("Error fetching partner status:", error);
-          // Don't show toast for permission denied, as it's expected for users with no submissions
-          if ((error as any).code !== 'permission-denied') {
+      if(error) {
+         if ((error as any).code !== 'permission-denied') {
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de vérifier votre statut de partenaire.' });
-          }
-          setPartnerStatus('not_partner');
+         }
       }
-    };
-    
-    fetchPartnerStatus();
-
-  }, [user, isUserLoading, firestore, toast, updateTrigger]);
+  }, [error, toast]);
 
 
   const handleFormSubmit = async (values: PartnerFormValues) => {
@@ -530,7 +492,8 @@ function PartnerPageContent() {
       }
       setIsSubmitting(true);
       try {
-        await addDoc(collection(firestore, 'submissions'), {
+        const submissionDocRef = doc(firestore, 'submissions', user.uid);
+        await setDoc(submissionDocRef, {
           ...values,
           socialLinks: values.socialLinks.map(link => link.value),
           type: 'Partenariat',
@@ -539,6 +502,7 @@ function PartnerPageContent() {
           promoCodeUses: 0,
           promoCodeTotalUses: 0,
           createdAt: serverTimestamp(),
+          id: user.uid, // Explicitly set ID to match doc ID
         });
         setShowSuccessDialog(true);
       } catch (error) {
@@ -557,18 +521,28 @@ function PartnerPageContent() {
   }
 
   const renderContent = () => {
-    switch (partnerStatus) {
-        case 'loading':
-            return <LoadingSpinner />;
-        
-        case 'partner_confirmed':
-            if (partnerData) {
-                return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerData} onUpdate={() => setUpdateTrigger(t => t + 1)} /></PageWrapper>;
-            }
-            return <LoadingSpinner />;
+    if (isUserLoading || (user && isPartnerLoading)) {
+        return <LoadingSpinner />;
+    }
 
-        case 'partner_pending':
+    if (partnerData) { // User has a submission document
+        if (partnerData.type !== 'Partenariat') {
+             // This case should be rare, but handles if a user has a 'Projet' submission with their UID as ID.
              return (
+                <PageWrapper>
+                {isCodeVerified ? (
+                    <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
+                ) : (
+                    <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
+                )}
+                </PageWrapper>
+            );
+        }
+        
+        if (partnerData.status === 'confirmé') {
+            return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerData} onUpdate={() => setUpdateTrigger(t => t + 1)} /></PageWrapper>;
+        } else {
+            return (
                 <>
                     <PageWrapper><PendingApprovalView /></PageWrapper>
                     <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
@@ -576,7 +550,6 @@ function PartnerPageContent() {
                             <NeumorphicCard className="relative overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
                                 <div className="absolute inset-0 sparkle-mask"></div>
-                                
                                 <div className="relative flex flex-col items-center text-center py-8 px-4">
                                     <DialogHeader>
                                         <DialogTitle className="text-center text-2xl font-bold font-headline">Demande envoyée !</DialogTitle>
@@ -598,22 +571,20 @@ function PartnerPageContent() {
                         </DialogContent>
                     </Dialog>
                 </>
-             );
-
-        case 'not_partner':
-            return (
-                <PageWrapper>
-                {isCodeVerified ? (
-                    <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
-                ) : (
-                    <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
-                )}
-                </PageWrapper>
             );
-
-        default:
-            return <LoadingSpinner />;
+        }
     }
+
+    // No partner data, user is not a partner yet.
+    return (
+        <PageWrapper>
+            {isCodeVerified ? (
+                <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
+            ) : (
+                <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
+            )}
+        </PageWrapper>
+    );
   }
 
   return renderContent();
@@ -626,7 +597,3 @@ export default function PartnerPage() {
         </Suspense>
     )
 }
-
-    
-
-    
