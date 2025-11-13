@@ -20,6 +20,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
+import { AuthGuard } from '@/components/auth-guard';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -469,51 +470,41 @@ function PartnerPageContent() {
     </div>
   );
   
-  // If user is not logged in, they can still see the initial form
-  if (!user) {
-      return (
-        <PageWrapper>
-            <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
-        </PageWrapper>
-      )
-  }
-
-  if (isLoadingPartner) {
-    return <LoadingSpinner />;
-  }
-
-  if (confirmedPartner) {
-      return (
-        <PageWrapper showBackButton={false}>
-            <PartnerDashboard partner={confirmedPartner} />
-        </PageWrapper>
-      )
-  }
-
-  if (pendingPartner) {
-      return (
-        <PageWrapper>
-            <div className="text-center">
-                <NeumorphicCard className="max-w-2xl mx-auto">
-                    <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
-                    <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
-                </NeumorphicCard>
-            </div>
-        </PageWrapper>
-      )
-  }
-  
-  if (refusedPartner) {
-    return (
-      <PageWrapper>
-        <div className="text-center">
-            <NeumorphicCard className="max-w-2xl mx-auto">
-                <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
-                <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
-            </NeumorphicCard>
-        </div>
-      </PageWrapper>
-    )
+  if (user) {
+    if (isLoadingPartner) {
+        return <LoadingSpinner />;
+    }
+    if (confirmedPartner) {
+        return (
+            <PageWrapper showBackButton={false}>
+                <PartnerDashboard partner={confirmedPartner} />
+            </PageWrapper>
+        )
+    }
+    if (pendingPartner) {
+        return (
+            <PageWrapper>
+                <div className="text-center">
+                    <NeumorphicCard className="max-w-2xl mx-auto">
+                        <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
+                        <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
+                    </NeumorphicCard>
+                </div>
+            </PageWrapper>
+        )
+    }
+    if (refusedPartner) {
+        return (
+            <PageWrapper>
+                <div className="text-center">
+                    <NeumorphicCard className="max-w-2xl mx-auto">
+                        <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
+                        <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
+                    </NeumorphicCard>
+                </div>
+            </PageWrapper>
+        )
+    }
   }
 
   if (!isCodeVerified) {
@@ -526,7 +517,9 @@ function PartnerPageContent() {
 
   return (
     <PageWrapper>
-        <PartnerForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
+        <AuthGuard>
+            <PartnerForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
+        </AuthGuard>
     </PageWrapper>
   );
 }

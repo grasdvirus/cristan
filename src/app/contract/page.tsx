@@ -10,6 +10,7 @@ import { ArrowLeft, Gift } from 'lucide-react';
 import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import Link from 'next/link';
+import { AuthGuard } from '@/components/auth-guard';
 
 type Project = {
     id: string;
@@ -87,7 +88,9 @@ function ContractPageContent() {
         </NeumorphicCard>
 
         <div className="sm:p-0">
-            <ContractForm projectId={projectId} />
+            <AuthGuard>
+                <ContractForm projectId={projectId} />
+            </AuthGuard>
         </div>
       </div>
     </div>

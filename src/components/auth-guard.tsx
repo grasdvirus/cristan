@@ -1,3 +1,4 @@
+
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
@@ -23,21 +24,26 @@ export function AuthGuard({ children, adminOnly = false }: AuthGuardProps) {
     }
 
     if (!user) {
-      router.replace('/login');
+      router.replace(`/login?redirect=${pathname}`);
       return;
     }
     
     if (adminOnly && (!user.email || !ADMIN_EMAILS.includes(user.email))) {
-        // If it's an admin-only page and the user is not an admin,
-        // redirect them to their profile, not the login page.
         router.replace('/profile');
     }
 
   }, [user, isUserLoading, router, pathname, adminOnly]);
 
-  if (isUserLoading || !user || (adminOnly && (!user.email || !ADMIN_EMAILS.includes(user.email)))) {
+  if (isUserLoading || !user) {
     return <LoadingSpinner />;
   }
+  
+  if (adminOnly && (!user.email || !ADMIN_EMAILS.includes(user.email))) {
+    // This check is redundant due to the useEffect, but it's a good safeguard
+    // to prevent flashing the content.
+    return <LoadingSpinner />;
+  }
+
 
   return <>{children}</>;
 }
