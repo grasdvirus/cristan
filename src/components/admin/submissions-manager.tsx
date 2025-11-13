@@ -95,8 +95,10 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
     const { firestore, user } = useFirebase();
     const { toast } = useToast();
     
+    // Strict admin check at the beginning of the component.
     const isAdmin = user?.email === 'grasdvirus@gmail.com';
 
+    // The query will only be defined if the user is an admin.
     const submissionsQuery = useMemoFirebase(
         () => {
             if (!firestore || !isAdmin) {
@@ -107,6 +109,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
         [firestore, isAdmin]
     );
 
+    // This hook will only run the query if it's not null.
     const { data: submissions, isLoading } = useCollection<ContractSubmission & { type?: string }>(submissionsQuery);
 
     const filteredSubmissions = useMemo(() => {
@@ -149,6 +152,8 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
         }
     };
     
+    // If not an admin, render an access denied message and stop.
+    // This prevents any hooks or queries from running for non-admins.
     if (!isAdmin) {
       return (
         <NeumorphicCard inset className="p-4 sm:p-6 text-center">
