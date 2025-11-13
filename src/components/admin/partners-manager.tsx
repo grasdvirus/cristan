@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -255,13 +256,15 @@ function PartnerCard({ partner, onDelete }: { partner: ContractSubmission, onDel
 }
 
 export function PartnersManager({ searchTerm }: { searchTerm: string }) {
-    const { firestore } = useFirebase();
+    const { firestore, user } = useFirebase();
     const { toast } = useToast();
     
+    const isAdmin = user?.email === 'grasdvirus@gmail.com';
+
     const partnersQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || !isAdmin) return null;
         return query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat'));
-    }, [firestore]);
+    }, [firestore, isAdmin]);
 
     const { data: partners, isLoading } = useCollection<ContractSubmission>(partnersQuery);
     

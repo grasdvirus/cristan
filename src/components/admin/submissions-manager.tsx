@@ -92,12 +92,19 @@ function SubmissionCard({ submission, formatDate, handleDelete, handleStatusChan
 }
 
 export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
-    const { firestore } = useFirebase();
+    const { firestore, user } = useFirebase();
     const { toast } = useToast();
+    
+    const isAdmin = user?.email === 'grasdvirus@gmail.com';
+
     const submissionsQuery = useMemoFirebase(
-        () => firestore ? query(collection(firestore, 'submissions'), orderBy('createdAt', 'desc')) : null,
-        [firestore]
+        () => {
+            if (!firestore || !isAdmin) return null;
+            return query(collection(firestore, 'submissions'), orderBy('createdAt', 'desc'));
+        },
+        [firestore, isAdmin]
     );
+
     const { data: submissions, isLoading } = useCollection<ContractSubmission & { type?: string }>(submissionsQuery);
 
     const filteredSubmissions = useMemo(() => {
