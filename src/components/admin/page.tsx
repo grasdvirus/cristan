@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -21,7 +22,9 @@ import { ProjectForm, type ProjectFormValues } from '@/components/admin/project-
 import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
 import { GameForm, type GameFormValues } from '@/components/admin/game-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
+import { PartnersManager } from '@/components/admin/partners-manager';
 import { convertToEmbedUrl } from '@/lib/utils';
+import { AuthGuard } from '../auth-guard';
 
 // Define types based on backend.json
 export type Slide = {
@@ -76,6 +79,13 @@ export type ContractSubmission = {
         seconds: number;
         nanoseconds: number;
     };
+    promoCode?: string;
+    promoCodeUses?: number;
+    promoCodeTotalUses?: number;
+    socialLinks?: string[];
+    type?: string;
+    status: 'en attente' | 'confirmé' | 'refusé' | 'Nouveau' | 'Vu' | 'En cours' | 'Terminé';
+    userId: string;
 };
 
 
@@ -547,46 +557,53 @@ function GamesManager() {
 
 export default function AdminPage() {
     return (
-        <div className="container mx-auto px-4 py-16 sm:py-24">
-            <NeumorphicCard className="max-w-7xl mx-auto">
-                <div className="flex items-center gap-4 mb-8">
-                    <Shield className="w-8 h-8 text-primary" />
-                    <h1 className="text-4xl font-bold font-headline">Panneau d'administration</h1>
-                </div>
-                <p className="text-muted-foreground mb-8">
-                    Gérez le contenu de votre site web à partir de cet espace.
-                </p>
+        <AuthGuard adminOnly>
+            <div className="container mx-auto px-4 py-16 sm:py-24">
+                <NeumorphicCard className="max-w-7xl mx-auto">
+                    <div className="flex items-center gap-4 mb-8">
+                        <Shield className="w-8 h-8 text-primary" />
+                        <h1 className="text-4xl font-bold font-headline">Panneau d'administration</h1>
+                    </div>
+                    <p className="text-muted-foreground mb-8">
+                        Gérez le contenu de votre site web à partir de cet espace.
+                    </p>
 
-                <Tabs defaultValue="slides">
-                    <TabsList className="mb-8 grid w-full grid-cols-5">
-                        <TabsTrigger value="slides">Slides</TabsTrigger>
-                        <TabsTrigger value="internet">Internet</TabsTrigger>
-                        <TabsTrigger value="tv">TV</TabsTrigger>
-                        <TabsTrigger value="games">Gamme</TabsTrigger>
-                        <TabsTrigger value="submissions">Demandes</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="slides">
-                        <SlidesManager />
-                    </TabsContent>
+                    <Tabs defaultValue="slides">
+                        <TabsList className="mb-8 grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
+                            <TabsTrigger value="slides">Slides</TabsTrigger>
+                            <TabsTrigger value="internet">Internet</TabsTrigger>
+                            <TabsTrigger value="tv">TV</TabsTrigger>
+                            <TabsTrigger value="games">Gamme</TabsTrigger>
+                            <TabsTrigger value="submissions">Demandes</TabsTrigger>
+                            <TabsTrigger value="partners">Partenaires</TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="slides">
+                            <SlidesManager />
+                        </TabsContent>
 
-                    <TabsContent value="internet">
-                        <ProjectsManager />
-                    </TabsContent>
+                        <TabsContent value="internet">
+                            <ProjectsManager />
+                        </TabsContent>
 
-                    <TabsContent value="tv">
-                        <VideosManager />
-                    </TabsContent>
+                        <TabsContent value="tv">
+                            <VideosManager />
+                        </TabsContent>
 
-                    <TabsContent value="games">
-                        <GamesManager />
-                    </TabsContent>
+                        <TabsContent value="games">
+                            <GamesManager />
+                        </TabsContent>
 
-                    <TabsContent value="submissions">
-                        <SubmissionsManager />
-                    </TabsContent>
-                </Tabs>
-            </NeumorphicCard>
-        </div>
+                        <TabsContent value="submissions">
+                            <SubmissionsManager searchTerm="" />
+                        </TabsContent>
+
+                        <TabsContent value="partners">
+                            <PartnersManager searchTerm="" />
+                        </TabsContent>
+                    </Tabs>
+                </NeumorphicCard>
+            </div>
+        </AuthGuard>
     );
 }

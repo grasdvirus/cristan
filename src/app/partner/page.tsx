@@ -402,28 +402,18 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
     );
 }
 
-function LoggedOutPartnerView({ onCodeVerified }: { onCodeVerified: () => void; }) {
-    return (
-        <PageWrapper>
-            <PartnerCodeForm onCodeVerified={onCodeVerified} />
-        </PageWrapper>
-    )
-}
-
-function LoggedInPartnerView(
-    { isCodeVerified, onCodeVerified, onFormSubmit, isSubmitting }: 
-    { isCodeVerified: boolean; onCodeVerified: () => void; onFormSubmit: (values: PartnerFormValues) => void; isSubmitting: boolean;}
-) {
+function LoggedInPartnerView({ isCodeVerified, onCodeVerified, onFormSubmit, isSubmitting }: { isCodeVerified: boolean; onCodeVerified: () => void; onFormSubmit: (values: PartnerFormValues) => void; isSubmitting: boolean;}) {
     const { firestore, user } = useFirebase();
 
     const partnerQuery = useMemoFirebase(() => {
-        if (!firestore || !user) return null; // Should not happen if we are in this component
+        if (!firestore || !user) return null;
         return query(
             collection(firestore, 'submissions'),
             where('userId', '==', user.uid),
             where('type', '==', 'Partenariat'),
         );
     }, [firestore, user]);
+    
     const { data: partnerData, isLoading: isLoadingPartner } = useCollection<ContractSubmission>(partnerQuery);
     
     if (isLoadingPartner) {
@@ -441,6 +431,7 @@ function LoggedInPartnerView(
             </PageWrapper>
         )
     }
+
     if (pendingPartner) {
         return (
             <PageWrapper>
@@ -453,25 +444,26 @@ function LoggedInPartnerView(
             </PageWrapper>
         )
     }
+    
     if (refusedPartner) {
-      return (
-          <PageWrapper>
-              <div className="text-center">
-                  <NeumorphicCard className="max-w-2xl mx-auto">
-                      <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
-                      <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
-                  </NeumorphicCard>
-              </div>
-          </PageWrapper>
-      )
+        return (
+            <PageWrapper>
+                <div className="text-center">
+                    <NeumorphicCard className="max-w-2xl mx-auto">
+                        <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
+                        <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
+                    </NeumorphicCard>
+                </div>
+            </PageWrapper>
+        )
     }
     
     // User is logged in but is not a partner yet.
     if (!isCodeVerified) {
         return (
-          <PageWrapper>
-              <PartnerCodeForm onCodeVerified={onCodeVerified} />
-          </PageWrapper>
+            <PageWrapper>
+                <PartnerCodeForm onCodeVerified={onCodeVerified} />
+            </PageWrapper>
         )
     }
 
@@ -509,8 +501,13 @@ function PartnerPageContent() {
   const { firestore, user, isUserLoading } = useFirebase();
 
   const handleFormSubmit = async (values: PartnerFormValues) => {
-      if (!firestore || !user) {
-        toast({ title: 'Erreur: utilisateur non connecté', description: 'Veuillez vous connecter pour devenir partenaire.', variant: 'destructive' });
+      if (!firestore) {
+        toast({ title: 'Erreur de base de données', variant: 'destructive' });
+        return;
+      }
+      // Require user to be logged in to submit
+      if (!user) {
+        toast({ title: 'Connexion requise', description: 'Veuillez vous connecter pour devenir partenaire.', variant: 'destructive' });
         return;
       }
       setIsSubmitting(true);
@@ -539,32 +536,30 @@ function PartnerPageContent() {
     return <LoadingSpinner />;
   }
 
-  if (!user) {
-    if (isCodeVerified) {
-        return (
-            <PageWrapper>
-                <NeumorphicCard className="max-w-2xl mx-auto">
-                    <h2 className="text-2xl font-bold text-center mb-2">Presque là !</h2>
-                    <p className="text-center text-muted-foreground mb-6">Connectez-vous ou créez un compte pour soumettre votre demande de partenariat.</p>
-                    <Button asChild className="w-full btn-neumorphic-light dark:btn-neumorphic-dark">
-                        <Link href="/login?redirect=/partner">
-                            Se connecter pour continuer
-                        </Link>
-                    </Button>
-                </NeumorphicCard>
-            </PageWrapper>
-        )
-    }
-    return <LoggedOutPartnerView onCodeVerified={() => setIsCodeVerified(true)} />;
+  if (user) {
+      return (
+        <LoggedInPartnerView
+            isCodeVerified={isCodeVerified}
+            onCodeVerified={() => setIsCodeVerified(true)}
+            onFormSubmit={handleFormSubmit}
+            isSubmitting={isSubmitting}
+        />
+      );
+  }
+
+  // Fallback for anonymous users
+  if (isCodeVerified) {
+    return (
+        <PageWrapper>
+            <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
+        </PageWrapper>
+    )
   }
 
   return (
-    <LoggedInPartnerView
-        isCodeVerified={isCodeVerified}
-        onCodeVerified={() => setIsCodeVerified(true)}
-        onFormSubmit={handleFormSubmit}
-        isSubmitting={isSubmitting}
-    />
+    <PageWrapper>
+        <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
+    </PageWrapper>
   );
 }
 
