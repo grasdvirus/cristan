@@ -466,7 +466,7 @@ function PartnerPageContent() {
     );
   }, [firestore, user]);
 
-  const { data: userSubmissions, isLoading: isPartnerLoading, error } = useCollection<ContractSubmission>(partnerQuery);
+  const { data: userSubmissions, isLoading: isPartnerLoading } = useCollection<ContractSubmission>(partnerQuery);
   
   useEffect(() => {
     if (isUserLoading || isPartnerLoading) {
