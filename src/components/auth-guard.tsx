@@ -6,7 +6,7 @@ import { useEffect, type ReactNode } from 'react';
 import { useUser } from '@/firebase';
 import { LoadingSpinner } from './loading-spinner';
 
-const ADMIN_EMAILS = ['grasdvirus@gmail.com', 'christianvirus77@gmail.com'];
+const ADMIN_EMAILS = ['grasdvirus@gmail.com'];
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -48,5 +48,3 @@ export function AuthGuard({ children, adminOnly = false }: AuthGuardProps) {
   // If all checks pass, render the protected children.
   return <>{children}</>;
 }
-
-    
