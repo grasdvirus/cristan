@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { addDoc, collection, serverTimestamp, query, where, doc, updateDoc, increment } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, query, where, doc, updateDoc, increment, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
@@ -21,7 +21,6 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { useRouter } from 'next/navigation';
-import { AuthGuard } from '@/components/auth-guard';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -113,6 +112,9 @@ function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
 }
 
 function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: PartnerFormValues) => void, isSubmitting: boolean }) {
+  const { user, isUserLoading } = useFirebase();
+  const router = useRouter();
+  
   const form = useForm<PartnerFormValues>({
     resolver: zodResolver(partnerFormSchema),
     defaultValues: {
@@ -124,121 +126,129 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
     },
   });
 
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login?redirect=/partner');
+    }
+  }, [user, isUserLoading, router]);
+
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'socialLinks',
   });
+  
+  if (isUserLoading || !user) {
+    return <LoadingSpinner />;
+  }
 
   return (
-    <AuthGuard>
-        <NeumorphicCard className="w-full max-w-2xl mx-auto mt-12">
-        <h2 className="text-2xl font-bold font-headline text-center mb-6">Formulaire de Partenariat</h2>
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <NeumorphicCard className="w-full max-w-2xl mx-auto mt-12">
+    <h2 className="text-2xl font-bold font-headline text-center mb-6">Formulaire de Partenariat</h2>
+    <Form {...form}>
+        <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+            control={form.control}
+            name="fullName"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Nom complet</FormLabel>
+                <FormControl>
+                    <Input placeholder="Jean Dupont" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="promoCode"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Code Promo Suggeré</FormLabel>
+                <FormControl>
+                    <Input placeholder="EX: CRISTAN10" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                    <Input type="email" placeholder="votre@email.com" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Téléphone</FormLabel>
+                <FormControl>
+                    <Input type="tel" placeholder="+33 6..." {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
+        
+        <div>
+            <FormLabel>Réseaux Sociaux</FormLabel>
+            <div className="space-y-2 mt-2">
+            {fields.map((field, index) => (
                 <FormField
+                key={field.id}
                 control={form.control}
-                name="fullName"
+                name={`socialLinks.${index}.value`}
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Nom complet</FormLabel>
-                    <FormControl>
-                        <Input placeholder="Jean Dupont" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
-                    </FormControl>
+                    <div className="flex items-center gap-2">
+                        <FormControl>
+                        <Input placeholder="https://linkedin.com/in/..." {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"/>
+                        </FormControl>
+                        {fields.length > 1 && (
+                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                        )}
+                    </div>
                     <FormMessage />
                     </FormItem>
                 )}
                 />
-                <FormField
-                control={form.control}
-                name="promoCode"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Code Promo Suggeré</FormLabel>
-                    <FormControl>
-                        <Input placeholder="EX: CRISTAN10" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
+            ))}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                        <Input type="email" placeholder="votre@email.com" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Téléphone</FormLabel>
-                    <FormControl>
-                        <Input type="tel" placeholder="+33 6..." {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            </div>
-            
-            <div>
-                <FormLabel>Réseaux Sociaux</FormLabel>
-                <div className="space-y-2 mt-2">
-                {fields.map((field, index) => (
-                    <FormField
-                    key={field.id}
-                    control={form.control}
-                    name={`socialLinks.${index}.value`}
-                    render={({ field }) => (
-                        <FormItem>
-                        <div className="flex items-center gap-2">
-                            <FormControl>
-                            <Input placeholder="https://linkedin.com/in/..." {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"/>
-                            </FormControl>
-                            {fields.length > 1 && (
-                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                            )}
-                        </div>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                ))}
-                </div>
-                <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => append({ value: '' })}
-                >
-                <Plus className="mr-2 h-4 w-4" /> Ajouter un lien
-                </Button>
-            </div>
+            <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => append({ value: '' })}
+            >
+            <Plus className="mr-2 h-4 w-4" /> Ajouter un lien
+            </Button>
+        </div>
 
-            <div className="flex justify-end pt-4">
-                <Button type="submit" size="lg" className="w-full sm:w-auto btn-neumorphic-light dark:btn-neumorphic-dark" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4" />}
-                {isSubmitting ? 'Envoi en cours...' : 'Envoyer la demande'}
-                </Button>
-            </div>
-            </form>
-        </Form>
-        </NeumorphicCard>
-      </AuthGuard>
+        <div className="flex justify-end pt-4">
+            <Button type="submit" size="lg" className="w-full sm:w-auto btn-neumorphic-light dark:btn-neumorphic-dark" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Send className="mr-2 h-4 w-4" />}
+            {isSubmitting ? 'Envoi en cours...' : 'Envoyer la demande'}
+            </Button>
+        </div>
+        </form>
+    </Form>
+    </NeumorphicCard>
   );
 }
 
@@ -253,7 +263,7 @@ const motivationalMessages = [
 const congratsEmojis = ['🎉', '🥳', '🎊', '🤩', '🚀', '💯'];
 
 
-function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
+function PartnerDashboard({ partner, onUpdate }: { partner: ContractSubmission, onUpdate: () => void }) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
     const uses = partner.promoCodeUses || 0;
@@ -301,6 +311,7 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
             await updateDoc(partnerRef, { promoCode: newCode.trim() });
             toast({ variant: 'success', title: 'Code promo mis à jour !' });
             setIsEditingCode(false);
+            onUpdate(); // Trigger re-fetch in parent
         } catch (error) {
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour le code.' });
             console.error(error);
@@ -459,16 +470,10 @@ function PartnerPageContent() {
   const { firestore, user, isUserLoading } = useFirebase();
   const [partnerStatus, setPartnerStatus] = useState<PartnerStatus>('loading');
   const [partnerData, setPartnerData] = useState<ContractSubmission | null>(null);
+  const [updateTrigger, setUpdateTrigger] = useState(0);
 
-  const partnerQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(collection(firestore, 'submissions'), where('userId', '==', user.uid));
-  }, [firestore, user]);
-
-  const { data: userSubmissions, isLoading: isPartnerLoading } = useCollection<ContractSubmission>(partnerQuery);
-  
   useEffect(() => {
-    if (isUserLoading || isPartnerLoading) {
+    if (isUserLoading) {
         setPartnerStatus('loading');
         return;
     };
@@ -477,22 +482,41 @@ function PartnerPageContent() {
         setPartnerStatus('anonymous');
         return;
     }
-
-    if (userSubmissions && userSubmissions.length > 0) {
-        const partnerSubmission = userSubmissions.find(s => s.type === 'Partenariat');
-
-        if(partnerSubmission) {
-            setPartnerData(partnerSubmission);
-            if (partnerSubmission.status === 'confirmé') {
+    
+    const fetchPartnerStatus = async () => {
+      if (!firestore || !user) return;
+      setPartnerStatus('loading');
+      
+      const q = query(
+        collection(firestore, 'submissions'),
+        where('userId', '==', user.uid),
+        where('type', '==', 'Partenariat')
+      );
+      
+      try {
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const partnerSubmissionDoc = querySnapshot.docs[0];
+            const submissionData = { id: partnerSubmissionDoc.id, ...partnerSubmissionDoc.data() } as ContractSubmission;
+            setPartnerData(submissionData);
+            if (submissionData.status === 'confirmé') {
                 setPartnerStatus('partner');
             } else {
                 setPartnerStatus('pending');
             }
-            return;
+        } else {
+            setPartnerStatus('not_partner');
         }
-    }
-    setPartnerStatus('not_partner');
-  }, [user, userSubmissions, isUserLoading, isPartnerLoading]);
+      } catch (error) {
+          console.error("Error fetching partner status:", error);
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de vérifier votre statut de partenaire.' });
+          setPartnerStatus('not_partner'); // Fallback
+      }
+    };
+    
+    fetchPartnerStatus();
+
+  }, [user, isUserLoading, firestore, toast, updateTrigger]);
 
 
   const handleFormSubmit = async (values: PartnerFormValues) => {
@@ -524,7 +548,7 @@ function PartnerPageContent() {
   const handleDialogClose = (isOpen: boolean) => {
       setShowSuccessDialog(isOpen);
       if (!isOpen) {
-          setPartnerStatus('pending');
+          setUpdateTrigger(t => t + 1); // Trigger a re-fetch
       }
   }
 
@@ -545,43 +569,44 @@ function PartnerPageContent() {
   }
 
   if (partnerStatus === 'partner' && partnerData) {
-    return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerData} /></PageWrapper>;
+    return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerData} onUpdate={() => setUpdateTrigger(t => t+1)}/></PageWrapper>;
   }
 
   if (partnerStatus === 'pending') {
-      return <PageWrapper><PendingApprovalView /></PageWrapper>;
+      return (
+        <>
+            <PageWrapper><PendingApprovalView /></PageWrapper>
+            <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
+                <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
+                    <NeumorphicCard className="relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
+                        <div className="absolute inset-0 sparkle-mask"></div>
+                        
+                        <div className="relative flex flex-col items-center text-center py-8 px-4">
+                            <DialogHeader>
+                                <DialogTitle className="text-center text-2xl font-bold font-headline">Demande envoyée !</DialogTitle>
+                            </DialogHeader>
+                            <div className="text-7xl my-6 animate-bounce">
+                                <PartyPopper className="h-20 w-20 text-primary" />
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Nous avons bien reçu vos informations et examinerons votre demande bientôt.
+                            </p>
+                            <Button 
+                                onClick={() => handleDialogClose(false)} 
+                                className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark"
+                            >
+                                Fermer
+                            </Button>
+                        </div>
+                    </NeumorphicCard>
+                </DialogContent>
+            </Dialog>
+        </>
+      )
   }
   
-  return (
-    <PageWrapper>
-      <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
-          <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
-              <NeumorphicCard className="relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
-                  <div className="absolute inset-0 sparkle-mask"></div>
-                  
-                  <div className="relative flex flex-col items-center text-center py-8 px-4">
-                      <DialogHeader>
-                          <DialogTitle className="text-center text-2xl font-bold font-headline">Demande envoyée !</DialogTitle>
-                      </DialogHeader>
-                      <div className="text-7xl my-6 animate-bounce">
-                          <PartyPopper className="h-20 w-20 text-primary" />
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                          Nous avons bien reçu vos informations et examinerons votre demande bientôt.
-                      </p>
-                      <Button 
-                          onClick={() => handleDialogClose(false)} 
-                          className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark"
-                      >
-                          Fermer
-                      </Button>
-                  </div>
-              </NeumorphicCard>
-          </DialogContent>
-      </Dialog>
-    </PageWrapper>
-  );
+  return null;
 }
 
 export default function PartnerPage() {
@@ -591,3 +616,5 @@ export default function PartnerPage() {
         </Suspense>
     )
 }
+
+    
