@@ -119,8 +119,8 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
   const form = useForm<PartnerFormValues>({
     resolver: zodResolver(partnerFormSchema),
     defaultValues: {
-      fullName: '',
-      email: '',
+      fullName: user?.displayName || '',
+      email: user?.email || '',
       phone: '',
       socialLinks: [{ value: '' }],
       promoCode: '',
@@ -469,16 +469,18 @@ function PartnerPageContent() {
   const { firestore, user, isUserLoading } = useFirebase();
   const [updateTrigger, setUpdateTrigger] = useState(0);
 
+  // This is the key change: useDoc with a predictable ID (user.uid)
   const partnerDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'submissions', user.uid);
   }, [firestore, user, updateTrigger]);
 
+  // useDoc is a simple `get` operation, not a `list`
   const { data: partnerData, isLoading: isPartnerLoading, error } = useDoc<ContractSubmission>(partnerDocRef);
   
   useEffect(() => {
       if(error) {
-         if ((error as any).code !== 'permission-denied') {
+         if ((error as any).code !== 'permission-denied') { // Ignore permission-denied as it can be expected for new users
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de vérifier votre statut de partenaire.' });
          }
       }
@@ -492,6 +494,7 @@ function PartnerPageContent() {
       }
       setIsSubmitting(true);
       try {
+        // Use user.uid as the document ID
         const submissionDocRef = doc(firestore, 'submissions', user.uid);
         await setDoc(submissionDocRef, {
           ...values,
@@ -502,7 +505,7 @@ function PartnerPageContent() {
           promoCodeUses: 0,
           promoCodeTotalUses: 0,
           createdAt: serverTimestamp(),
-          id: user.uid, // Explicitly set ID to match doc ID
+          id: user.uid,
         });
         setShowSuccessDialog(true);
       } catch (error) {
@@ -525,69 +528,57 @@ function PartnerPageContent() {
         return <LoadingSpinner />;
     }
 
-    if (partnerData) { // User has a submission document
-        if (partnerData.type !== 'Partenariat') {
-             // This case should be rare, but handles if a user has a 'Projet' submission with their UID as ID.
-             return (
-                <PageWrapper>
-                {isCodeVerified ? (
-                    <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
-                ) : (
-                    <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
-                )}
-                </PageWrapper>
-            );
-        }
-        
+    if (partnerData && partnerData.type === 'Partenariat') {
         if (partnerData.status === 'confirmé') {
             return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerData} onUpdate={() => setUpdateTrigger(t => t + 1)} /></PageWrapper>;
         } else {
-            return (
-                <>
-                    <PageWrapper><PendingApprovalView /></PageWrapper>
-                    <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
-                        <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
-                            <NeumorphicCard className="relative overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
-                                <div className="absolute inset-0 sparkle-mask"></div>
-                                <div className="relative flex flex-col items-center text-center py-8 px-4">
-                                    <DialogHeader>
-                                        <DialogTitle className="text-center text-2xl font-bold font-headline">Demande envoyée !</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="text-7xl my-6 animate-bounce">
-                                        <PartyPopper className="h-20 w-20 text-primary" />
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">
-                                        Nous avons bien reçu vos informations et examinerons votre demande bientôt.
-                                    </p>
-                                    <Button 
-                                        onClick={() => handleDialogClose(false)} 
-                                        className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark"
-                                    >
-                                        Fermer
-                                    </Button>
-                                </div>
-                            </NeumorphicCard>
-                        </DialogContent>
-                    </Dialog>
-                </>
-            );
+            return <PageWrapper><PendingApprovalView /></PageWrapper>;
         }
     }
+    
+    // User is logged in but has no partner submission document yet.
+    if (user) {
+      if (isCodeVerified) {
+        return <PageWrapper><PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} /></PageWrapper>;
+      } else {
+        return <PageWrapper><PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} /></PageWrapper>;
+      }
+    }
 
-    // No partner data, user is not a partner yet.
-    return (
-        <PageWrapper>
-            {isCodeVerified ? (
-                <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
-            ) : (
-                <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
-            )}
-        </PageWrapper>
-    );
+    // User is not logged in.
+    return <PageWrapper><PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} /></PageWrapper>;
   }
 
-  return renderContent();
+  return (
+      <>
+        {renderContent()}
+        <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
+            <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
+                <NeumorphicCard className="relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
+                    <div className="absolute inset-0 sparkle-mask"></div>
+                    <div className="relative flex flex-col items-center text-center py-8 px-4">
+                        <DialogHeader>
+                            <DialogTitle className="text-center text-2xl font-bold font-headline">Demande envoyée !</DialogTitle>
+                        </DialogHeader>
+                        <div className="text-7xl my-6 animate-bounce">
+                            <PartyPopper className="h-20 w-20 text-primary" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            Nous avons bien reçu vos informations et examinerons votre demande bientôt.
+                        </p>
+                        <Button 
+                            onClick={() => handleDialogClose(false)} 
+                            className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark"
+                        >
+                            Fermer
+                        </Button>
+                    </div>
+                </NeumorphicCard>
+            </DialogContent>
+        </Dialog>
+      </>
+  );
 }
 
 export default function PartnerPage() {
@@ -597,3 +588,5 @@ export default function PartnerPage() {
         </Suspense>
     )
 }
+
+    
