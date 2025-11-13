@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2, User, Trophy, Copy, Edit, ArrowLeft, PartyPopper } from 'lucide-react';
+import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2, User, Trophy, Copy, Edit, ArrowLeft, PartyPopper, Clock } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { ContractSubmission } from '@/app/admin/page';
 import { Progress } from '@/components/ui/progress';
@@ -402,7 +402,36 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
     );
 }
 
-function PartnerStatusChecker({ onResult }: { onResult: (partner: ContractSubmission | null) => void }) {
+function PendingApprovalView() {
+    return (
+        <div className="text-center px-4 sm:px-0">
+            <NeumorphicCard className="max-w-2xl mx-auto p-8">
+                <div className="flex justify-center mb-6">
+                    <NeumorphicCard className="rounded-full p-4">
+                        <Clock className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
+                    </NeumorphicCard>
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-bold font-headline">Demande en cours d'examen</h1>
+                <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
+                    Merci pour votre demande ! Nous l'examinons et reviendrons vers vous rapidement. Une fois approuvée, vous aurez accès à votre tableau de bord partenaire sur cette page.
+                </p>
+                <Button asChild className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark">
+                    <Link href="/">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Retour à l'accueil
+                    </Link>
+                </Button>
+            </NeumorphicCard>
+        </div>
+    );
+}
+
+type PartnerStatus = {
+    status: 'loading' | 'partner' | 'pending' | 'not_partner';
+    partnerData: ContractSubmission | null;
+}
+
+function PartnerStatusChecker({ onResult }: { onResult: (result: PartnerStatus) => void }) {
     const { firestore, user } = useFirebase();
 
     const partnerQuery = useMemoFirebase(() => {
@@ -410,18 +439,29 @@ function PartnerStatusChecker({ onResult }: { onResult: (partner: ContractSubmis
         return query(
             collection(firestore, 'submissions'),
             where('userId', '==', user.uid),
-            where('type', '==', 'Partenariat'),
-            where('status', '==', 'confirmé')
+            where('type', '==', 'Partenariat')
         );
     }, [firestore, user]);
     
-    const { data: partnerData, isLoading } = useCollection<ContractSubmission>(partnerQuery);
+    const { data: partnerSubmissions, isLoading } = useCollection<ContractSubmission>(partnerQuery);
     
     useEffect(() => {
         if (!isLoading) {
-            onResult(partnerData?.[0] || null);
+            const confirmedPartner = partnerSubmissions?.find(s => s.status === 'confirmé');
+            if (confirmedPartner) {
+                onResult({ status: 'partner', partnerData: confirmedPartner });
+                return;
+            }
+            
+            const pendingPartner = partnerSubmissions?.find(s => s.status === 'en attente');
+            if (pendingPartner) {
+                onResult({ status: 'pending', partnerData: pendingPartner });
+                return;
+            }
+
+            onResult({ status: 'not_partner', partnerData: null });
         }
-    }, [isLoading, partnerData, onResult]);
+    }, [isLoading, partnerSubmissions, onResult]);
 
     if (isLoading) {
         return <LoadingSpinner />;
@@ -457,8 +497,7 @@ function PartnerPageContent() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const { toast } = useToast();
   const { firestore, user, isUserLoading } = useFirebase();
-  const [partnerStatus, setPartnerStatus] = useState<'loading' | 'partner' | 'not_partner'>('loading');
-  const [confirmedPartner, setConfirmedPartner] = useState<ContractSubmission | null>(null);
+  const [partnerStatus, setPartnerStatus] = useState<PartnerStatus>({ status: 'loading', partnerData: null });
   const router = useRouter();
   
   const handleFormSubmit = async (values: PartnerFormValues) => {
@@ -492,40 +531,43 @@ function PartnerPageContent() {
       }
   };
 
-  const handlePartnerCheckResult = (partner: ContractSubmission | null) => {
-      if (partner) {
-          setConfirmedPartner(partner);
-          setPartnerStatus('partner');
-      } else {
-          setPartnerStatus('not_partner');
-      }
+  const handlePartnerCheckResult = (result: PartnerStatus) => {
+      setPartnerStatus(result);
   };
 
   const handleDialogClose = (isOpen: boolean) => {
       setShowSuccessDialog(isOpen);
       if (!isOpen) {
-          setIsCodeVerified(false); // Reset to code form
-          setPartnerStatus('not_partner'); // Re-evaluate status
+          // After submitting, force the state to 'pending' to show the waiting view
+          setPartnerStatus({ status: 'pending', partnerData: null });
+          setIsCodeVerified(false);
       }
   }
 
-  if (isUserLoading) {
+  if (isUserLoading || partnerStatus.status === 'loading') {
       return <LoadingSpinner />;
   }
 
-  // If user is logged in, check their partner status first.
-  if (user && partnerStatus === 'loading') {
+  // If user is logged in but we haven't checked their status yet
+  if (user && partnerStatus.status === 'loading') {
       return <PartnerStatusChecker onResult={handlePartnerCheckResult} />;
   }
-
-  // If user is a confirmed partner, show dashboard.
-  if (user && partnerStatus === 'partner' && confirmedPartner) {
-      return <PageWrapper showBackButton={false}><PartnerDashboard partner={confirmedPartner} /></PageWrapper>;
+  
+  if (user) {
+      if (partnerStatus.status === 'loading') {
+          return <PartnerStatusChecker onResult={handlePartnerCheckResult} />;
+      }
+      if (partnerStatus.status === 'partner' && partnerStatus.partnerData) {
+          return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerStatus.partnerData} /></PageWrapper>;
+      }
+      if (partnerStatus.status === 'pending') {
+          return <PageWrapper><PendingApprovalView /></PageWrapper>;
+      }
   }
   
   // This view is for:
   // 1. Anonymous users.
-  // 2. Logged-in users who are not partners (status is 'not_partner').
+  // 2. Logged-in users who are 'not_partner'.
   return (
     <PageWrapper>
       {isCodeVerified ? (
