@@ -480,6 +480,8 @@ function PartnerPageContent() {
     };
 
     if (!user) {
+        // If user is not logged in, they are not a partner.
+        // They will be prompted to log in when trying to submit the form.
         setPartnerStatus('not_partner');
         return;
     }
@@ -510,7 +512,10 @@ function PartnerPageContent() {
         }
       } catch (error) {
           console.error("Error fetching partner status:", error);
-          toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de vérifier votre statut de partenaire.' });
+          // Don't show a toast for permission errors, just fallback gracefully
+          if ((error as any).code !== 'permission-denied') {
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de vérifier votre statut de partenaire.' });
+          }
           setPartnerStatus('not_partner'); // Fallback
       }
     };
@@ -522,7 +527,7 @@ function PartnerPageContent() {
 
   const handleFormSubmit = async (values: PartnerFormValues) => {
       if (!firestore || !user) {
-        toast({ title: 'Erreur', description: 'Utilisateur non trouvé', variant: 'destructive' });
+        toast({ title: 'Erreur', description: 'Vous devez être connecté pour postuler.', variant: 'destructive' });
         return;
       }
       setIsSubmitting(true);
