@@ -12,13 +12,14 @@ import Link from 'next/link';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2, User, Trophy, Copy, Edit, ArrowLeft } from 'lucide-react';
+import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2, User, Trophy, Copy, Edit, ArrowLeft, PartyPopper } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { ContractSubmission } from '@/app/admin/page';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
+import { useRouter } from 'next/navigation';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -453,10 +454,12 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
 function PartnerPageContent() {
   const [isCodeVerified, setIsCodeVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const { toast } = useToast();
   const { firestore, user, isUserLoading } = useFirebase();
   const [partnerStatus, setPartnerStatus] = useState<'loading' | 'partner' | 'not_partner'>('loading');
   const [confirmedPartner, setConfirmedPartner] = useState<ContractSubmission | null>(null);
+  const router = useRouter();
   
   const handleFormSubmit = async (values: PartnerFormValues) => {
       if (!firestore) {
@@ -480,8 +483,7 @@ function PartnerPageContent() {
           promoCodeTotalUses: 0,
           createdAt: serverTimestamp(),
         });
-        toast({ variant: 'success', title: 'Demande envoyée !', description: 'Nous examinerons votre demande bientôt.' });
-        setPartnerStatus('not_partner'); // Re-check status or show pending view
+        setShowSuccessDialog(true);
       } catch (error) {
         toast({ title: 'Erreur', description: 'Impossible d\'envoyer le formulaire.', variant: 'destructive'});
         console.error(error);
@@ -498,6 +500,14 @@ function PartnerPageContent() {
           setPartnerStatus('not_partner');
       }
   };
+
+  const handleDialogClose = (isOpen: boolean) => {
+      setShowSuccessDialog(isOpen);
+      if (!isOpen) {
+          setIsCodeVerified(false); // Reset to code form
+          setPartnerStatus('not_partner'); // Re-evaluate status
+      }
+  }
 
   if (isUserLoading) {
       return <LoadingSpinner />;
@@ -523,6 +533,32 @@ function PartnerPageContent() {
       ) : (
         <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
       )}
+      <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
+          <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
+              <NeumorphicCard className="relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
+                  <div className="absolute inset-0 sparkle-mask"></div>
+                  
+                  <div className="relative flex flex-col items-center text-center py-8 px-4">
+                      <DialogHeader>
+                          <DialogTitle className="text-center text-2xl font-bold font-headline">Demande envoyée !</DialogTitle>
+                      </DialogHeader>
+                      <div className="text-7xl my-6 animate-bounce">
+                          <PartyPopper className="h-20 w-20 text-primary" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                          Nous avons bien reçu vos informations et examinerons votre demande bientôt.
+                      </p>
+                      <Button 
+                          onClick={() => handleDialogClose(false)} 
+                          className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark"
+                      >
+                          Fermer
+                      </Button>
+                  </div>
+              </NeumorphicCard>
+          </DialogContent>
+      </Dialog>
     </PageWrapper>
   );
 }
