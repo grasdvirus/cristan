@@ -6,9 +6,10 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
-import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { addDoc, collection, serverTimestamp, query, where, doc, updateDoc, increment, getDocs } from 'firebase/firestore';
+import { useFirebase } from '@/firebase';
+import { addDoc, collection, serverTimestamp, query, where, doc, updateDoc, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
-import { useRouter } from 'next/navigation';
+
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -460,7 +461,7 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
     </div>
 );
 
-type PartnerStatus = 'loading' | 'partner' | 'pending' | 'not_partner' | 'anonymous';
+type PartnerStatus = 'loading' | 'partner_confirmed' | 'partner_pending' | 'not_partner' | 'anonymous';
 
 function PartnerPageContent() {
   const [isCodeVerified, setIsCodeVerified] = useState(false);
@@ -500,9 +501,9 @@ function PartnerPageContent() {
             const submissionData = { id: partnerSubmissionDoc.id, ...partnerSubmissionDoc.data() } as ContractSubmission;
             setPartnerData(submissionData);
             if (submissionData.status === 'confirmé') {
-                setPartnerStatus('partner');
+                setPartnerStatus('partner_confirmed');
             } else {
-                setPartnerStatus('pending');
+                setPartnerStatus('partner_pending');
             }
         } else {
             setPartnerStatus('not_partner');
@@ -552,61 +553,68 @@ function PartnerPageContent() {
       }
   }
 
-  if (partnerStatus === 'loading') {
-      return <LoadingSpinner />;
-  }
-  
-  if (partnerStatus === 'anonymous' || partnerStatus === 'not_partner') {
-     return (
-        <PageWrapper>
-          {isCodeVerified ? (
-            <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
-          ) : (
-            <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
-          )}
-        </PageWrapper>
-      );
+  const renderContent = () => {
+    switch (partnerStatus) {
+        case 'loading':
+            return <LoadingSpinner />;
+        
+        case 'partner_confirmed':
+            if (partnerData) {
+                return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerData} onUpdate={() => setUpdateTrigger(t => t + 1)} /></PageWrapper>;
+            }
+            return <LoadingSpinner />;
+
+        case 'partner_pending':
+             return (
+                <>
+                    <PageWrapper><PendingApprovalView /></PageWrapper>
+                    <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
+                        <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
+                            <NeumorphicCard className="relative overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
+                                <div className="absolute inset-0 sparkle-mask"></div>
+                                
+                                <div className="relative flex flex-col items-center text-center py-8 px-4">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-center text-2xl font-bold font-headline">Demande envoyée !</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="text-7xl my-6 animate-bounce">
+                                        <PartyPopper className="h-20 w-20 text-primary" />
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Nous avons bien reçu vos informations et examinerons votre demande bientôt.
+                                    </p>
+                                    <Button 
+                                        onClick={() => handleDialogClose(false)} 
+                                        className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark"
+                                    >
+                                        Fermer
+                                    </Button>
+                                </div>
+                            </NeumorphicCard>
+                        </DialogContent>
+                    </Dialog>
+                </>
+             );
+
+        case 'anonymous':
+        case 'not_partner':
+            return (
+                <PageWrapper>
+                {isCodeVerified ? (
+                    <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
+                ) : (
+                    <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
+                )}
+                </PageWrapper>
+            );
+
+        default:
+            return <LoadingSpinner />;
+    }
   }
 
-  if (partnerStatus === 'partner' && partnerData) {
-    return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerData} onUpdate={() => setUpdateTrigger(t => t+1)}/></PageWrapper>;
-  }
-
-  if (partnerStatus === 'pending') {
-      return (
-        <>
-            <PageWrapper><PendingApprovalView /></PageWrapper>
-            <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
-                <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
-                    <NeumorphicCard className="relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
-                        <div className="absolute inset-0 sparkle-mask"></div>
-                        
-                        <div className="relative flex flex-col items-center text-center py-8 px-4">
-                            <DialogHeader>
-                                <DialogTitle className="text-center text-2xl font-bold font-headline">Demande envoyée !</DialogTitle>
-                            </DialogHeader>
-                            <div className="text-7xl my-6 animate-bounce">
-                                <PartyPopper className="h-20 w-20 text-primary" />
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                                Nous avons bien reçu vos informations et examinerons votre demande bientôt.
-                            </p>
-                            <Button 
-                                onClick={() => handleDialogClose(false)} 
-                                className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark"
-                            >
-                                Fermer
-                            </Button>
-                        </div>
-                    </NeumorphicCard>
-                </DialogContent>
-            </Dialog>
-        </>
-      )
-  }
-  
-  return null;
+  return renderContent();
 }
 
 export default function PartnerPage() {
@@ -616,5 +624,3 @@ export default function PartnerPage() {
         </Suspense>
     )
 }
-
-    
