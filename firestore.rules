@@ -96,7 +96,7 @@ service cloud.firestore {
     
     match /submissions/{submissionId} {
       allow get: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.userId);
-      allow list: if isAdmin();
+      allow list: if isAdmin() || (request.auth != null && request.query.where.size() == 1 && request.query.where[0].field == 'userId' && request.query.where[0].op == '==' && request.query.where[0].value == request.auth.uid);
       allow create: if true;
       allow update, delete: if isAdmin();
     }

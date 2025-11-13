@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { useRouter } from 'next/navigation';
+import { AuthGuard } from '@/components/auth-guard';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -453,7 +454,7 @@ function PartnerPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const { toast } = useToast();
-  const { firestore, user, isUserLoading } = useFirebase();
+  const { firestore, user } = useFirebase();
   const [partnerStatus, setPartnerStatus] = useState<PartnerStatus>('loading');
   const [partnerData, setPartnerData] = useState<ContractSubmission | null>(null);
   const router = useRouter();
@@ -461,19 +462,15 @@ function PartnerPageContent() {
   const partnerQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, 'submissions'), where('userId', '==', user.uid));
-}, [firestore, user]);
+  }, [firestore, user]);
 
   const { data: userSubmissions, isLoading: isPartnerLoading } = useCollection<ContractSubmission>(partnerQuery);
   
   useEffect(() => {
-    if (isUserLoading || isPartnerLoading) {
+    if (isPartnerLoading) {
         setPartnerStatus('loading');
         return;
     };
-    if (!user) {
-        setPartnerStatus('not_partner');
-        return;
-    }
 
     if (userSubmissions && userSubmissions.length > 0) {
         const partnerSubmission = userSubmissions.find(s => s.type === 'Partenariat');
@@ -489,17 +486,12 @@ function PartnerPageContent() {
         }
     }
     setPartnerStatus('not_partner');
-  }, [user, userSubmissions, isUserLoading, isPartnerLoading]);
+  }, [userSubmissions, isPartnerLoading]);
 
 
   const handleFormSubmit = async (values: PartnerFormValues) => {
-      if (!firestore) {
-        toast({ title: 'Erreur de base de données', variant: 'destructive' });
-        return;
-      }
-      if (!user) {
-        toast({ title: 'Connexion requise', description: 'Veuillez vous connecter pour devenir partenaire.', variant: 'destructive' });
-        router.push('/login?redirect=/partner');
+      if (!firestore || !user) {
+        toast({ title: 'Erreur', description: 'Utilisateur non trouvé', variant: 'destructive' });
         return;
       }
       setIsSubmitting(true);
@@ -542,7 +534,6 @@ function PartnerPageContent() {
       return <PageWrapper><PendingApprovalView /></PageWrapper>;
   }
   
-  // Renders for 'not_partner' status (and anonymous users)
   return (
     <PageWrapper>
       {isCodeVerified ? (
@@ -582,8 +573,10 @@ function PartnerPageContent() {
 
 export default function PartnerPage() {
     return (
-      <Suspense fallback={<LoadingSpinner />}>
-        <PartnerPageContent />
-      </Suspense>
+        <AuthGuard>
+            <Suspense fallback={<LoadingSpinner />}>
+                <PartnerPageContent />
+            </Suspense>
+        </AuthGuard>
     )
 }
