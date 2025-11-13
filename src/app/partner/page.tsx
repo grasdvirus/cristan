@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, Suspense, useCallback } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -462,33 +462,37 @@ function PartnerPageContent() {
     if (!firestore || !user) return null;
     return query(
         collection(firestore, 'submissions'),
-        where('userId', '==', user.uid),
-        where('type', '==', 'Partenariat')
+        where('userId', '==', user.uid)
     );
   }, [firestore, user]);
 
-  const { data: partnerSubmissions, isLoading: isPartnerLoading } = useCollection<ContractSubmission>(partnerQuery);
+  const { data: userSubmissions, isLoading: isPartnerLoading, error } = useCollection<ContractSubmission>(partnerQuery);
   
   useEffect(() => {
-    if (!user || isPartnerLoading) return;
+    if (isUserLoading || isPartnerLoading) {
+        setPartnerStatus('loading');
+        return;
+    };
+    if (!user) {
+        setPartnerStatus('not_partner');
+        return;
+    }
 
-    if (partnerSubmissions && partnerSubmissions.length > 0) {
-        const confirmedPartner = partnerSubmissions.find(s => s.status === 'confirmé');
-        if (confirmedPartner) {
-            setPartnerStatus('partner');
-            setPartnerData(confirmedPartner);
-            return;
-        }
-        
-        const pendingPartner = partnerSubmissions.find(s => s.status === 'en attente');
-        if (pendingPartner) {
-            setPartnerStatus('pending');
+    if (userSubmissions && userSubmissions.length > 0) {
+        const partnerSubmission = userSubmissions.find(s => s.type === 'Partenariat');
+
+        if(partnerSubmission) {
+            if (partnerSubmission.status === 'confirmé') {
+                setPartnerStatus('partner');
+                setPartnerData(partnerSubmission);
+            } else {
+                setPartnerStatus('pending');
+            }
             return;
         }
     }
     setPartnerStatus('not_partner');
-
-  }, [user, partnerSubmissions, isPartnerLoading]);
+  }, [user, userSubmissions, isUserLoading, isPartnerLoading]);
 
 
   const handleFormSubmit = async (values: PartnerFormValues) => {
@@ -529,7 +533,7 @@ function PartnerPageContent() {
       }
   }
 
-  if (isUserLoading || partnerStatus === 'loading') {
+  if (partnerStatus === 'loading') {
       return <LoadingSpinner />;
   }
 
@@ -541,9 +545,7 @@ function PartnerPageContent() {
       return <PageWrapper><PendingApprovalView /></PageWrapper>;
   }
   
-  // This view is for:
-  // 1. Anonymous users.
-  // 2. Logged-in users who are 'not_partner'.
+  // Renders for 'not_partner' status (and anonymous users)
   return (
     <PageWrapper>
       {isCodeVerified ? (
