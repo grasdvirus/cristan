@@ -99,8 +99,6 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
 
     const submissionsQuery = useMemoFirebase(
         () => {
-            // **CRITICAL FIX**: Only create the query if the user is an admin.
-            // For non-admins, this will be null, and useCollection will not run.
             if (!firestore || !isAdmin) {
                 return null;
             }
