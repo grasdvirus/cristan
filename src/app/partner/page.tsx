@@ -21,7 +21,6 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { useRouter } from 'next/navigation';
-import { AuthGuard } from '@/components/auth-guard';
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 const REWARD_GOAL = 100;
@@ -113,6 +112,15 @@ function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
 }
 
 function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: PartnerFormValues) => void, isSubmitting: boolean }) {
+  const { user } = useFirebase();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login?redirect=/partner');
+    }
+  }, [user, router]);
+  
   const form = useForm<PartnerFormValues>({
     resolver: zodResolver(partnerFormSchema),
     defaultValues: {
@@ -128,6 +136,10 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
     control: form.control,
     name: 'socialLinks',
   });
+
+  if (!user) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <NeumorphicCard className="w-full max-w-2xl mx-auto mt-12">
@@ -447,14 +459,14 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
     </div>
 );
 
-type PartnerStatus = 'loading' | 'partner' | 'pending' | 'not_partner';
+type PartnerStatus = 'loading' | 'partner' | 'pending' | 'not_partner' | 'anonymous';
 
 function PartnerPageContent() {
   const [isCodeVerified, setIsCodeVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const { toast } = useToast();
-  const { firestore, user } = useFirebase();
+  const { firestore, user, isUserLoading } = useFirebase();
   const [partnerStatus, setPartnerStatus] = useState<PartnerStatus>('loading');
   const [partnerData, setPartnerData] = useState<ContractSubmission | null>(null);
 
@@ -466,10 +478,15 @@ function PartnerPageContent() {
   const { data: userSubmissions, isLoading: isPartnerLoading } = useCollection<ContractSubmission>(partnerQuery);
   
   useEffect(() => {
-    if (isPartnerLoading) {
+    if (isUserLoading || isPartnerLoading) {
         setPartnerStatus('loading');
         return;
     };
+
+    if (!user) {
+        setPartnerStatus('anonymous');
+        return;
+    }
 
     if (userSubmissions && userSubmissions.length > 0) {
         const partnerSubmission = userSubmissions.find(s => s.type === 'Partenariat');
@@ -485,7 +502,7 @@ function PartnerPageContent() {
         }
     }
     setPartnerStatus('not_partner');
-  }, [userSubmissions, isPartnerLoading]);
+  }, [user, userSubmissions, isUserLoading, isPartnerLoading]);
 
 
   const handleFormSubmit = async (values: PartnerFormValues) => {
@@ -524,6 +541,18 @@ function PartnerPageContent() {
   if (partnerStatus === 'loading') {
       return <LoadingSpinner />;
   }
+  
+  if (partnerStatus === 'anonymous' || partnerStatus === 'not_partner') {
+     return (
+        <PageWrapper>
+          {isCodeVerified ? (
+            <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
+          ) : (
+            <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
+          )}
+        </PageWrapper>
+      );
+  }
 
   if (partnerStatus === 'partner' && partnerData) {
     return <PageWrapper showBackButton={false}><PartnerDashboard partner={partnerData} /></PageWrapper>;
@@ -535,11 +564,6 @@ function PartnerPageContent() {
   
   return (
     <PageWrapper>
-      {isCodeVerified ? (
-        <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
-      ) : (
-        <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
-      )}
       <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
           <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
               <NeumorphicCard className="relative overflow-hidden">
@@ -572,11 +596,9 @@ function PartnerPageContent() {
 
 export default function PartnerPage() {
     return (
-        <AuthGuard>
-            <Suspense fallback={<LoadingSpinner />}>
-                <PartnerPageContent />
-            </Suspense>
-        </AuthGuard>
+        <Suspense fallback={<LoadingSpinner />}>
+            <PartnerPageContent />
+        </Suspense>
     )
 }
 
