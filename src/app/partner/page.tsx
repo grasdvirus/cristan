@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from 'react';
-import { useForm, useFieldArray, useForm as useHookForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
@@ -41,7 +41,7 @@ type PartnerFormValues = z.infer<typeof partnerFormSchema>;
 
 function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
     const { toast } = useToast();
-    const form = useHookForm<PartnerCodeValues>({
+    const form = useForm<PartnerCodeValues>({
         resolver: zodResolver(partnerCodeSchema),
         defaultValues: { code: "" }
     });
@@ -74,7 +74,7 @@ function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold font-headline">Devenez Partenaire</h1>
                 <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-                    Pour accéder au formulaire de partenariat, veuillez entrer le code d'accès qui vous a été fourni.
+                    Pour accéder au formulaire de partenariat, veuillez entrer le code d'accès qui vous a été fourni. Si vous n'en avez pas, <Link href="/about" className="text-primary underline">apprenez-en plus ici</Link>.
                 </p>
 
                 <Form {...form}>
@@ -110,7 +110,7 @@ function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
     );
 }
 
-function PartnerForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: PartnerFormValues) => void, isSubmitting: boolean }) {
+function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: PartnerFormValues) => void, isSubmitting: boolean }) {
   const form = useForm<PartnerFormValues>({
     resolver: zodResolver(partnerFormSchema),
     defaultValues: {
@@ -402,26 +402,111 @@ function PartnerDashboard({ partner }: { partner: ContractSubmission }) {
     );
 }
 
+function LoggedOutPartnerView({ onCodeVerified }: { onCodeVerified: () => void; }) {
+    return (
+        <PageWrapper>
+            <PartnerCodeForm onCodeVerified={onCodeVerified} />
+        </PageWrapper>
+    )
+}
+
+function LoggedInPartnerView(
+    { isCodeVerified, onCodeVerified, onFormSubmit, isSubmitting }: 
+    { isCodeVerified: boolean; onCodeVerified: () => void; onFormSubmit: (values: PartnerFormValues) => void; isSubmitting: boolean;}
+) {
+    const { firestore, user } = useFirebase();
+
+    const partnerQuery = useMemoFirebase(() => {
+        if (!firestore || !user) return null; // Should not happen if we are in this component
+        return query(
+            collection(firestore, 'submissions'),
+            where('userId', '==', user.uid),
+            where('type', '==', 'Partenariat'),
+        );
+    }, [firestore, user]);
+    const { data: partnerData, isLoading: isLoadingPartner } = useCollection<ContractSubmission>(partnerQuery);
+    
+    if (isLoadingPartner) {
+        return <LoadingSpinner />;
+    }
+
+    const confirmedPartner = partnerData?.find(p => p.status === 'confirmé');
+    const pendingPartner = partnerData?.find(p => p.status === 'en attente');
+    const refusedPartner = partnerData?.find(p => p.status === 'refusé');
+
+    if (confirmedPartner) {
+        return (
+            <PageWrapper showBackButton={false}>
+                <PartnerDashboard partner={confirmedPartner} />
+            </PageWrapper>
+        )
+    }
+    if (pendingPartner) {
+        return (
+            <PageWrapper>
+                <div className="text-center">
+                    <NeumorphicCard className="max-w-2xl mx-auto">
+                        <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
+                        <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
+                    </NeumorphicCard>
+                </div>
+            </PageWrapper>
+        )
+    }
+    if (refusedPartner) {
+      return (
+          <PageWrapper>
+              <div className="text-center">
+                  <NeumorphicCard className="max-w-2xl mx-auto">
+                      <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
+                      <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
+                  </NeumorphicCard>
+              </div>
+          </PageWrapper>
+      )
+    }
+    
+    // User is logged in but is not a partner yet.
+    if (!isCodeVerified) {
+        return (
+          <PageWrapper>
+              <PartnerCodeForm onCodeVerified={onCodeVerified} />
+          </PageWrapper>
+        )
+    }
+
+    return (
+        <PageWrapper>
+            <PartnerApplicationForm onFormSubmit={onFormSubmit} isSubmitting={isSubmitting} />
+        </PageWrapper>
+    );
+}
+
+const PageWrapper = ({ children, showBackButton = true }: { children: React.ReactNode, showBackButton?: boolean }) => (
+    <div className="container mx-auto px-4 py-16 sm:py-24 relative">
+        {showBackButton && (
+            <Button 
+                asChild
+                variant="ghost" 
+                size="icon"
+                className="absolute left-4 top-4 sm:left-6 sm:top-10 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+                aria-label="Retour"
+            >
+                <Link href="/">
+                    <ArrowLeft className="h-5 w-5" />
+                </Link>
+            </Button>
+        )}
+        {children}
+    </div>
+);
+
+
 function PartnerPageContent() {
   const [isCodeVerified, setIsCodeVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { firestore, user, isUserLoading } = useFirebase();
-
-  // Check if user is already a confirmed partner
-  const partnerQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(
-        collection(firestore, 'submissions'),
-        where('userId', '==', user.uid),
-        where('type', '==', 'Partenariat'),
-    );
-  }, [firestore, user]);
-  const { data: partnerData, isLoading: isLoadingPartner } = useCollection<ContractSubmission>(partnerQuery);
-  
-  const confirmedPartner = partnerData?.find(p => p.status === 'confirmé');
-  const pendingPartner = partnerData?.find(p => p.status === 'en attente');
-  const refusedPartner = partnerData?.find(p => p.status === 'refusé');
 
   const handleFormSubmit = async (values: PartnerFormValues) => {
       if (!firestore || !user) {
@@ -441,7 +526,7 @@ function PartnerPageContent() {
           createdAt: serverTimestamp(),
         });
         toast({ variant: 'success', title: 'Demande envoyée !', description: 'Nous examinerons votre demande bientôt.' });
-        setIsCodeVerified(false);
+        // The component will re-render and show the pending status view
       } catch (error) {
         toast({ title: 'Erreur', description: 'Impossible d\'envoyer le formulaire.', variant: 'destructive'});
         console.error(error);
@@ -449,94 +534,38 @@ function PartnerPageContent() {
         setIsSubmitting(false);
       }
   };
-  
-  const PageWrapper = ({ children, showBackButton = true }: { children: React.ReactNode, showBackButton?: boolean }) => (
-    <div className="container mx-auto px-4 py-16 sm:py-24 relative">
-      {showBackButton && (
-         <Button 
-            asChild
-            variant="ghost" 
-            size="icon"
-            className="absolute left-4 top-4 sm:left-6 sm:top-10 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
-            aria-label="Retour"
-        >
-            <Link href="/">
-                <ArrowLeft className="h-5 w-5" />
-            </Link>
-        </Button>
-      )}
-      {children}
-    </div>
-  );
-  
-  // Public access part
+
   if (isUserLoading) {
     return <LoadingSpinner />;
   }
 
-  if (user) {
-      if (isLoadingPartner) {
-          return <LoadingSpinner />;
-      }
-      if (confirmedPartner) {
-          return (
-              <PageWrapper showBackButton={false}>
-                  <PartnerDashboard partner={confirmedPartner} />
-              </PageWrapper>
-          )
-      }
-      if (pendingPartner) {
-          return (
-              <PageWrapper>
-                  <div className="text-center">
-                      <NeumorphicCard className="max-w-2xl mx-auto">
-                          <h1 className="text-3xl font-bold font-headline">Demande en cours d'examen</h1>
-                          <p className="text-muted-foreground mt-4">Votre demande de partenariat est en cours de validation. Nous vous recontacterons bientôt.</p>
-                      </NeumorphicCard>
-                  </div>
-              </PageWrapper>
-          )
-      }
-      if (refusedPartner) {
+  if (!user) {
+    if (isCodeVerified) {
         return (
             <PageWrapper>
-                <div className="text-center">
-                    <NeumorphicCard className="max-w-2xl mx-auto">
-                        <h1 className="text-3xl font-bold font-headline text-destructive">Demande Refusée</h1>
-                        <p className="text-muted-foreground mt-4">Malheureusement, votre demande de partenariat n'a pas été retenue. Pour plus d'informations, veuillez nous contacter.</p>
-                    </NeumorphicCard>
-                </div>
+                <NeumorphicCard className="max-w-2xl mx-auto">
+                    <h2 className="text-2xl font-bold text-center mb-2">Presque là !</h2>
+                    <p className="text-center text-muted-foreground mb-6">Connectez-vous ou créez un compte pour soumettre votre demande de partenariat.</p>
+                    <Button asChild className="w-full btn-neumorphic-light dark:btn-neumorphic-dark">
+                        <Link href="/login?redirect=/partner">
+                            Se connecter pour continuer
+                        </Link>
+                    </Button>
+                </NeumorphicCard>
             </PageWrapper>
         )
-      }
+    }
+    return <LoggedOutPartnerView onCodeVerified={() => setIsCodeVerified(true)} />;
   }
-  
-  // At this point, user is either not logged in, or is not a partner yet.
-  // The logic for displaying the forms can proceed.
 
-  if (!isCodeVerified) {
-      return (
-        <PageWrapper>
-            <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
-        </PageWrapper>
-      )
-  }
-  
-  // If code is verified, show the form. We need to wrap it in AuthGuard because submitting requires a user.
   return (
-    <PageWrapper>
-        <NeumorphicCard className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-center mb-2">Presque là !</h2>
-            <p className="text-center text-muted-foreground mb-6">Connectez-vous ou créez un compte pour soumettre votre demande de partenariat.</p>
-            <Button asChild className="w-full btn-neumorphic-light dark:btn-neumorphic-dark">
-                <Link href="/login?redirect=/partner">
-                    Se connecter pour continuer
-                </Link>
-            </Button>
-        </NeumorphicCard>
-    </PageWrapper>
+    <LoggedInPartnerView
+        isCodeVerified={isCodeVerified}
+        onCodeVerified={() => setIsCodeVerified(true)}
+        onFormSubmit={handleFormSubmit}
+        isSubmitting={isSubmitting}
+    />
   );
-
 }
 
 export default function PartnerPage() {

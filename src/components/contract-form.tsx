@@ -56,14 +56,15 @@ export function ContractForm({ projectId }: ContractFormProps) {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [showSuccessDialog, setShowSuccessDialog] = React.useState(false);
     
+    // Only query for partners if a user is logged in
     const partnersQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || !user) return null;
         return query(
             collection(firestore, 'submissions'),
             where('type', '==', 'Partenariat'),
             where('status', '==', 'confirmé')
         );
-    }, [firestore]);
+    }, [firestore, user]);
     const { data: partners, isLoading: isLoadingPartners } = useCollection<ContractSubmission>(partnersQuery);
 
 
@@ -80,11 +81,11 @@ export function ContractForm({ projectId }: ContractFormProps) {
     })
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        if (!firestore || !user) {
+        if (!firestore) {
             toast({
                 variant: "destructive",
                 title: "Erreur de base de données",
-                description: "Utilisateur non authentifié.",
+                description: "Le service n'est pas disponible.",
             });
             return;
         }
@@ -94,7 +95,7 @@ export function ContractForm({ projectId }: ContractFormProps) {
                 ...values,
                 projectId: projectId || "N/A",
                 type: 'Projet',
-                userId: user.uid,
+                userId: user?.uid || "anonymous", // Handle anonymous submissions
                 status: 'Nouveau',
                 createdAt: serverTimestamp()
             };
@@ -211,18 +212,20 @@ export function ContractForm({ projectId }: ContractFormProps) {
                             <FormLabel>Code Promo (Optionnel)</FormLabel>
                             <FormControl>
                                 <Input 
-                                    placeholder={isLoadingPartners ? "Chargement..." : "Entrez un code promo"} 
+                                    placeholder={(isLoadingPartners && user) ? "Chargement..." : "Entrez un code promo"} 
                                     {...field}
                                     list="promo-codes"
                                     className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" 
-                                    disabled={isLoadingPartners}
+                                    disabled={isLoadingPartners && !!user}
                                 />
                             </FormControl>
-                            <datalist id="promo-codes">
-                                {partners?.map(partner => (
-                                    partner.promoCode && <option key={partner.id} value={partner.promoCode} />
-                                ))}
-                            </datalist>
+                            {user && partners && (
+                              <datalist id="promo-codes">
+                                  {partners.map(partner => (
+                                      partner.promoCode && <option key={partner.id} value={partner.promoCode} />
+                                  ))}
+                              </datalist>
+                            )}
                             <FormMessage />
                         </FormItem>
                     )}
