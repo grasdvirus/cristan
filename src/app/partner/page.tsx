@@ -477,10 +477,19 @@ function PartnerPageContent() {
   const { data: partnerData, isLoading: isPartnerLoading, error } = useDoc<ContractSubmission>(partnerDocRef);
   
   useEffect(() => {
-      if(error) {
-         if ((error as any).code !== 'permission-denied' && (error as any).code !== 'not-found') {
-            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de vérifier votre statut de partenaire.' });
-         }
+      if (error) {
+        const errorCode = (error as any).code;
+        if (errorCode === 'permission-denied' || errorCode === 'not-found') {
+          // This is an expected state for a new user, so we ignore it silently.
+          console.log('No existing partner submission found for this user.');
+          return;
+        }
+        // For any other unexpected errors, show a toast.
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Impossible de vérifier votre statut de partenaire.'
+        });
       }
   }, [error, toast]);
 
