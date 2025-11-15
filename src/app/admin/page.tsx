@@ -21,7 +21,6 @@ import { ProjectForm, type ProjectFormValues } from '@/components/admin/project-
 import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
 import { GameForm, type GameFormValues } from '@/components/admin/game-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
-import { PartnersManager } from '@/components/admin/partners-manager';
 import { convertToEmbedUrl } from '@/lib/utils';
 import { AuthGuard } from '@/components/auth-guard';
 import { Input } from '@/components/ui/input';
@@ -92,7 +91,7 @@ export type ContractSubmission = {
 
 
 function SlidesManager() {
-    const { firestore, user, isUserLoading } = useFirebase();
+    const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -104,9 +103,6 @@ function SlidesManager() {
     }, [firestore]);
 
     const { data: slides, isLoading } = useCollection<Slide>(slidesQuery);
-
-    if (isUserLoading) return <Skeleton className="h-40 w-full" />;
-    if (user?.email !== 'grasdvirus@gmail.com') return null;
 
     const handleFormSubmit = async (values: { description: string, imageUrl: string, imageHint?: string }) => {
         if (!firestore) return;
@@ -216,7 +212,7 @@ function SlidesManager() {
 }
 
 function ProjectsManager() {
-    const { firestore, user, isUserLoading } = useFirebase();
+    const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -228,9 +224,6 @@ function ProjectsManager() {
     }, [firestore]);
 
     const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
-
-    if (isUserLoading) return <Skeleton className="h-40 w-full" />;
-    if (user?.email !== 'grasdvirus@gmail.com') return null;
 
     const handleFormSubmit = async (values: ProjectFormValues) => {
         if (!firestore) return;
@@ -343,7 +336,7 @@ function ProjectsManager() {
 }
 
 function VideosManager() {
-    const { firestore, user, isUserLoading } = useFirebase();
+    const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -356,9 +349,6 @@ function VideosManager() {
 
     const { data: videos, isLoading } = useCollection<Video>(videosQuery);
     
-    if (isUserLoading) return <Skeleton className="h-40 w-full" />;
-    if (user?.email !== 'grasdvirus@gmail.com') return null;
-
     const handleFormSubmit = async (values: VideoFormValues) => {
         if (!firestore) return;
         setIsSubmitting(true);
@@ -470,7 +460,7 @@ function VideosManager() {
 }
 
 function GamesManager() {
-    const { firestore, user, isUserLoading } = useFirebase();
+    const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -482,9 +472,6 @@ function GamesManager() {
     }, [firestore]);
 
     const { data: games, isLoading } = useCollection<Game>(gamesQuery);
-
-    if (isUserLoading) return <Skeleton className="h-40 w-full" />;
-    if (user?.email !== 'grasdvirus@gmail.com') return null;
 
     const handleFormSubmit = async (values: GameFormValues) => {
         if (!firestore) return;
@@ -590,7 +577,21 @@ function GamesManager() {
 }
 
 function AdminPageContent() {
+    const { user, isUserLoading } = useFirebase();
     const [searchTerm, setSearchTerm] = useState('');
+
+    if (isUserLoading) {
+        return <LoadingSpinner />;
+    }
+
+    if (user?.email !== 'grasdvirus@gmail.com') {
+        return (
+            <NeumorphicCard className="m-8 p-8 text-center">
+                <h1 className="text-2xl font-bold text-destructive">Accès refusé</h1>
+                <p className="text-muted-foreground mt-2">Vous n'avez pas l'autorisation d'accéder à cette page.</p>
+            </NeumorphicCard>
+        );
+    }
 
     return (
         <div className="container mx-auto px-0 sm:px-4 py-8 sm:py-16">
@@ -615,13 +616,12 @@ function AdminPageContent() {
 
 
                 <Tabs defaultValue="slides" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 mb-8">
+                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-8">
                         <TabsTrigger value="slides">Slides</TabsTrigger>
                         <TabsTrigger value="internet">Internet</TabsTrigger>
                         <TabsTrigger value="tv">TV</TabsTrigger>
                         <TabsTrigger value="games">Gamme</TabsTrigger>
                         <TabsTrigger value="submissions">Demandes</TabsTrigger>
-                        <TabsTrigger value="partners">Partenaires</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="slides">
@@ -644,9 +644,6 @@ function AdminPageContent() {
                         <SubmissionsManager searchTerm={searchTerm} />
                     </TabsContent>
 
-                    <TabsContent value="partners">
-                       <PartnersManager searchTerm={searchTerm} />
-                    </TabsContent>
                 </Tabs>
             </NeumorphicCard>
         </div>

@@ -14,11 +14,7 @@ export default function Home() {
   const router = useRouter();
 
   const handleTabChange = (value: string) => {
-    if (value === 'partner') {
-      router.push('/partner');
-    } else {
-      setActiveTab(value);
-    }
+    setActiveTab(value);
   };
 
   return (
@@ -50,12 +46,14 @@ export default function Home() {
                   >
                       Gamme
                   </TabsTrigger>
-                  <TabsTrigger 
-                      value="partner" 
-                      className="text-lg font-bold bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
-                  >
-                      Partenariat
-                  </TabsTrigger>
+                   <a
+                      href="https://cristian-two.vercel.app/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-4 py-1.5 text-lg font-bold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-b-2 border-transparent hover:border-primary/50"
+                    >
+                      Devenir Partenaire
+                    </a>
                   </TabsList>
               </Tabs>
           </div>
