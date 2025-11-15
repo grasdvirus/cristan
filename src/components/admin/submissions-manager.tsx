@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useCollection, useFirebase } from '@/firebase';
+import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import type { ContractSubmission } from '@/app/admin/page';
 import { NeumorphicCard } from '../neumorphic-card';
@@ -95,7 +95,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
     const { firestore, user, isUserLoading } = useFirebase();
     const { toast } = useToast();
     
-    const submissionsQuery = useAdminQuery(() => {
+    const submissionsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'submissions'), orderBy('createdAt', 'desc'));
     }, [firestore]);

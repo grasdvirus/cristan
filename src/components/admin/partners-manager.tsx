@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useCollection, useFirebase } from '@/firebase';
+import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 import { ContractSubmission } from '@/app/admin/page';
 import { NeumorphicCard } from '../neumorphic-card';
@@ -259,7 +259,7 @@ export function PartnersManager({ searchTerm }: { searchTerm: string }) {
     const { firestore, user, isUserLoading } = useFirebase();
     const { toast } = useToast();
     
-    const partnersQuery = useAdminQuery(() => {
+    const partnersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat'));
     }, [firestore]);
