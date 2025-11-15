@@ -21,6 +21,7 @@ import { ProjectForm, type ProjectFormValues } from '@/components/admin/project-
 import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
 import { GameForm, type GameFormValues } from '@/components/admin/game-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
+import { PartnersManager } from '@/components/admin/partners-manager';
 import { convertToEmbedUrl } from '@/lib/utils';
 import { AuthGuard } from '@/components/auth-guard';
 import { Input } from '@/components/ui/input';
@@ -622,6 +623,7 @@ function AdminPageContent() {
                         <TabsTrigger value="tv">TV</TabsTrigger>
                         <TabsTrigger value="games">Gamme</TabsTrigger>
                         <TabsTrigger value="submissions">Demandes</TabsTrigger>
+                        <TabsTrigger value="partners">Partenaires</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="slides">
@@ -642,6 +644,10 @@ function AdminPageContent() {
 
                     <TabsContent value="submissions">
                         <SubmissionsManager searchTerm={searchTerm} />
+                    </TabsContent>
+                    
+                    <TabsContent value="partners">
+                        <PartnersManager searchTerm={searchTerm} />
                     </TabsContent>
 
                 </Tabs>
