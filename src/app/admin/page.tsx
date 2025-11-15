@@ -25,7 +25,6 @@ import { PartnersManager } from '@/components/admin/partners-manager';
 import { convertToEmbedUrl } from '@/lib/utils';
 import { AuthGuard } from '@/components/auth-guard';
 import { Input } from '@/components/ui/input';
-import { useAdminQuery } from '@/hooks/useAdminQuery';
 import { LoadingSpinner } from '@/components/loading-spinner';
 
 // Define types based on backend.json
@@ -98,10 +97,10 @@ function SlidesManager() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingSlide, setEditingSlide] = useState<Slide | null>(null);
 
-    const slidesQuery = useAdminQuery(() => {
+    const slidesQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'slides'));
-    });
+    }, [firestore]);
 
     const { data: slides, isLoading } = useCollection<Slide>(slidesQuery);
 
@@ -219,10 +218,10 @@ function ProjectsManager() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-    const projectsQuery = useAdminQuery(() => {
+    const projectsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'projects'));
-    });
+    }, [firestore]);
 
     const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
 
@@ -343,10 +342,10 @@ function VideosManager() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingVideo, setEditingVideo] = useState<Video | null>(null);
 
-    const videosQuery = useAdminQuery(() => {
+    const videosQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'videos'));
-    });
+    }, [firestore]);
 
     const { data: videos, isLoading } = useCollection<Video>(videosQuery);
     
@@ -467,10 +466,10 @@ function GamesManager() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingGame, setEditingGame] = useState<Game | null>(null);
 
-    const gamesQuery = useAdminQuery(() => {
+    const gamesQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'games'));
-    });
+    }, [firestore]);
 
     const { data: games, isLoading } = useCollection<Game>(gamesQuery);
 
@@ -585,6 +584,7 @@ function AdminPageContent() {
         return <LoadingSpinner />;
     }
 
+    // This check is redundant due to AuthGuard, but it's good for clarity
     if (user?.email !== 'grasdvirus@gmail.com') {
         return (
             <NeumorphicCard className="m-8 p-8 text-center">
@@ -663,5 +663,3 @@ export default function AdminPage() {
         </AuthGuard>
     )
 }
-
-    
