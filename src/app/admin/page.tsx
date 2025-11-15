@@ -101,7 +101,7 @@ function SlidesManager() {
     const slidesQuery = useAdminQuery(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'slides'));
-    }, [firestore]);
+    });
 
     const { data: slides, isLoading } = useCollection<Slide>(slidesQuery);
 
@@ -222,7 +222,7 @@ function ProjectsManager() {
     const projectsQuery = useAdminQuery(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'projects'));
-    }, [firestore]);
+    });
 
     const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
 
@@ -346,7 +346,7 @@ function VideosManager() {
     const videosQuery = useAdminQuery(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'videos'));
-    }, [firestore]);
+    });
 
     const { data: videos, isLoading } = useCollection<Video>(videosQuery);
     
@@ -470,7 +470,7 @@ function GamesManager() {
     const gamesQuery = useAdminQuery(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'games'));
-    }, [firestore]);
+    });
 
     const { data: games, isLoading } = useCollection<Game>(gamesQuery);
 
@@ -663,3 +663,5 @@ export default function AdminPage() {
         </AuthGuard>
     )
 }
+
+    
