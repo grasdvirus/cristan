@@ -479,9 +479,9 @@ function PartnerPageContent() {
   useEffect(() => {
       if (error) {
         const errorCode = (error as any).code;
-        if (errorCode === 'permission-denied' || errorCode === 'not-found') {
+        if (errorCode === 'permission-denied' || errorCode === 'not-found' || (error.message && error.message.includes("was denied"))) {
           // This is an expected state for a new user, so we ignore it silently.
-          console.log('No existing partner submission found for this user.');
+          console.log('No existing partner submission found for this user or access was denied as expected.');
           return;
         }
         // For any other unexpected errors, show a toast.
@@ -530,7 +530,7 @@ function PartnerPageContent() {
   }
 
   const renderContent = () => {
-    if (isUserLoading || (user && isPartnerLoading)) {
+    if (isUserLoading || (user && isPartnerLoading && !error)) { // Show loader while loading and no error
         return <LoadingSpinner />;
     }
     
@@ -592,3 +592,5 @@ export default function PartnerPage() {
         </Suspense>
     )
 }
+
+    
