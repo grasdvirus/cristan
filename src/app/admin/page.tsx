@@ -581,7 +581,7 @@ function AdminPageContent() {
     const [searchTerm, setSearchTerm] = useState('');
 
     const submissionsQuery = useMemoFirebase(() => {
-        if (!firestore || user?.email !== 'grasdvirus@gmail.com') return null;
+        if (!firestore || !user || user.email !== 'grasdvirus@gmail.com') return null;
         return query(collection(firestore, 'submissions'));
     }, [firestore, user]);
 
@@ -591,7 +591,6 @@ function AdminPageContent() {
         return <LoadingSpinner />;
     }
 
-    // This check is redundant due to AuthGuard, but it's good for clarity
     if (user?.email !== 'grasdvirus@gmail.com') {
         return (
             <NeumorphicCard className="m-8 p-8 text-center">
