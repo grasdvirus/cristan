@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { useFirebase } from '@/firebase';
+import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import type { ContractSubmission } from '@/app/admin/page';
 import { NeumorphicCard } from '../neumorphic-card';
 import { Skeleton } from '../ui/skeleton';
@@ -17,8 +17,13 @@ import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import { useAdminQuery } from '@/hooks/useAdminQuery';
 import { LoadingSpinner } from '../loading-spinner';
+
+interface SubmissionsManagerProps {
+    submissions?: ContractSubmission[];
+    isLoading?: boolean;
+    searchTerm?: string;
+}
 
 function SubmissionCard({ submission, formatDate, handleDelete, handleStatusChange }: { submission: ContractSubmission, formatDate: (ts: any) => string, handleDelete: (id: string) => void, handleStatusChange: (id: string, status: ContractSubmission['status']) => void }) {
   return (
@@ -91,16 +96,9 @@ function SubmissionCard({ submission, formatDate, handleDelete, handleStatusChan
   )
 }
 
-export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
+export function SubmissionsManager({ submissions, isLoading, searchTerm = '' }: SubmissionsManagerProps) {
     const { firestore, user, isUserLoading } = useFirebase();
     const { toast } = useToast();
-    
-    const submissionsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        return query(collection(firestore, 'submissions'), orderBy('createdAt', 'desc'));
-    }, [firestore]);
-
-    const { data: submissions, isLoading } = useCollection<ContractSubmission & { type?: string }>(submissionsQuery);
 
     const filteredSubmissions = useMemo(() => {
         if (!submissions) return [];
@@ -142,7 +140,7 @@ export function SubmissionsManager({ searchTerm }: { searchTerm: string }) {
         }
     };
     
-    if (isUserLoading) {
+    if (isUserLoading || isLoading) {
         return <LoadingSpinner />;
     }
 

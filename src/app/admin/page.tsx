@@ -577,8 +577,15 @@ function GamesManager() {
 }
 
 function AdminPageContent() {
-    const { user, isUserLoading } = useFirebase();
+    const { firestore, user, isUserLoading } = useFirebase();
     const [searchTerm, setSearchTerm] = useState('');
+
+    const submissionsQuery = useMemoFirebase(() => {
+        if (!firestore || user?.email !== 'grasdvirus@gmail.com') return null;
+        return query(collection(firestore, 'submissions'));
+    }, [firestore, user]);
+
+    const { data: allSubmissions, isLoading: isSubmissionsLoading } = useCollection<ContractSubmission>(submissionsQuery);
 
     if (isUserLoading) {
         return <LoadingSpinner />;
@@ -643,11 +650,19 @@ function AdminPageContent() {
                     </TabsContent>
 
                     <TabsContent value="submissions">
-                        <SubmissionsManager searchTerm={searchTerm} />
+                        <SubmissionsManager 
+                            submissions={allSubmissions}
+                            isLoading={isSubmissionsLoading}
+                            searchTerm={searchTerm} 
+                        />
                     </TabsContent>
                     
                     <TabsContent value="partners">
-                        <PartnersManager searchTerm={searchTerm} />
+                        <PartnersManager 
+                            submissions={allSubmissions}
+                            isLoading={isSubmissionsLoading}
+                            searchTerm={searchTerm} 
+                        />
                     </TabsContent>
 
                 </Tabs>

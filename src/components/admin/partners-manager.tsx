@@ -1,335 +1,577 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
-import { ContractSubmission } from '@/app/admin/page';
-import { NeumorphicCard } from '../neumorphic-card';
-import { Skeleton } from '../ui/skeleton';
-import { Button } from '../ui/button';
-import { useToast } from '../ui/use-toast';
-import { Minus, Plus, Link as LinkIcon, User, Mail, Phone, Code, Check, X, Clock, RefreshCw, BarChart, Trophy, MoreVertical, Trash2 } from 'lucide-react';
-import Link from 'next/link';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
-import { Badge } from '../ui/badge';
-import { cn } from '@/lib/utils';
+import { useState, useMemo } from 'react';
+import { doc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import { useFirebase } from '@/firebase';
+import { useToast } from '@/components/ui/use-toast';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+import { NeumorphicCard } from '@/components/neumorphic-card';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
-import { useAdminQuery } from '@/hooks/useAdminQuery';
-import { LoadingSpinner } from '../loading-spinner';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, XCircle, Trophy, TrendingUp, Copy, Plus, Minus, Edit2, Trash2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
+import type { ContractSubmission } from '@/app/admin/page';
 
-function PartnerDetails({ partner }: { partner: ContractSubmission }) {
-    const { firestore } = useFirebase();
-    const { toast } = useToast();
-
-    const handleUpdateUses = async (amount: number) => {
-        if (!firestore) return;
-        const partnerRef = doc(firestore, 'submissions', partner.id);
-        const currentUses = partner.promoCodeUses || 0;
-        if (currentUses + amount < 0) return;
-
-        await updateDoc(partnerRef, {
-            promoCodeUses: increment(amount),
-            promoCodeTotalUses: increment(amount)
-        });
-        toast({ variant: "success", title: "Compteur mis à jour!" });
-    };
-
-    const handleResetUses = async () => {
-        if (!firestore) return;
-        const partnerRef = doc(firestore, 'submissions', partner.id);
-        await updateDoc(partnerRef, {
-            promoCodeUses: 0
-        });
-        toast({ variant: "success", title: "Compteur de récompense réinitialisé !" });
-    };
-
-    return (
-        <NeumorphicCard inset className="p-4 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <h4 className="font-semibold text-sm flex items-center gap-2"><User />Coordonnées</h4>
-                    <p className="text-sm flex items-center gap-2"><Mail className="w-4 h-4 text-muted-foreground" /> {partner.email}</p>
-                    <p className="text-sm flex items-center gap-2"><Phone className="w-4 h-4 text-muted-foreground" /> {partner.phone}</p>
-                </div>
-                <div className="space-y-2">
-                    <h4 className="font-semibold text-sm flex items-center gap-2"><LinkIcon />Réseaux Sociaux</h4>
-                    {partner.socialLinks?.map((link, i) => (
-                        <Link key={i} href={link} target="_blank" className="text-sm text-primary hover:underline block truncate">{link}</Link>
-                    ))}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Reward Counter */}
-                <div className="flex flex-col gap-4 rounded-lg p-3 neumorphic-card-light dark:neumorphic-card-dark">
-                    <div className='text-center sm:text-left'>
-                        <p className="font-semibold flex items-center gap-2 text-sm"><Trophy className="w-4 h-4" />Compteur pour Récompense</p>
-                    </div>
-                    <div className="flex items-center justify-center gap-2">
-                        <Button size="icon" variant="outline" onClick={() => handleUpdateUses(-1)} disabled={(partner.promoCodeUses || 0) === 0} className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
-                            <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="font-bold text-lg w-10 text-center">{partner.promoCodeUses || 0}</span>
-                        <Button size="icon" variant="outline" onClick={() => handleUpdateUses(1)} className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
-                            <Plus className="h-4 w-4" />
-                        </Button>
-                    </div>
-                    <Button onClick={handleResetUses} variant="outline" size="sm" className="self-center btn-neumorphic-light dark:btn-neumorphic-dark">
-                        <RefreshCw className="h-3 w-3 mr-2" /> Réinitialiser
-                    </Button>
-                </div>
-                {/* Total Uses Counter */}
-                 <div className="flex flex-col justify-center items-center gap-2 rounded-lg p-3 neumorphic-card-light dark:neumorphic-card-dark">
-                     <p className="font-semibold flex items-center gap-2 text-sm"><BarChart className="w-4 h-4" />Utilisations Totales (à vie)</p>
-                     <p className="font-bold text-2xl text-primary">{partner.promoCodeTotalUses || 0}</p>
-                </div>
-            </div>
-            
-            <div className="text-center rounded-lg p-3 neumorphic-card-light dark:neumorphic-card-dark">
-                <p className="font-semibold flex items-center justify-center gap-2"><Code className="w-4 h-4" />Code Promo</p>
-                <p className="font-mono text-primary text-xl mt-1">{partner.promoCode}</p>
-            </div>
-        </NeumorphicCard>
-    );
+interface PartnersManagerProps {
+  submissions?: ContractSubmission[];
+  isLoading?: boolean;
+  searchTerm?: string;
 }
 
-function PartnerRow({ partner, onDelete }: { partner: ContractSubmission, onDelete: (id: string) => void }) {
-    const { firestore } = useFirebase();
-    const { toast } = useToast();
-    const [isOpen, setIsOpen] = useState(false);
-
-    const handleStatusChange = async (id: string, status: 'en attente' | 'confirmé' | 'refusé') => {
-        if (!firestore) return;
-        const partnerRef = doc(firestore, 'submissions', id);
-        try {
-            await updateDoc(partnerRef, { status });
-            toast({ variant: 'success', title: 'Statut mis à jour !'});
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour le statut.' });
-        }
-    };
-
-    return (
-        <React.Fragment>
-            <TableRow data-state={isOpen ? 'open' : 'closed'} className="cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-                <TableCell className="font-medium">{partner.fullName}</TableCell>
-                <TableCell>{partner.email}</TableCell>
-                <TableCell><span className="font-mono">{partner.promoCode}</span></TableCell>
-                <TableCell>
-                    <Badge className={cn(
-                        "capitalize",
-                        partner.status === 'confirmé' && 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300',
-                        partner.status === 'en attente' && 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-yellow-300',
-                        partner.status === 'refusé' && 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300'
-                    )} variant="outline">
-                        {partner.status}
-                    </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                    <div onClick={e => e.stopPropagation()}>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">Gérer</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'confirmé')}>
-                                    <Check className="mr-2 h-4 w-4 text-green-500"/> Confirmer
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'refusé')}>
-                                    <X className="mr-2 h-4 w-4 text-red-500"/> Refuser
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'en attente')}>
-                                    <Clock className="mr-2 h-4 w-4 text-yellow-500"/> Mettre en attente
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors text-destructive focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
-                                             <Trash2 className="mr-2 h-4 w-4"/> Supprimer
-                                        </div>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
-                                        <AlertDialogDescription>Cette action est irréversible et supprimera définitivement ce partenaire.</AlertDialogDescription>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => onDelete(partner.id)}>Supprimer</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </TableCell>
-            </TableRow>
-            {isOpen && (
-                <TableRow>
-                    <TableCell colSpan={5} className="p-0 bg-muted/50">
-                        <div className="p-4">
-                            <PartnerDetails partner={partner} />
-                        </div>
-                    </TableCell>
-                </TableRow>
-            )}
-        </React.Fragment>
-    );
-}
-
-function PartnerCard({ partner, onDelete }: { partner: ContractSubmission, onDelete: (id: string) => void }) {
+export function PartnersManager({ submissions, isLoading, searchTerm = '' }: PartnersManagerProps) {
   const { firestore } = useFirebase();
   const { toast } = useToast();
-  const [isOpen, setIsOpen] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [incrementDialogOpen, setIncrementDialogOpen] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<ContractSubmission | null>(null);
+  const [incrementAmount, setIncrementAmount] = useState<number>(1);
+  const [editCodeDialogOpen, setEditCodeDialogOpen] = useState(false);
+  const [newPromoCode, setNewPromoCode] = useState('');
 
-  const handleStatusChange = async (id: string, status: 'en attente' | 'confirmé' | 'refusé') => {
-      if (!firestore) return;
-      const partnerRef = doc(firestore, 'submissions', id);
-      try {
-          await updateDoc(partnerRef, { status });
-          toast({ variant: 'success', title: 'Statut mis à jour !'});
-      } catch (error) {
-          toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour le statut.' });
-      }
+  // Filtrer seulement les partenaires
+  const partners = useMemo(() => {
+    if (!submissions) return [];
+    
+    return submissions
+      .filter((sub) => sub.type === 'Partenariat')
+      .filter((partner) => {
+        if (!searchTerm) return true;
+        const search = searchTerm.toLowerCase();
+        return (
+          partner.fullName?.toLowerCase().includes(search) ||
+          partner.email?.toLowerCase().includes(search) ||
+          partner.promoCode?.toLowerCase().includes(search)
+        );
+      })
+      .sort((a, b) => {
+        // Trier par statut (confirmé en premier) puis par date
+        if (a.status === 'confirmé' && b.status !== 'confirmé') return -1;
+        if (a.status !== 'confirmé' && b.status === 'confirmé') return 1;
+        return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
+      });
+  }, [submissions, searchTerm]);
+
+  // Statistiques
+  const stats = useMemo(() => {
+    if (!partners) return { total: 0, confirmed: 0, pending: 0, totalUses: 0 };
+    const confirmed = partners.filter(p => p.status === 'confirmé');
+    const pending = partners.filter(p => p.status === 'en attente');
+    const totalUses = confirmed.reduce((sum, p) => sum + (p.promoCodeTotalUses || 0), 0);
+    
+    return {
+      total: partners.length,
+      confirmed: confirmed.length,
+      pending: pending.length,
+      totalUses,
+    };
+  }, [partners]);
+
+  const handleDelete = async (id: string) => {
+    if (!firestore) return;
+    try {
+        await deleteDoc(doc(firestore, "submissions", id));
+        toast({ variant: 'success', title: 'Partenaire supprimé.'});
+    } catch (error) {
+        console.error("Error deleting partner: ", error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer le partenaire.'});
+    }
   };
 
+
+  // 🔥 ACTION 1 : Approuver un partenaire
+  const handleApprove = async (partnerId: string) => {
+    if (!firestore) return;
+    setProcessingId(partnerId);
+
+    try {
+      const partnerRef = doc(firestore, 'submissions', partnerId);
+      await updateDoc(partnerRef, {
+        status: 'confirmé',
+      });
+
+      toast({
+        variant: 'success',
+        title: '✅ Partenaire approuvé !',
+        description: 'Le partenaire peut maintenant accéder à son dashboard.',
+      });
+    } catch (error) {
+      console.error('Error approving partner:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: "Impossible d'approuver le partenaire.",
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // 🔥 ACTION 2 : Refuser un partenaire
+  const handleReject = async (partnerId: string) => {
+    if (!firestore) return;
+    setProcessingId(partnerId);
+
+    try {
+      const partnerRef = doc(firestore, 'submissions', partnerId);
+      await updateDoc(partnerRef, {
+        status: 'refusé',
+      });
+
+      toast({
+        variant: 'success',
+        title: '❌ Partenaire refusé',
+        description: 'Le statut a été mis à jour.',
+      });
+    } catch (error) {
+      console.error('Error rejecting partner:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de refuser le partenaire.',
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // 🔥 ACTION 3 : Incrémenter les utilisations du code promo
+  const handleIncrementUses = async () => {
+    if (!firestore || !selectedPartner) return;
+    setProcessingId(selectedPartner.id);
+
+    try {
+      const partnerRef = doc(firestore, 'submissions', selectedPartner.id);
+      
+      // Incrémenter les deux compteurs
+      await updateDoc(partnerRef, {
+        promoCodeUses: increment(incrementAmount),
+        promoCodeTotalUses: increment(incrementAmount),
+      });
+
+      toast({
+        variant: 'success',
+        title: `🎉 +${incrementAmount} utilisation(s) !`,
+        description: `Le compteur de ${selectedPartner.fullName} a été mis à jour.`,
+      });
+
+      setIncrementDialogOpen(false);
+      setIncrementAmount(1);
+      setSelectedPartner(null);
+    } catch (error) {
+      console.error('Error incrementing uses:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour le compteur.',
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // 🔥 ACTION 4 : Réinitialiser le compteur (cycle de récompense)
+  const handleResetUses = async (partnerId: string) => {
+    if (!firestore) return;
+    setProcessingId(partnerId);
+
+    try {
+      const partnerRef = doc(firestore, 'submissions', partnerId);
+      await updateDoc(partnerRef, {
+        promoCodeUses: 0,
+      });
+
+      toast({
+        variant: 'success',
+        title: '🔄 Compteur réinitialisé',
+        description: 'Le cycle de récompense a été remis à zéro.',
+      });
+    } catch (error) {
+      console.error('Error resetting uses:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de réinitialiser le compteur.',
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // 🔥 ACTION 5 : Modifier le code promo
+  const handleEditPromoCode = async () => {
+    if (!firestore || !selectedPartner || !newPromoCode.trim()) return;
+    setProcessingId(selectedPartner.id);
+
+    try {
+      const partnerRef = doc(firestore, 'submissions', selectedPartner.id);
+      await updateDoc(partnerRef, {
+        promoCode: newPromoCode.trim(),
+      });
+
+      toast({
+        variant: 'success',
+        title: '✏️ Code promo modifié',
+        description: `Nouveau code : ${newPromoCode}`,
+      });
+
+      setEditCodeDialogOpen(false);
+      setNewPromoCode('');
+      setSelectedPartner(null);
+    } catch (error) {
+      console.error('Error editing promo code:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de modifier le code promo.',
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast({ variant: 'success', title: '📋 Code copié !' });
+  };
+
+  const formatDate = (timestamp?: { seconds: number }) => {
+    if (!timestamp) return 'N/A';
+    return format(new Date(timestamp.seconds * 1000), 'dd MMM yyyy', { locale: fr });
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmé':
+        return <Badge className="bg-green-500/20 text-green-700 dark:text-green-300">Actif</Badge>;
+      case 'en attente':
+        return <Badge className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-300">En attente</Badge>;
+      case 'refusé':
+        return <Badge className="bg-red-500/20 text-red-700 dark:text-red-300">Refusé</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  if (isLoading) {
+    return <Skeleton className="h-96 w-full" />;
+  }
+
   return (
-    <NeumorphicCard className="space-y-4">
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="font-bold">{partner.fullName}</h3>
-          <p className="text-sm text-muted-foreground">{partner.email}</p>
-          <div className="mt-2">
-            <Badge className={cn(
-                "capitalize",
-                partner.status === 'confirmé' && 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300',
-                partner.status === 'en attente' && 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-yellow-300',
-                partner.status === 'refusé' && 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300'
-            )} variant="outline">
-                {partner.status}
-            </Badge>
+    <NeumorphicCard inset className="p-4 sm:p-6">
+      <div className="mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold font-headline mb-4">Gestion des Partenaires</h2>
+        
+        {/* Statistiques */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-lg p-4">
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-sm text-muted-foreground">Total</div>
+          </div>
+          <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 rounded-lg p-4">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.confirmed}</div>
+            <div className="text-sm text-muted-foreground">Actifs</div>
+          </div>
+          <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 rounded-lg p-4">
+            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.pending}</div>
+            <div className="text-sm text-muted-foreground">En attente</div>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 rounded-lg p-4">
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.totalUses}</div>
+            <div className="text-sm text-muted-foreground">Total utilisations</div>
           </div>
         </div>
-        <div onClick={e => e.stopPropagation()}>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'confirmé')}>
-                        <Check className="mr-2 h-4 w-4 text-green-500"/> Confirmer
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'refusé')}>
-                        <X className="mr-2 h-4 w-4 text-red-500"/> Refuser
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange(partner.id, 'en attente')}>
-                        <Clock className="mr-2 h-4 w-4 text-yellow-500"/> Mettre en attente
-                    </DropdownMenuItem>
-                     <DropdownMenuSeparator />
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors text-destructive focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
-                                <Trash2 className="mr-2 h-4 w-4"/> Supprimer
-                            </div>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
-                            <AlertDialogDescription>Cette action est irréversible et supprimera définitivement ce partenaire.</AlertDialogDescription>
+      </div>
+
+      {partners.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <Trophy className="w-16 h-16 mx-auto mb-4 opacity-20" />
+          <p>Aucun partenaire trouvé.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nom</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Code Promo</TableHead>
+                <TableHead className="text-center">Cycle</TableHead>
+                <TableHead className="text-center">Total</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {partners.map((partner) => (
+                <TableRow key={partner.id}>
+                  <TableCell className="font-medium">{partner.fullName}</TableCell>
+                  <TableCell className="text-sm">{partner.email}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
+                        {partner.promoCode}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => handleCopyCode(partner.promoCode || '')}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => {
+                          setSelectedPartner(partner);
+                          setNewPromoCode(partner.promoCode || '');
+                          setEditCodeDialogOpen(true);
+                        }}
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="font-semibold">{partner.promoCodeUses || 0}</span>
+                    <span className="text-muted-foreground text-sm"> / 100</span>
+                  </TableCell>
+                  <TableCell className="text-center font-semibold">
+                    {partner.promoCodeTotalUses || 0}
+                  </TableCell>
+                  <TableCell>{getStatusBadge(partner.status)}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {formatDate(partner.createdAt)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {partner.status === 'en attente' && (
+                        <>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-green-600 hover:text-green-700"
+                                disabled={processingId === partner.id}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Approuver ce partenaire ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {partner.fullName} pourra accéder à son tableau de bord et commencer à utiliser son code promo.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleApprove(partner.id)}>
+                                  Approuver
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-600 hover:text-red-700"
+                                disabled={processingId === partner.id}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Refuser ce partenaire ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Cette action changera le statut à "refusé".
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleReject(partner.id)}>
+                                  Refuser
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      )}
+
+                      {partner.status === 'confirmé' && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary"
+                            onClick={() => {
+                              setSelectedPartner(partner);
+                              setIncrementDialogOpen(true);
+                            }}
+                            disabled={processingId === partner.id}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-orange-600"
+                                disabled={processingId === partner.id || (partner.promoCodeUses || 0) === 0}
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Réinitialiser le compteur ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Le compteur du cycle actuel sera remis à 0. Le total à vie ne sera pas affecté.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleResetUses(partner.id)}>
+                                  Réinitialiser
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      )}
+                      
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-600 hover:text-red-700"
+                                disabled={processingId === partner.id}
+                                >
+                                <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Supprimer ce partenaire ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                Cette action est irréversible. Toutes les données associées seront perdues.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDelete(partner.id)}>Supprimer</AlertDialogAction>
+                                <AlertDialogAction onClick={() => handleDelete(partner.id)}>
+                                Supprimer
+                                </AlertDialogAction>
                             </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
-      </div>
-      <p className="text-sm flex items-center gap-2"><Code className="w-4 h-4"/> <span className="font-mono">{partner.promoCode}</span></p>
+      )}
 
-      {isOpen && <PartnerDetails partner={partner} />}
-      <Button variant="link" onClick={() => setIsOpen(!isOpen)} className="p-0 h-auto text-sm">
-        {isOpen ? 'Masquer les détails' : 'Voir les détails'}
-      </Button>
+      {/* Dialog pour incrémenter les utilisations */}
+      <Dialog open={incrementDialogOpen} onOpenChange={setIncrementDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajouter des utilisations</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Partenaire</Label>
+              <p className="text-sm font-medium">{selectedPartner?.fullName}</p>
+              <p className="text-xs text-muted-foreground">Code: {selectedPartner?.promoCode}</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="increment-amount">Nombre d'utilisations à ajouter</Label>
+              <Input
+                id="increment-amount"
+                type="number"
+                min="1"
+                value={incrementAmount}
+                onChange={(e) => setIncrementAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"
+              />
+            </div>
+            <div className="bg-muted rounded-lg p-3 text-sm">
+              <div className="flex justify-between mb-1">
+                <span>Cycle actuel :</span>
+                <span className="font-medium">{selectedPartner?.promoCodeUses || 0} → {(selectedPartner?.promoCodeUses || 0) + incrementAmount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total à vie :</span>
+                <span className="font-medium">{selectedPartner?.promoCodeTotalUses || 0} → {(selectedPartner?.promoCodeTotalUses || 0) + incrementAmount}</span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIncrementDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleIncrementUses} disabled={processingId === selectedPartner?.id}>
+              <TrendingUp className="mr-2 h-4 w-4" />
+              Ajouter
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog pour modifier le code promo */}
+      <Dialog open={editCodeDialogOpen} onOpenChange={setEditCodeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le code promo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Partenaire</Label>
+              <p className="text-sm font-medium">{selectedPartner?.fullName}</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-promo-code">Nouveau code promo</Label>
+              <Input
+                id="new-promo-code"
+                value={newPromoCode}
+                onChange={(e) => setNewPromoCode(e.target.value.toUpperCase())}
+                placeholder="NOUVEAU-CODE"
+                maxLength={15}
+                className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark font-mono"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditCodeDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleEditPromoCode} disabled={!newPromoCode.trim() || processingId === selectedPartner?.id}>
+              <Edit2 className="mr-2 h-4 w-4" />
+              Modifier
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </NeumorphicCard>
-  )
-}
-
-export function PartnersManager({ searchTerm }: { searchTerm: string }) {
-    const { firestore, user, isUserLoading } = useFirebase();
-    const { toast } = useToast();
-    
-    const partnersQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        return query(collection(firestore, 'submissions'), where('type', '==', 'Partenariat'));
-    }, [firestore]);
-
-    const { data: partners, isLoading } = useCollection<ContractSubmission>(partnersQuery);
-    
-    const filteredPartners = useMemo(() => {
-        if (!partners) return [];
-        if (!searchTerm) return partners;
-
-        return partners.filter(p =>
-            p.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (p.promoCode && p.promoCode.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-    }, [partners, searchTerm]);
-
-    const handleDelete = async (id: string) => {
-        if (!firestore) return;
-        try {
-            await deleteDoc(doc(firestore, "submissions", id));
-            toast({ variant: 'success', title: 'Partenaire supprimé.'});
-        } catch (error) {
-            console.error("Error deleting partner: ", error);
-            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer le partenaire.'});
-        }
-    };
-    
-    if (isUserLoading) return <LoadingSpinner />;
-    if (user?.email !== 'grasdvirus@gmail.com') return null;
-
-    return (
-        <NeumorphicCard inset className="p-4 sm:p-6">
-            <h2 className="text-xl sm:text-2xl font-bold font-headline mb-4">Demandes de Partenariat</h2>
-            {isLoading ? (
-                <div className="space-y-2">
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                </div>
-            ) : filteredPartners && filteredPartners.length > 0 ? (
-                <>
-                  <div className="hidden sm:block">
-                      <Table>
-                          <TableHeader>
-                              <TableRow>
-                                  <TableHead>Nom</TableHead>
-                                  <TableHead>Email</TableHead>
-                                  <TableHead>Code Promo</TableHead>
-                                  <TableHead>Statut</TableHead>
-                                  <TableHead className="text-right">Actions</TableHead>
-                              </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                          {filteredPartners.map((partner) => (
-                              <PartnerRow key={partner.id} partner={partner} onDelete={handleDelete} />
-                          ))}
-                          </TableBody>
-                      </Table>
-                  </div>
-                  <div className="sm:hidden space-y-4">
-                      {filteredPartners.map((partner) => (
-                        <PartnerCard key={partner.id} partner={partner} onDelete={handleDelete} />
-                      ))}
-                  </div>
-                </>
-            ) : (
-                <p className="text-center text-muted-foreground py-8">
-                    {searchTerm ? "Aucun partenaire ne correspond à votre recherche." : "Aucune demande de partenariat pour le moment."}
-                </p>
-            )}
-        </NeumorphicCard>
-    );
+  );
 }
