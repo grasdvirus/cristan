@@ -206,6 +206,7 @@
             "projectDetails": { "type": "string", "description": "Details about the project or partnership." },
             "projectId": { "type": "string", "description": "ID of the related project, if applicable." },
             "promoCode": { "type": "string", "description": "Promotional code used or suggested." },
+            "password": { "type": "string", "description": "Password set by the partner for their dashboard access." },
             "promoCodeUses": { "type": "number", "description": "Resettable count of promo code uses for rewards." },
             "promoCodeTotalUses": { "type": "number", "description": "Lifetime total uses of the promo code." },
             "socialLinks": { "type": "array", "items": { "type": "string", "format": "uri" }, "description": "Social media links for partners." },

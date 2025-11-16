@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Handshake } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('sites');
@@ -49,12 +50,12 @@ export default function Home() {
                     >
                         Gamme
                     </TabsTrigger>
-                    <TabsTrigger 
-                        value="partnership" 
+                     <TabsTrigger 
+                        value="partnership"
                         className="text-lg font-bold bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
-                    >
+                     >
                         Partenariat
-                    </TabsTrigger>
+                     </TabsTrigger>
                   </TabsList>
 
                   <div className="mt-12">
@@ -71,10 +72,10 @@ export default function Home() {
                                 Rejoignez notre programme d'affiliation et commencez à gagner des récompenses en partageant nos services. Accédez à votre tableau de bord et suivez vos performances en temps réel.
                             </p>
                             <Button asChild size="lg" className="mt-6 btn-neumorphic-light dark:btn-neumorphic-dark">
-                                <a href="https://page-partenaire.vercel.app/" target="_blank" rel="noopener noreferrer">
+                                <Link href="/partner">
                                     Accéder à l'espace partenaire
                                     <ArrowRight className="ml-2 h-5 w-5" />
-                                </a>
+                                </Link>
                             </Button>
                         </NeumorphicCard>
                     )}

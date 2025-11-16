@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -81,6 +82,7 @@ export type ContractSubmission = {
         nanoseconds: number;
     };
     promoCode?: string;
+    password?: string;
     promoCodeUses?: number;
     promoCodeTotalUses?: number;
     socialLinks?: string[];

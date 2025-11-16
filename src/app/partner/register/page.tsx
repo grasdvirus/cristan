@@ -1,31 +1,26 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
-import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { useFirebase } from '@/firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Handshake, ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, BarChart2, User, Trophy, Copy, Edit, ArrowLeft, PartyPopper, Clock, Eye, EyeOff } from 'lucide-react';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ContractSubmission } from '@/app/admin/page';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, useFieldArray } from '@/components/ui/form';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { AuthGuard } from '@/components/auth-guard';
 
-
 const PARTNER_CODE = 'CRISTAN-PAT';
-const REWARD_GOAL = 100;
 
 const partnerCodeSchema = z.object({
   code: z.string().min(1, "Le code est requis."),
@@ -42,38 +37,6 @@ const partnerFormSchema = z.object({
 
 type PartnerCodeValues = z.infer<typeof partnerCodeSchema>;
 type PartnerFormValues = z.infer<typeof partnerFormSchema>;
-
-
-function PartnerLandingPage() {
-    return (
-        <PageWrapper>
-            <div className="text-center">
-                 <div className="flex justify-center mb-6">
-                    <NeumorphicCard className="rounded-full p-4">
-                        <Handshake className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
-                    </NeumorphicCard>
-                </div>
-                <h1 className="text-3xl sm:text-4xl font-bold font-headline">Espace Partenaire</h1>
-                <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-                    Accédez à votre tableau de bord pour suivre vos performances ou rejoignez notre programme pour commencer à gagner des récompenses.
-                </p>
-                <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button asChild size="lg" className="btn-neumorphic-light dark:btn-neumorphic-dark">
-                        <Link href="/partner/login">
-                            Se Connecter
-                        </Link>
-                    </Button>
-                    <Button asChild size="lg" variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
-                         <Link href="/partner/register">
-                            Devenir Partenaire
-                        </Link>
-                    </Button>
-                </div>
-            </div>
-        </PageWrapper>
-    )
-}
-
 
 function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
     const { toast } = useToast();
@@ -148,7 +111,6 @@ function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
 
 function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: PartnerFormValues) => void, isSubmitting: boolean }) {
   const { user, isUserLoading } = useFirebase();
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   
   const form = useForm<PartnerFormValues>({
@@ -305,174 +267,6 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
   );
 }
 
-const motivationalMessages = [
-    { text: "Chaque code partagé vous rapproche du succès ! 💪", color: "text-green-500" },
-    { text: "Continuez comme ça, vous êtes une star ! ⭐", color: "text-yellow-500" },
-    { text: "Votre influence grandit à chaque utilisation. 🚀", color: "text-blue-500" },
-    { text: "L'excellence est une habitude. Ne lâchez rien ! ✨", color: "text-purple-500" },
-    { text: "Plus que quelques pas avant la récompense ! 🎉", color: "text-pink-500" },
-];
-
-function PartnerDashboard({ partner, onUpdate }: { partner: ContractSubmission, onUpdate: () => void }) {
-    const { firestore } = useFirebase();
-    const { toast } = useToast();
-    const uses = partner.promoCodeUses || 0;
-    const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
-    const [motivation, setMotivation] = useState({ text: "", color: ""});
-    const [isEditingCode, setIsEditingCode] = useState(false);
-    const [newCode, setNewCode] = useState(partner.promoCode || '');
-    const [isSavingCode, setIsSavingCode] = useState(false);
-    
-    useEffect(() => {
-        setMotivation(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
-    }, [partner.promoCodeUses]);
-
-    const handleCopyCode = (textToCopy: string, type: string) => {
-        navigator.clipboard.writeText(textToCopy);
-        toast({ variant: 'success', title: `${type} copié !` });
-    };
-    
-    const handleSaveCode = async () => {
-        if (!firestore || !partner.promoCode || newCode.trim() === '' || newCode.trim() === partner.promoCode) {
-            setIsEditingCode(false);
-            return;
-        }
-        setIsSavingCode(true);
-        try {
-            const partnerRef = doc(firestore, 'submissions', partner.id);
-            await updateDoc(partnerRef, { promoCode: newCode.trim() });
-            toast({ variant: 'success', title: 'Code promo mis à jour !' });
-            setIsEditingCode(false);
-            onUpdate();
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour le code.' });
-            console.error(error);
-        } finally {
-            setIsSavingCode(false);
-        }
-    }
-
-
-    return (
-        <PageWrapper showBackButton={false}>
-            <div className="max-w-4xl mx-auto">
-                <div className="text-center mb-12">
-                    <h1 className="text-3xl sm:text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
-                    <p className="text-muted-foreground mt-2">Bienvenue, {partner.fullName} !</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                    <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center transition-transform duration-300 hover:scale-105">
-                        <User className="w-12 h-12 text-primary mb-4" />
-                        <h3 className="text-lg font-semibold">Votre Code Promo</h3>
-                        <div className="text-2xl sm:text-3xl font-bold font-mono text-primary my-2 flex items-center gap-2">
-                            <span>{partner.promoCode}</span>
-                            <Button variant="ghost" size="icon" onClick={() => handleCopyCode(partner.promoCode || '', 'Code')} className="h-8 w-8 rounded-full">
-                                <Copy className="h-4 w-4"/>
-                            </Button>
-                        </div>
-                        <p className="text-sm text-muted-foreground">Partagez ce code pour gagner des commissions.</p>
-                    </NeumorphicCard>
-                    <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center transition-transform duration-300 hover:scale-105">
-                        <BarChart2 className="w-12 h-12 text-primary mb-4" />
-                        <h3 className="text-lg font-semibold">Utilisations Totales (à vie)</h3>
-                        <p className="text-3xl font-bold font-mono text-primary my-2">{partner.promoCodeTotalUses || 0}</p>
-                        <p className="text-sm text-muted-foreground">Nombre total d'achats avec votre code.</p>
-                    </NeumorphicCard>
-                </div>
-                
-                <NeumorphicCard>
-                    <div className="flex items-center gap-4 mb-4">
-                        <Trophy className="w-8 h-8 text-primary animate-pulse"/>
-                        <h2 className="text-2xl font-bold font-headline">Prochaine Récompense</h2>
-                    </div>
-                    <div className="text-center my-4">
-                        <span className="text-4xl font-bold">{uses}</span>
-                        <span className="text-xl text-muted-foreground"> / {REWARD_GOAL}</span>
-                        <p className="text-sm text-muted-foreground mt-1">utilisations avant la prochaine récompense</p>
-                    </div>
-                    <Progress value={progress} className="w-full h-4" />
-                    <div className="text-center mt-4 h-6">
-                        <p className={cn("font-semibold", motivation.color)}>{motivation.text}</p>
-                    </div>
-                </NeumorphicCard>
-            </div>
-        </PageWrapper>
-    );
-}
-
-function StatusCheckPage() {
-    const { user, firestore, isUserLoading } = useFirebase();
-    const [updateTrigger, setUpdateTrigger] = useState(0);
-    const { toast } = useToast();
-    const router = useRouter();
-
-    const partnerDocRef = useMemoFirebase(() => {
-        if (!firestore || !user) return null;
-        return doc(firestore, 'submissions', user.uid);
-    }, [firestore, user, updateTrigger]);
-    
-    const { data: partnerData, isLoading: isPartnerLoading, error } = useDoc<ContractSubmission>(partnerDocRef);
-    
-    useEffect(() => {
-        if (error) {
-            const errorCode = (error as any).code;
-            if (errorCode === 'permission-denied' || errorCode === 'not-found' || (error.message && error.message.includes("was denied"))) {
-                console.log('No existing partner submission found for this user. Redirecting to registration.');
-                router.push('/partner/register');
-                return;
-            }
-            toast({
-              variant: 'destructive',
-              title: 'Erreur',
-              description: 'Impossible de vérifier votre statut de partenaire.'
-            });
-          }
-    }, [error, toast, router]);
-
-    const handleCopyPassword = () => {
-        if (partnerData?.password) {
-            navigator.clipboard.writeText(partnerData.password);
-            toast({ variant: 'success', title: 'Mot de passe copié !' });
-        }
-    }
-
-    if (isUserLoading || (user && isPartnerLoading)) {
-        return <LoadingSpinner />;
-    }
-
-    if (!user) {
-        return null; // AuthGuard will handle redirect
-    }
-
-    if (partnerData && partnerData.type === 'Partenariat') {
-        if (partnerData.status === 'confirmé') {
-            return <PartnerDashboard partner={partnerData} onUpdate={() => setUpdateTrigger(t => t + 1)} />;
-        }
-        
-        if (partnerData.status === 'en attente') {
-            return (
-                <PageWrapper>
-                    <NeumorphicCard className="max-w-2xl mx-auto p-8 text-center">
-                        <div className="flex justify-center mb-6">
-                            <NeumorphicCard className="rounded-full p-4">
-                                <Clock className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
-                            </NeumorphicCard>
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl font-bold font-headline">Demande en cours d'examen</h1>
-                        <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-                            Merci pour votre demande ! Nous l'examinons et reviendrons vers vous rapidement. Cette page se mettra à jour automatiquement une fois votre demande approuvée.
-                        </p>
-                    </NeumorphicCard>
-                </PageWrapper>
-            );
-        }
-    }
-    
-    // Fallback if no specific state matches, likely means no submission found
-    // The useEffect should have redirected, but this is a safeguard.
-    return <PageWrapper><p>Statut inconnu. Redirection...</p></PageWrapper>;
-}
-
 
 const PageWrapper = ({ children, showBackButton = true }: { children: React.ReactNode, showBackButton?: boolean }) => (
     <div className="container mx-auto px-4 py-16 sm:py-24 relative">
@@ -484,7 +278,7 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
                 className="absolute left-4 top-4 sm:left-6 sm:top-10 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                 aria-label="Retour"
             >
-                <Link href="/">
+                <Link href="/partner">
                     <ArrowLeft className="h-5 w-5" />
                 </Link>
             </Button>
@@ -493,11 +287,91 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
     </div>
 );
 
+function PartnerRegistrationContent() {
+  const [isCodeVerified, setIsCodeVerified] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const { toast } = useToast();
+  const { firestore, user } = useFirebase();
+  const router = useRouter();
 
-export default function PartnerPage() {
+  const handleFormSubmit = async (values: PartnerFormValues) => {
+      if (!firestore || !user) {
+        toast({ title: 'Erreur', description: 'Vous devez être connecté pour postuler.', variant: 'destructive' });
+        return;
+      }
+      setIsSubmitting(true);
+      try {
+        const submissionDocRef = doc(firestore, 'submissions', user.uid);
+        await setDoc(submissionDocRef, {
+          ...values,
+          socialLinks: values.socialLinks.map(link => link.value),
+          type: 'Partenariat',
+          userId: user.uid,
+          status: 'en attente',
+          promoCodeUses: 0,
+          promoCodeTotalUses: 0,
+          createdAt: serverTimestamp(),
+          id: user.uid,
+        });
+        setShowSuccessDialog(true);
+      } catch (error) {
+        toast({ title: 'Erreur', description: 'Impossible d\'envoyer le formulaire.', variant: 'destructive'});
+        console.error(error);
+      } finally {
+        setIsSubmitting(false);
+      }
+  };
+  
+  const handleDialogClose = (isOpen: boolean) => {
+      setShowSuccessDialog(isOpen);
+      if (!isOpen) {
+          router.push('/partner/dashboard');
+      }
+  }
+
+  return (
+      <PageWrapper>
+        {isCodeVerified ? (
+            <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
+        ) : (
+            <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
+        )}
+         <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
+            <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
+                <NeumorphicCard className="relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
+                    <div className="absolute inset-0 sparkle-mask"></div>
+                    <div className="relative flex flex-col items-center text-center py-8 px-4">
+                        <DialogHeader>
+                            <DialogTitle className="text-center text-2xl font-bold font-headline">Demande envoyée !</DialogTitle>
+                        </DialogHeader>
+                        <div className="text-7xl my-6 animate-bounce">
+                            <PartyPopper className="h-20 w-20 text-primary" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            Nous avons bien reçu vos informations. Vous serez redirigé vers votre page d'attente.
+                        </p>
+                        <Button 
+                            onClick={() => handleDialogClose(false)} 
+                            className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark"
+                        >
+                            Fermer
+                        </Button>
+                    </div>
+                </NeumorphicCard>
+            </DialogContent>
+        </Dialog>
+      </PageWrapper>
+  );
+}
+
+export default function PartnerRegisterPage() {
     return (
         <Suspense fallback={<LoadingSpinner />}>
-            <PartnerLandingPage />
+            <AuthGuard>
+                <PartnerRegistrationContent />
+            </AuthGuard>
         </Suspense>
     )
 }
