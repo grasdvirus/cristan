@@ -2,18 +2,16 @@
 'use client';
 
 import { useState, useEffect, Suspense, useRef } from 'react';
-import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { useFirebase } from '@/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { BarChart2, User, Trophy, Copy, ArrowLeft, Clock, Loader2 } from 'lucide-react';
+import { BarChart2, User, Trophy, Copy, ArrowLeft } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { useToast } from '@/components/ui/use-toast';
 import { ContractSubmission } from '@/app/admin/page';
@@ -48,7 +46,7 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
 );
 
 
-function PartnerDashboard({ partnerData }: { partnerData: ContractSubmission }) {
+function PartnerDashboardContent({ partnerData, onSignOut }: { partnerData: ContractSubmission, onSignOut: () => void }) {
     const { toast } = useToast();
     const uses = partnerData.promoCodeUses || 0;
     const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
@@ -106,11 +104,9 @@ function PartnerDashboard({ partnerData }: { partnerData: ContractSubmission }) 
                     </div>
                 </NeumorphicCard>
                  <div className="mt-8 text-center">
-                    <Button variant="outline" asChild>
-                         <Link href="/partner/login">
-                            <ArrowLeft className="mr-2 h-4 w-4"/>
-                            Se déconnecter
-                        </Link>
+                    <Button variant="outline" onClick={onSignOut}>
+                         <ArrowLeft className="mr-2 h-4 w-4"/>
+                         Se déconnecter
                     </Button>
                 </div>
             </div>
@@ -121,6 +117,8 @@ function PartnerDashboard({ partnerData }: { partnerData: ContractSubmission }) 
 function StatusCheckPage() {
     const { firestore } = useFirebase();
     const [partnerId, setPartnerId] = useState<string | null>(null);
+    const [partnerData, setPartnerData] = useState<ContractSubmission | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
     const router = useRouter();
 
@@ -132,56 +130,48 @@ function StatusCheckPage() {
             router.push('/partner/login');
         }
     }, [router]);
-    
-    const partnerDocRef = useMemoFirebase(() => {
-        if (!firestore || !partnerId) return null;
-        return doc(firestore, 'submissions', partnerId);
-    }, [firestore, partnerId]);
-    
-    const { data: partnerData, isLoading, error } = useDoc<ContractSubmission>(partnerDocRef);
 
     useEffect(() => {
-        if (error) {
-            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de récupérer les informations du partenaire.' });
+        if (!firestore || !partnerId) return;
+    
+        setIsLoading(true);
+        const partnerRef = doc(firestore, 'submissions', partnerId);
+    
+        const unsubscribe = onSnapshot(partnerRef, (snapshot) => {
+          if (snapshot.exists()) {
+            setPartnerData(snapshot.data() as ContractSubmission);
+          } else {
+            // Document n'existe pas ou a été supprimé
+            setPartnerData(null);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Partenaire non trouvé.' });
             router.push('/partner/login');
-        }
-    }, [error, router, toast]);
+          }
+          setIsLoading(false);
+        }, (error) => {
+          console.error('Error listening to partner data:', error);
+          toast({ variant: 'destructive', title: 'Erreur de connexion', description: 'Impossible de récupérer vos informations.' });
+          setIsLoading(false);
+          router.push('/partner/login');
+        });
+    
+        return () => unsubscribe();
+      }, [firestore, partnerId, router, toast]);
 
-    const handleCopyPassword = () => {
-        if (partnerData?.password) {
-            navigator.clipboard.writeText(partnerData.password);
-            toast({ variant: 'success', title: 'Mot de passe copié !' });
-        }
+    const handleSignOut = () => {
+        sessionStorage.removeItem('partner_uid');
+        router.push('/partner/login');
     }
     
-    if (isLoading || !partnerId) {
+    if (isLoading || !partnerData) {
         return <LoadingSpinner />;
     }
 
-    if (partnerData) {
-         if (partnerData.status === 'confirmé') {
-            return <PartnerDashboard partnerData={partnerData} />;
-        } else {
-            return (
-                <PageWrapper>
-                    <NeumorphicCard className="max-w-2xl mx-auto p-8 text-center">
-                        <div className="flex justify-center mb-6">
-                            <NeumorphicCard className="rounded-full p-4">
-                                <Clock className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
-                            </NeumorphicCard>
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl font-bold font-headline">Demande en cours d'examen</h1>
-                        <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-                            Merci pour votre demande ! Nous l'examinons et reviendrons vers vous rapidement. Cette page se mettra à jour automatiquement une fois votre demande approuvée.
-                        </p>
-                    </NeumorphicCard>
-                </PageWrapper>
-            );
-        }
+    if (partnerData.status !== 'confirmé') {
+         router.push('/partner/register'); // Redirect to registration page which handles pending status
+         return <LoadingSpinner />;
     }
 
-    // Fallback if data is null after loading
-    return <PageWrapper><p>Partenaire non trouvé. Redirection...</p></PageWrapper>;
+    return <PartnerDashboardContent partnerData={partnerData} onSignOut={handleSignOut} />;
 }
 
 

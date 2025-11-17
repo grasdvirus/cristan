@@ -51,10 +51,11 @@ export default function Home() {
                         Gamme
                     </TabsTrigger>
                      <TabsTrigger 
+                        asChild
                         value="partnership"
-                        className="text-lg font-bold bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
+                        className="text-lg font-bold bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none hover:text-primary transition-colors"
                      >
-                        Partenariat
+                        <Link href="/partner/login">Partenariat</Link>
                      </TabsTrigger>
                   </TabsList>
 
@@ -62,23 +63,6 @@ export default function Home() {
                     {activeTab === 'sites' && <ProjectsGrid />}
                     {activeTab === 'videos' && <HomeTVSection />}
                     {activeTab === 'games' && <GamesGrid />}
-                    {activeTab === 'partnership' && (
-                        <NeumorphicCard inset className="text-center p-8">
-                            <div className="flex justify-center mb-4">
-                                <Handshake className="w-12 h-12 text-primary"/>
-                            </div>
-                            <h3 className="text-2xl font-bold font-headline">Devenez Partenaire Cristan</h3>
-                            <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-                                Rejoignez notre programme d'affiliation et commencez à gagner des récompenses en partageant nos services. Accédez à votre tableau de bord et suivez vos performances en temps réel.
-                            </p>
-                            <Button asChild size="lg" className="mt-6 btn-neumorphic-light dark:btn-neumorphic-dark">
-                                <Link href="/partner">
-                                    Accéder à l'espace partenaire
-                                    <ArrowRight className="ml-2 h-5 w-5" />
-                                </Link>
-                            </Button>
-                        </NeumorphicCard>
-                    )}
                   </div>
               </Tabs>
           </div>
