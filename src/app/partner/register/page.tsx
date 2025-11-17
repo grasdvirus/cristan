@@ -10,6 +10,8 @@ import { useFirebase } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
@@ -295,15 +297,13 @@ function PartnerRegistrationContent() {
   const { firestore, user } = useFirebase();
   const router = useRouter();
 
-  const handleFormSubmit = async (values: PartnerFormValues) => {
+  const handleFormSubmit = (values: PartnerFormValues) => {
       if (!firestore || !user) {
         toast({ title: 'Erreur', description: 'Vous devez être connecté pour postuler.', variant: 'destructive' });
         return;
       }
       setIsSubmitting(true);
-      try {
-        const submissionDocRef = doc(firestore, 'submissions', user.uid);
-        await setDoc(submissionDocRef, {
+      const submissionData = {
           ...values,
           socialLinks: values.socialLinks.map(link => link.value),
           type: 'Partenariat',
@@ -313,14 +313,24 @@ function PartnerRegistrationContent() {
           promoCodeTotalUses: 0,
           createdAt: serverTimestamp(),
           id: user.uid,
+        };
+
+      const submissionDocRef = doc(firestore, 'submissions', user.uid);
+      setDoc(submissionDocRef, submissionData)
+        .then(() => {
+            setShowSuccessDialog(true);
+        })
+        .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: submissionDocRef.path,
+                operation: 'create',
+                requestResourceData: submissionData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        })
+        .finally(() => {
+            setIsSubmitting(false);
         });
-        setShowSuccessDialog(true);
-      } catch (error) {
-        toast({ title: 'Erreur', description: 'Impossible d\'envoyer le formulaire.', variant: 'destructive'});
-        console.error(error);
-      } finally {
-        setIsSubmitting(false);
-      }
   };
   
   const handleDialogClose = (isOpen: boolean) => {
