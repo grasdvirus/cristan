@@ -1,13 +1,8 @@
-
 'use client';
 
-import { useState, useEffect, Suspense, useRef } from 'react';
-import { useFirebase } from '@/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
-import Link from 'next/link';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import Link from 'next/link';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +11,6 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { useToast } from '@/components/ui/use-toast';
-import { ContractSubmission } from '@/app/admin/page';
 
 const REWARD_GOAL = 100;
 
@@ -27,6 +21,14 @@ const motivationalMessages = [
     { text: "L'excellence est une habitude. Ne lâchez rien ! ✨", color: "text-purple-500" },
     { text: "Plus que quelques pas avant la récompense ! 🎉", color: "text-pink-500" },
 ];
+
+type PartnerData = {
+    id: string;
+    fullName: string;
+    promoCode: string;
+    promoCodeUses: number;
+    promoCodeTotalUses: number;
+};
 
 const PageWrapper = ({ children, showBackButton = true }: { children: React.ReactNode, showBackButton?: boolean }) => (
     <div className="container mx-auto px-4 py-16 sm:py-24 relative">
@@ -48,20 +50,42 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
 );
 
 
-function PartnerDashboardContent({ partnerData, onSignOut }: { partnerData: ContractSubmission, onSignOut: () => void }) {
+function PartnerDashboardContent() {
+    const router = useRouter();
     const { toast } = useToast();
-    const uses = partnerData.promoCodeUses || 0;
-    const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
+    const [partnerData, setPartnerData] = useState<PartnerData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [motivation, setMotivation] = useState({ text: "", color: ""});
     
     useEffect(() => {
-        setMotivation(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
-    }, [partnerData.promoCodeUses]);
+        const storedData = sessionStorage.getItem('partner_data');
+        if (storedData) {
+            const data = JSON.parse(storedData);
+            setPartnerData(data);
+            setMotivation(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
+        } else {
+            // Si pas de données, rediriger vers la page de connexion
+            router.replace('/partner/login');
+        }
+        setIsLoading(false);
+    }, [router]);
+
+    const handleSignOut = () => {
+        sessionStorage.removeItem('partner_data');
+        router.push('/partner/login');
+    };
 
     const handleCopy = (textToCopy: string, type: string) => {
         navigator.clipboard.writeText(textToCopy);
         toast({ variant: 'success', title: `${type} copié !` });
     };
+
+    if (isLoading || !partnerData) {
+        return <LoadingSpinner />;
+    }
+
+    const uses = partnerData.promoCodeUses || 0;
+    const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
 
     return (
         <PageWrapper showBackButton={false}>
@@ -106,7 +130,7 @@ function PartnerDashboardContent({ partnerData, onSignOut }: { partnerData: Cont
                     </div>
                 </NeumorphicCard>
                  <div className="mt-8 text-center">
-                    <Button variant="outline" onClick={onSignOut}>
+                    <Button variant="outline" onClick={handleSignOut}>
                          <ArrowLeft className="mr-2 h-4 w-4"/>
                          Se déconnecter
                     </Button>
@@ -116,94 +140,11 @@ function PartnerDashboardContent({ partnerData, onSignOut }: { partnerData: Cont
     );
 }
 
-function StatusCheckPage() {
-    const { firestore, user } = useFirebase();
-    const [partnerId, setPartnerId] = useState<string | null>(null);
-    const [partnerData, setPartnerData] = useState<ContractSubmission | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const { toast } = useToast();
-    const router = useRouter();
-
-    useEffect(() => {
-        const storedId = sessionStorage.getItem('partner_uid');
-        if (storedId) {
-            setPartnerId(storedId);
-        } else if (user) {
-            // Fallback to user.uid if session is missing but user is logged in
-            setPartnerId(user.uid);
-        } else {
-            router.push('/partner/login');
-        }
-    }, [user, router]);
-
-
-    useEffect(() => {
-        if (!firestore || !partnerId) return;
-    
-        setIsLoading(true);
-        const partnerRef = doc(firestore, 'submissions', partnerId);
-    
-        const unsubscribe = onSnapshot(partnerRef, 
-            (snapshot) => {
-              if (snapshot.exists()) {
-                setPartnerData(snapshot.data() as ContractSubmission);
-              } else {
-                setPartnerData(null);
-                toast({ variant: 'destructive', title: 'Erreur', description: 'Partenaire non trouvé.' });
-                router.push('/partner/login');
-              }
-              setIsLoading(false);
-            }, 
-            (error) => {
-                const permissionError = new FirestorePermissionError({
-                    path: partnerRef.path,
-                    operation: 'get',
-                });
-                errorEmitter.emit('permission-error', permissionError);
-                
-                setIsLoading(false);
-                setPartnerData(null);
-            }
-        );
-    
-        return () => unsubscribe();
-    }, [firestore, partnerId, router, toast]);
-
-    const handleSignOut = () => {
-        sessionStorage.removeItem('partner_uid');
-        router.push('/partner/login');
-    }
-    
-    if (isLoading) {
-        return <LoadingSpinner />;
-    }
-
-    if (!partnerData) {
-        // This can happen if the doc doesn't exist or there was a permission error handled above
-        return (
-             <PageWrapper>
-                <NeumorphicCard className="text-center">
-                    <h2 className="text-xl font-bold">Impossible de charger les données</h2>
-                    <p className="text-muted-foreground mt-2">Nous n'avons pas pu récupérer vos informations. Cela peut être dû à un problème de connexion ou de permissions.</p>
-                    <Button onClick={handleSignOut} className="mt-6">Retour à la connexion</Button>
-                </NeumorphicCard>
-            </PageWrapper>
-        )
-    }
-
-    if (partnerData.status !== 'confirmé') {
-         router.push('/partner/register'); // Redirect to registration page which handles pending/denied status
-         return <LoadingSpinner />; // Show spinner during redirect
-    }
-
-    return <PartnerDashboardContent partnerData={partnerData} onSignOut={handleSignOut} />;
-}
-
 
 export default function PartnerDashboardPage() {
     return (
         <Suspense fallback={<LoadingSpinner />}>
-            <StatusCheckPage />
+            <PartnerDashboardContent />
         </Suspense>
     )
 }

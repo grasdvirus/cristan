@@ -7,7 +7,7 @@ import HeroSection from '@/components/sections/hero-section';
 import ProjectsGrid from '@/components/sections/projects-grid';
 import { HomeTVSection } from '@/components/sections/videos-grid';
 import GamesGrid from '@/components/sections/games-grid';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Handshake } from 'lucide-react';
@@ -15,7 +15,6 @@ import Link from 'next/link';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('sites');
-  const router = useRouter();
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -51,18 +50,40 @@ export default function Home() {
                         Gamme
                     </TabsTrigger>
                      <TabsTrigger 
-                        asChild
                         value="partnership"
-                        className="text-lg font-bold bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none hover:text-primary transition-colors"
+                        className="text-lg font-bold bg-transparent shadow-none px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none"
                      >
-                        <Link href="/partner/login">Partenariat</Link>
+                        Partenariat
                      </TabsTrigger>
                   </TabsList>
 
                   <div className="mt-12">
-                    {activeTab === 'sites' && <ProjectsGrid />}
-                    {activeTab === 'videos' && <HomeTVSection />}
-                    {activeTab === 'games' && <GamesGrid />}
+                     <TabsContent value="sites">
+                        <ProjectsGrid />
+                     </TabsContent>
+                     <TabsContent value="videos">
+                        <HomeTVSection />
+                     </TabsContent>
+                     <TabsContent value="games">
+                        <GamesGrid />
+                     </TabsContent>
+                     <TabsContent value="partnership">
+                        <NeumorphicCard className="text-center p-8">
+                            <div className="flex justify-center mb-4">
+                                <Handshake className="h-12 w-12 text-primary" />
+                            </div>
+                            <h3 className="text-2xl font-bold font-headline">Rejoignez Notre Programme Partenaire</h3>
+                            <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                                Collaborez avec nous, bénéficiez d'avantages exclusifs et suivez vos performances sur votre tableau de bord personnel.
+                            </p>
+                            <Button asChild size="lg" className="mt-6 btn-neumorphic-light dark:btn-neumorphic-dark">
+                                <Link href="/partner/login">
+                                    Accéder à l'espace partenaire
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Link>
+                            </Button>
+                        </NeumorphicCard>
+                     </TabsContent>
                   </div>
               </Tabs>
           </div>
