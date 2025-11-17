@@ -1,11 +1,13 @@
 
 'use client';
 
-import { useState, useEffect, Suspense, useRef } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useFirebase } from '@/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
@@ -137,22 +139,32 @@ function StatusCheckPage() {
         setIsLoading(true);
         const partnerRef = doc(firestore, 'submissions', partnerId);
     
-        const unsubscribe = onSnapshot(partnerRef, (snapshot) => {
-          if (snapshot.exists()) {
-            setPartnerData(snapshot.data() as ContractSubmission);
-          } else {
-            // Document n'existe pas ou a été supprimé
-            setPartnerData(null);
-            toast({ variant: 'destructive', title: 'Erreur', description: 'Partenaire non trouvé.' });
-            router.push('/partner/login');
-          }
-          setIsLoading(false);
-        }, (error) => {
-          console.error('Error listening to partner data:', error);
-          toast({ variant: 'destructive', title: 'Erreur de connexion', description: 'Impossible de récupérer vos informations.' });
-          setIsLoading(false);
-          router.push('/partner/login');
-        });
+        const unsubscribe = onSnapshot(partnerRef, 
+            (snapshot) => {
+              if (snapshot.exists()) {
+                setPartnerData(snapshot.data() as ContractSubmission);
+              } else {
+                setPartnerData(null);
+                toast({ variant: 'destructive', title: 'Erreur', description: 'Partenaire non trouvé.' });
+                router.push('/partner/login');
+              }
+              setIsLoading(false);
+            }, 
+            (error) => {
+              const permissionError = new FirestorePermissionError({
+                path: partnerRef.path,
+                operation: 'get',
+              });
+              errorEmitter.emit('permission-error', permissionError);
+              
+              setIsLoading(false);
+              toast({ 
+                variant: 'destructive', 
+                title: 'Erreur de connexion', 
+                description: 'Impossible de récupérer vos informations.' 
+              });
+            }
+        );
     
         return () => unsubscribe();
       }, [firestore, partnerId, router, toast]);
