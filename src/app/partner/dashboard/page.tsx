@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -56,13 +55,13 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => (
 function PartnerDashboardContent() {
     const router = useRouter();
     const { toast } = useToast();
-    const { user, auth } = useFirebase();
+    const { user, auth, firestore } = useFirebase();
     const [motivation, setMotivation] = useState({ text: "", color: ""});
     
     const partnerRef = useMemoFirebase(() => {
-        if (!user) return null;
+        if (!user || !firestore) return null;
         return doc(firestore, 'submissions', user.uid);
-    }, [user]);
+    }, [user, firestore]);
 
     const { data: partnerData, isLoading } = useDoc<PartnerData>(partnerRef);
     
