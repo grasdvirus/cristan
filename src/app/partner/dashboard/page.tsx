@@ -1,16 +1,20 @@
+
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
-import { BarChart2, User, Trophy, Copy, ArrowLeft } from 'lucide-react';
+import { BarChart2, User, Trophy, Copy, ArrowLeft, LogOut, Hourglass } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { useToast } from '@/components/ui/use-toast';
+import { AuthGuard } from '@/components/auth-guard';
 
 const REWARD_GOAL = 100;
 
@@ -28,23 +32,22 @@ type PartnerData = {
     promoCode: string;
     promoCodeUses: number;
     promoCodeTotalUses: number;
+    status: 'en attente' | 'confirmé' | 'refusé';
 };
 
-const PageWrapper = ({ children, showBackButton = true }: { children: React.ReactNode, showBackButton?: boolean }) => (
+const PageWrapper = ({ children }: { children: React.ReactNode }) => (
     <div className="container mx-auto px-4 py-16 sm:py-24 relative">
-        {showBackButton && (
-            <Button 
-                asChild
-                variant="ghost" 
-                size="icon"
-                className="absolute left-4 top-4 sm:left-6 sm:top-10 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
-                aria-label="Retour"
-            >
-                <Link href="/">
-                    <ArrowLeft className="h-5 w-5" />
-                </Link>
-            </Button>
-        )}
+        <Button 
+            asChild
+            variant="ghost" 
+            size="icon"
+            className="absolute left-4 top-4 sm:left-6 sm:top-10 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+            aria-label="Retour à l'accueil"
+        >
+            <Link href="/">
+                <ArrowLeft className="h-5 w-5" />
+            </Link>
+        </Button>
         {children}
     </div>
 );
@@ -53,26 +56,29 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
 function PartnerDashboardContent() {
     const router = useRouter();
     const { toast } = useToast();
-    const [partnerData, setPartnerData] = useState<PartnerData | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const { user, auth } = useFirebase();
     const [motivation, setMotivation] = useState({ text: "", color: ""});
     
-    useEffect(() => {
-        const storedData = sessionStorage.getItem('partner_data');
-        if (storedData) {
-            const data = JSON.parse(storedData);
-            setPartnerData(data);
-            setMotivation(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
-        } else {
-            // Si pas de données, rediriger vers la page de connexion
-            router.replace('/partner/login');
-        }
-        setIsLoading(false);
-    }, [router]);
+    const partnerRef = useMemoFirebase(() => {
+        if (!user) return null;
+        return doc(firestore, 'submissions', user.uid);
+    }, [user]);
 
-    const handleSignOut = () => {
-        sessionStorage.removeItem('partner_data');
-        router.push('/partner/login');
+    const { data: partnerData, isLoading } = useDoc<PartnerData>(partnerRef);
+    
+    useEffect(() => {
+        if (!isLoading && !partnerData) {
+            router.replace('/partner/register');
+        } else if (partnerData) {
+            setMotivation(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
+        }
+    }, [isLoading, partnerData, router]);
+
+    const handleSignOut = async () => {
+        if (auth) {
+            await auth.signOut();
+            router.push('/');
+        }
     };
 
     const handleCopy = (textToCopy: string, type: string) => {
@@ -84,11 +90,34 @@ function PartnerDashboardContent() {
         return <LoadingSpinner />;
     }
 
+    if (partnerData.status === 'en attente' || partnerData.status === 'refusé') {
+        return (
+            <PageWrapper>
+                <div className="max-w-xl mx-auto text-center">
+                    <NeumorphicCard>
+                        <Hourglass className="w-16 h-16 mx-auto text-primary mb-6" />
+                        <h1 className="text-2xl font-bold font-headline">Demande en cours d'examen</h1>
+                        <p className="text-muted-foreground mt-2">
+                           {partnerData.status === 'en attente' 
+                                ? "Merci pour votre demande ! Votre compte partenaire est en cours de vérification par notre équipe. Vous serez notifié par e-mail une fois votre compte approuvé."
+                                : "Malheureusement, votre demande de partenariat n'a pas été approuvée pour le moment. Pour plus d'informations, veuillez nous contacter."
+                           }
+                        </p>
+                        <Button variant="outline" onClick={handleSignOut} className="mt-8">
+                             <LogOut className="mr-2 h-4 w-4"/>
+                             Se déconnecter
+                        </Button>
+                    </NeumorphicCard>
+                </div>
+            </PageWrapper>
+        )
+    }
+
     const uses = partnerData.promoCodeUses || 0;
     const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
 
     return (
-        <PageWrapper showBackButton={false}>
+        <PageWrapper>
             <div className="max-w-4xl mx-auto">
                 <div className="text-center mb-12">
                     <h1 className="text-3xl sm:text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
@@ -131,7 +160,7 @@ function PartnerDashboardContent() {
                 </NeumorphicCard>
                  <div className="mt-8 text-center">
                     <Button variant="outline" onClick={handleSignOut}>
-                         <ArrowLeft className="mr-2 h-4 w-4"/>
+                         <LogOut className="mr-2 h-4 w-4"/>
                          Se déconnecter
                     </Button>
                 </div>
@@ -144,7 +173,9 @@ function PartnerDashboardContent() {
 export default function PartnerDashboardPage() {
     return (
         <Suspense fallback={<LoadingSpinner />}>
-            <PartnerDashboardContent />
+           <AuthGuard>
+              <PartnerDashboardContent />
+           </AuthGuard>
         </Suspense>
     )
 }

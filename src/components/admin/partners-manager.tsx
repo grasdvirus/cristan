@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Trophy, TrendingUp, Copy, Plus, Minus, Edit2, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -304,7 +304,6 @@ export function PartnersManager({ submissions, isLoading, searchTerm = '' }: Par
                 <TableHead>Nom</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Code Promo</TableHead>
-                <TableHead>Mot de passe</TableHead>
                 <TableHead className="text-center">Cycle</TableHead>
                 <TableHead className="text-center">Total</TableHead>
                 <TableHead>Statut</TableHead>
@@ -344,7 +343,6 @@ export function PartnersManager({ submissions, isLoading, searchTerm = '' }: Par
                       </Button>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-xs">{partner.password}</TableCell>
                   <TableCell className="text-center">
                     <span className="font-semibold">{partner.promoCodeUses || 0}</span>
                     <span className="text-muted-foreground text-sm"> / 100</span>

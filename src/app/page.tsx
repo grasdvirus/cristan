@@ -77,7 +77,7 @@ export default function Home() {
                                 Collaborez avec nous, bénéficiez d'avantages exclusifs et suivez vos performances sur votre tableau de bord personnel.
                             </p>
                             <Button asChild size="lg" className="mt-6 btn-neumorphic-light dark:btn-neumorphic-dark">
-                                <Link href="/partner/login">
+                                <Link href="/partner/register">
                                     Accéder à l'espace partenaire
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Link>

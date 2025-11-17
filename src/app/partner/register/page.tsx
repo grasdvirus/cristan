@@ -1,17 +1,15 @@
 
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
-import { useFirebase } from '@/firebase';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FirestorePermissionError } from '@/firebase/errors';
-import { errorEmitter } from '@/firebase/error-emitter';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +32,6 @@ const partnerFormSchema = z.object({
   phone: z.string().min(8, 'Numéro invalide.'),
   socialLinks: z.array(z.object({ value: z.string().url('URL invalide.') })).min(1, 'Ajoutez au moins un lien social.'),
   promoCode: z.string().min(3, 'Le code doit avoir au moins 3 caractères.').max(15, 'Le code ne doit pas dépasser 15 caractères.'),
-  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères.'),
 });
 
 type PartnerCodeValues = z.infer<typeof partnerCodeSchema>;
@@ -113,7 +110,6 @@ function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
 
 function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: PartnerFormValues) => void, isSubmitting: boolean }) {
   const { user, isUserLoading } = useFirebase();
-  const [showPassword, setShowPassword] = useState(false);
   
   const form = useForm<PartnerFormValues>({
     resolver: zodResolver(partnerFormSchema),
@@ -123,7 +119,6 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
       phone: '',
       socialLinks: [{ value: '' }],
       promoCode: '',
-      password: '',
     },
   });
 
@@ -197,28 +192,6 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
             )}
             />
         </div>
-
-        <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Mot de passe pour votre espace partenaire</FormLabel>
-                     <div className="relative">
-                        <FormControl>
-                            <Input 
-                                type={showPassword ? 'text' : 'password'} 
-                                placeholder="Créez un mot de passe" {...field} 
-                                className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark pr-10" />
-                        </FormControl>
-                        <Button type="button" variant="ghost" size="icon" className="absolute right-1 bottom-[9px] h-7 w-7" onClick={() => setShowPassword(!showPassword)}>
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                    </div>
-                    <FormMessage />
-                </FormItem>
-            )}
-        />
         
         <div>
             <FormLabel>Réseaux Sociaux</FormLabel>
@@ -280,7 +253,7 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
                 className="absolute left-4 top-4 sm:left-6 sm:top-10 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                 aria-label="Retour"
             >
-                <Link href="/partner">
+                <Link href="/">
                     <ArrowLeft className="h-5 w-5" />
                 </Link>
             </Button>
@@ -297,7 +270,21 @@ function PartnerRegistrationContent() {
   const { firestore, user } = useFirebase();
   const router = useRouter();
 
-  const handleFormSubmit = (values: PartnerFormValues) => {
+  const partnerRef = useMemoFirebase(() => {
+      if (!user) return null;
+      return doc(firestore, 'submissions', user.uid);
+  }, [user]);
+
+  const { data: existingSubmission, isLoading: isSubmissionLoading } = useDoc(partnerRef);
+  
+  useEffect(() => {
+    if(!isSubmissionLoading && existingSubmission) {
+        router.replace('/partner/dashboard');
+    }
+  }, [isSubmissionLoading, existingSubmission, router])
+
+
+  const handleFormSubmit = async (values: PartnerFormValues) => {
       if (!firestore || !user) {
         toast({ title: 'Erreur', description: 'Vous devez être connecté pour postuler.', variant: 'destructive' });
         return;
@@ -316,21 +303,16 @@ function PartnerRegistrationContent() {
         };
 
       const submissionDocRef = doc(firestore, 'submissions', user.uid);
-      setDoc(submissionDocRef, submissionData)
-        .then(() => {
-            setShowSuccessDialog(true);
-        })
-        .catch(async (serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: submissionDocRef.path,
-                operation: 'create',
-                requestResourceData: submissionData,
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        })
-        .finally(() => {
-            setIsSubmitting(false);
-        });
+      
+      try {
+        await setDoc(submissionDocRef, submissionData)
+        setShowSuccessDialog(true);
+      } catch(e) {
+          console.error("Error submitting partnership request", e);
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Une erreur est survenue lors de la soumission.'});
+      } finally {
+        setIsSubmitting(false)
+      }
   };
   
   const handleDialogClose = (isOpen: boolean) => {
@@ -338,6 +320,14 @@ function PartnerRegistrationContent() {
       if (!isOpen) {
           router.push('/partner/dashboard');
       }
+  }
+  
+  if (isSubmissionLoading) {
+      return <LoadingSpinner />
+  }
+  
+  if (existingSubmission) {
+      return <LoadingSpinner />;
   }
 
   return (
