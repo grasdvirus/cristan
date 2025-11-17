@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
-import { verifyPartnerPassword } from './actions';
+import { verifyPartnerPassword } from '../actions';
 
 
 export default function PartnerLoginPage() {
