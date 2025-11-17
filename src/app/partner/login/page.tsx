@@ -9,61 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
-
-async function verifyPartnerPassword(password: string): Promise<{ success: boolean; data?: any; error?: string; status?: string }> {
-    'use server';
-    // This code runs only on the server
-    try {
-        const { initializeApp, getApps, App } = await import('firebase-admin/app');
-        const { getFirestore } = await import('firebase-admin/firestore');
-        const { credential } = await import('firebase-admin');
-
-        const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-        if (!serviceAccountKey) {
-            throw new Error('Firebase service account key is not configured on the server.');
-        }
-
-        let adminApp: App;
-        if (!getApps().length) {
-            adminApp = initializeApp({
-                credential: credential.cert(JSON.parse(serviceAccountKey)),
-            });
-        } else {
-            adminApp = getApps()[0];
-        }
-
-        const db = getFirestore(adminApp);
-
-        const partnersRef = db.collection('submissions');
-        const snapshot = await partnersRef.where('password', '==', password).where('type', '==', 'Partenariat').limit(1).get();
-
-        if (snapshot.empty) {
-            return { success: false, error: 'Mot de passe invalide.' };
-        }
-
-        const partnerDoc = snapshot.docs[0];
-        const partnerData = partnerDoc.data();
-
-        if (partnerData.status !== 'confirmé') {
-            return { success: false, error: 'Compte non actif.', status: 'en attente' };
-        }
-        
-        // Return only the necessary data for the dashboard
-        const dashboardData = {
-            id: partnerDoc.id,
-            fullName: partnerData.fullName,
-            promoCode: partnerData.promoCode,
-            promoCodeUses: partnerData.promoCodeUses || 0,
-            promoCodeTotalUses: partnerData.promoCodeTotalUses || 0,
-        };
-
-        return { success: true, data: dashboardData };
-
-    } catch (error) {
-        console.error('Server Action Error in verifyPartnerPassword:', error);
-        return { success: false, error: 'Erreur interne du serveur.' };
-    }
-}
+import { verifyPartnerPassword } from './actions';
 
 
 export default function PartnerLoginPage() {
