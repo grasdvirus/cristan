@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useFirebase } from '@/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import Link from 'next/link';
@@ -117,7 +117,7 @@ function PartnerDashboardContent({ partnerData, onSignOut }: { partnerData: Cont
 }
 
 function StatusCheckPage() {
-    const { firestore } = useFirebase();
+    const { firestore, user } = useFirebase();
     const [partnerId, setPartnerId] = useState<string | null>(null);
     const [partnerData, setPartnerData] = useState<ContractSubmission | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -128,10 +128,14 @@ function StatusCheckPage() {
         const storedId = sessionStorage.getItem('partner_uid');
         if (storedId) {
             setPartnerId(storedId);
+        } else if (user) {
+            // Fallback to user.uid if session is missing but user is logged in
+            setPartnerId(user.uid);
         } else {
             router.push('/partner/login');
         }
-    }, [router]);
+    }, [user, router]);
+
 
     useEffect(() => {
         if (!firestore || !partnerId) return;
@@ -151,36 +155,45 @@ function StatusCheckPage() {
               setIsLoading(false);
             }, 
             (error) => {
-              const permissionError = new FirestorePermissionError({
-                path: partnerRef.path,
-                operation: 'get',
-              });
-              errorEmitter.emit('permission-error', permissionError);
-              
-              setIsLoading(false);
-              toast({ 
-                variant: 'destructive', 
-                title: 'Erreur de connexion', 
-                description: 'Impossible de récupérer vos informations.' 
-              });
+                const permissionError = new FirestorePermissionError({
+                    path: partnerRef.path,
+                    operation: 'get',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                
+                setIsLoading(false);
+                setPartnerData(null);
             }
         );
     
         return () => unsubscribe();
-      }, [firestore, partnerId, router, toast]);
+    }, [firestore, partnerId, router, toast]);
 
     const handleSignOut = () => {
         sessionStorage.removeItem('partner_uid');
         router.push('/partner/login');
     }
     
-    if (isLoading || !partnerData) {
+    if (isLoading) {
         return <LoadingSpinner />;
     }
 
+    if (!partnerData) {
+        // This can happen if the doc doesn't exist or there was a permission error handled above
+        return (
+             <PageWrapper>
+                <NeumorphicCard className="text-center">
+                    <h2 className="text-xl font-bold">Impossible de charger les données</h2>
+                    <p className="text-muted-foreground mt-2">Nous n'avons pas pu récupérer vos informations. Cela peut être dû à un problème de connexion ou de permissions.</p>
+                    <Button onClick={handleSignOut} className="mt-6">Retour à la connexion</Button>
+                </NeumorphicCard>
+            </PageWrapper>
+        )
+    }
+
     if (partnerData.status !== 'confirmé') {
-         router.push('/partner/register'); // Redirect to registration page which handles pending status
-         return <LoadingSpinner />;
+         router.push('/partner/register'); // Redirect to registration page which handles pending/denied status
+         return <LoadingSpinner />; // Show spinner during redirect
     }
 
     return <PartnerDashboardContent partnerData={partnerData} onSignOut={handleSignOut} />;
