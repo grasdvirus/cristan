@@ -46,19 +46,10 @@ service cloud.firestore {
                                         }
                                             
                                                 match /submissions/{submissionId} {
-                                                        // Un administrateur peut obtenir n'importe quelle soumission. Un utilisateur peut obtenir la sienne.
                                                         allow get: if isAdmin() || (request.auth != null && request.auth.uid == submissionId);
-                                                        
-                                                        // Seul l'administrateur peut lister toutes les soumissions.
                                                         allow list: if isAdmin();
-                                                        
-                                                        // Tout utilisateur authentifié peut créer une soumission.
                                                         allow create: if request.auth != null;
-                                                              
-                                                        // Seul l'administrateur peut mettre à jour (pour changer le statut, etc.)
                                                         allow update: if isAdmin();
-                                                              
-                                                        // Seul l'administrateur peut supprimer.
                                                         allow delete: if isAdmin();
                                                 }
                                                     
