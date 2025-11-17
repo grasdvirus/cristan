@@ -46,23 +46,20 @@ service cloud.firestore {
                                         }
                                             
                                                 match /submissions/{submissionId} {
-                                                        // Permet à l'admin de tout voir, ou à l'utilisateur de voir sa propre soumission
-                                                              allow get: if isAdmin() || (request.auth != null && request.auth.uid == submissionId);
-                                                                    
-                                                                          // Seul l'admin peut lister toutes les soumissions
-                                                                                allow list: if isAdmin();
-                                                                                      
-                                                                                            // N'importe quel utilisateur authentifié peut créer une soumission
-                                                                                                  // avec son propre userId comme ID de document
-                                                                                                        allow create: if request.auth != null && 
-                                                                                                                              request.resource.data.userId == request.auth.uid && 
-                                                                                                                                                    submissionId == request.auth.uid;
-                                                                                                                                                          
-                                                                                                                                                                // Seul l'admin peut mettre à jour (pour changer le statut, promoCodeUses, etc.)
-                                                                                                                                                                      allow update: if isAdmin();
-                                                                                                                                                                            
-                                                                                                                                                                                  // Seul l'admin peut supprimer
-                                                                                                                                                                                        allow delete: if isAdmin();
+                                                        // Un administrateur peut obtenir n'importe quelle soumission. Un utilisateur peut obtenir la sienne.
+                                                        allow get: if isAdmin() || (request.auth != null && request.auth.uid == submissionId);
+                                                        
+                                                        // Seul l'administrateur peut lister toutes les soumissions.
+                                                        allow list: if isAdmin();
+                                                        
+                                                        // Tout utilisateur authentifié peut créer une soumission.
+                                                        allow create: if request.auth != null;
+                                                              
+                                                        // Seul l'administrateur peut mettre à jour (pour changer le statut, etc.)
+                                                        allow update: if isAdmin();
+                                                              
+                                                        // Seul l'administrateur peut supprimer.
+                                                        allow delete: if isAdmin();
                                                 }
                                                     
                                                         match /avis/{avisId} {
