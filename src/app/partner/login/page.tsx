@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { NeumorphicCard } from '@/components/neumorphic-card';
@@ -10,6 +10,62 @@ import { Label } from '@/components/ui/label';
 import { Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
+async function verifyPartnerPassword(password: string): Promise<{ success: boolean; data?: any; error?: string; status?: string }> {
+    'use server';
+    // This code runs only on the server
+    try {
+        const { initializeApp, getApps, App } = await import('firebase-admin/app');
+        const { getFirestore } = await import('firebase-admin/firestore');
+        const { credential } = await import('firebase-admin');
+
+        const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+        if (!serviceAccountKey) {
+            throw new Error('Firebase service account key is not configured on the server.');
+        }
+
+        let adminApp: App;
+        if (!getApps().length) {
+            adminApp = initializeApp({
+                credential: credential.cert(JSON.parse(serviceAccountKey)),
+            });
+        } else {
+            adminApp = getApps()[0];
+        }
+
+        const db = getFirestore(adminApp);
+
+        const partnersRef = db.collection('submissions');
+        const snapshot = await partnersRef.where('password', '==', password).where('type', '==', 'Partenariat').limit(1).get();
+
+        if (snapshot.empty) {
+            return { success: false, error: 'Mot de passe invalide.' };
+        }
+
+        const partnerDoc = snapshot.docs[0];
+        const partnerData = partnerDoc.data();
+
+        if (partnerData.status !== 'confirmé') {
+            return { success: false, error: 'Compte non actif.', status: 'en attente' };
+        }
+        
+        // Return only the necessary data for the dashboard
+        const dashboardData = {
+            id: partnerDoc.id,
+            fullName: partnerData.fullName,
+            promoCode: partnerData.promoCode,
+            promoCodeUses: partnerData.promoCodeUses || 0,
+            promoCodeTotalUses: partnerData.promoCodeTotalUses || 0,
+        };
+
+        return { success: true, data: dashboardData };
+
+    } catch (error) {
+        console.error('Server Action Error in verifyPartnerPassword:', error);
+        return { success: false, error: 'Erreur interne du serveur.' };
+    }
+}
+
+
 export default function PartnerLoginPage() {
     const router = useRouter();
     const { toast } = useToast();
@@ -17,6 +73,11 @@ export default function PartnerLoginPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
+     
+    useEffect(() => {
+        // Clear session storage on page load to ensure fresh login
+        sessionStorage.removeItem('partner_data');
+    }, []);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,30 +87,25 @@ export default function PartnerLoginPage() {
         setError(null);
 
         try {
-            const response = await fetch('/api/partner-data', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password }),
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                // Stocker les données dans la session et rediriger
+            const result = await verifyPartnerPassword(password);
+            
+            if (result.success && result.data) {
+                // Store data in session storage and redirect
                 sessionStorage.setItem('partner_data', JSON.stringify(result.data));
                 toast({ variant: 'success', title: 'Connexion réussie !' });
                 router.push('/partner/dashboard');
             } else {
                 const errorMessage = result.status === 'en attente'
                     ? 'Votre compte partenaire n\'est pas encore actif.'
-                    : 'Mot de passe incorrect.';
+                    : (result.error || 'Mot de passe incorrect.');
                 setError(errorMessage);
                 toast({ variant: result.status === 'en attente' ? 'warning' : 'destructive', title: 'Erreur', description: errorMessage });
             }
         } catch (err) {
             console.error(err);
-            setError('Une erreur de réseau est survenue.');
-            toast({ variant: 'destructive', title: 'Erreur de connexion', description: 'Impossible de contacter le serveur.' });
+            const friendlyError = 'Une erreur de communication est survenue. Veuillez réessayer.';
+            setError(friendlyError);
+            toast({ variant: 'destructive', title: 'Erreur de connexion', description: friendlyError });
         } finally {
             setIsSubmitting(false);
         }
@@ -97,7 +153,7 @@ export default function PartnerLoginPage() {
                             {isSubmitting ? 'Connexion...' : 'Se connecter'}
                         </Button>
                     </form>
-                    <p className="text-center text-sm text-muted-foreground mt-6">
+                     <p className="text-center text-sm text-muted-foreground mt-6">
                         Pas encore partenaire ?{' '}
                         <Link href="/partner/register" className="font-semibold text-primary hover:underline focus:outline-none">
                             Devenir partenaire
