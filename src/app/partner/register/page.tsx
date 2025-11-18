@@ -5,20 +5,121 @@ import { useState, Suspense, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, LogOut, BarChart2, User, Trophy, Copy, Hourglass } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { AuthGuard } from '@/components/auth-guard';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
+
+// ========= Dashboard Components =========
+
+const REWARD_GOAL = 100;
+
+const motivationalMessages = [
+    { text: "Chaque code partagé vous rapproche du succès ! 💪", color: "text-green-500" },
+    { text: "Continuez comme ça, vous êtes une star ! ⭐", color: "text-yellow-500" },
+    { text: "Votre influence grandit à chaque utilisation. 🚀", color: "text-blue-500" },
+    { text: "L'excellence est une habitude. Ne lâchez rien ! ✨", color: "text-purple-500" },
+    { text: "Plus que quelques pas avant la récompense ! 🎉", color: "text-pink-500" },
+];
+
+type PartnerData = {
+    id: string;
+    fullName: string;
+    promoCode: string;
+    promoCodeUses: number;
+    promoCodeTotalUses: number;
+    status: 'en attente' | 'confirmé' | 'refusé';
+};
+
+function PartnerDashboardContent({ partnerData }: { partnerData: PartnerData }) {
+    const router = useRouter();
+    const { toast } = useToast();
+    const { auth } = useFirebase();
+    const [motivation, setMotivation] = useState({ text: "", color: ""});
+    
+    useEffect(() => {
+        setMotivation(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
+    }, []);
+
+    const handleSignOut = async () => {
+        if (auth) {
+            await auth.signOut();
+            router.push('/');
+        }
+    };
+
+    const handleCopy = (textToCopy: string, type: string) => {
+        navigator.clipboard.writeText(textToCopy);
+        toast({ variant: 'success', title: `${type} copié !` });
+    };
+    
+    const uses = partnerData.promoCodeUses || 0;
+    const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
+
+    return (
+        <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+                <h1 className="text-3xl sm:text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
+                <p className="text-muted-foreground mt-2">Bienvenue, {partnerData.fullName} !</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center transition-transform duration-300 hover:scale-105">
+                    <User className="w-12 h-12 text-primary mb-4" />
+                    <h3 className="text-lg font-semibold">Votre Code Promo</h3>
+                    <div className="text-2xl sm:text-3xl font-bold font-mono text-primary my-2 flex items-center gap-2">
+                        <span>{partnerData.promoCode}</span>
+                        <Button variant="ghost" size="icon" onClick={() => handleCopy(partnerData.promoCode || '', 'Code')} className="h-8 w-8 rounded-full">
+                            <Copy className="h-4 w-4"/>
+                        </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Partagez ce code pour gagner des commissions.</p>
+                </NeumorphicCard>
+                <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center transition-transform duration-300 hover:scale-105">
+                    <BarChart2 className="w-12 h-12 text-primary mb-4" />
+                    <h3 className="text-lg font-semibold">Utilisations Totales (à vie)</h3>
+                    <p className="text-3xl font-bold font-mono text-primary my-2">{partnerData.promoCodeTotalUses || 0}</p>
+                    <p className="text-sm text-muted-foreground">Nombre total d'achats avec votre code.</p>
+                </NeumorphicCard>
+            </div>
+            
+            <NeumorphicCard>
+                <div className="flex items-center gap-4 mb-4">
+                    <Trophy className="w-8 h-8 text-primary animate-pulse"/>
+                    <h2 className="text-2xl font-bold font-headline">Prochaine Récompense</h2>
+                </div>
+                <div className="text-center my-4">
+                    <span className="text-4xl font-bold">{uses}</span>
+                    <span className="text-xl text-muted-foreground"> / {REWARD_GOAL}</span>
+                    <p className="text-sm text-muted-foreground mt-1">utilisations avant la prochaine récompense</p>
+                </div>
+                <Progress value={progress} className="w-full h-4" />
+                <div className="text-center mt-4 h-6">
+                    <p className={cn("font-semibold", motivation.color)}>{motivation.text}</p>
+                </div>
+            </NeumorphicCard>
+                <div className="mt-8 text-center">
+                <Button variant="outline" onClick={handleSignOut}>
+                        <LogOut className="mr-2 h-4 w-4"/>
+                        Se déconnecter
+                </Button>
+            </div>
+        </div>
+    );
+}
+
+// ========= Registration Form Components =========
 
 const PARTNER_CODE = 'CRISTAN-PAT';
 
@@ -28,8 +129,6 @@ const partnerCodeSchema = z.object({
 
 const partnerFormSchema = z.object({
   fullName: z.string().min(2, 'Le nom est requis.'),
-  email: z.string().email('Email invalide.'),
-  phone: z.string().min(8, 'Numéro invalide.'),
   socialLinks: z.array(z.object({ value: z.string().url('URL invalide.') })).min(1, 'Ajoutez au moins un lien social.'),
   promoCode: z.string().min(3, 'Le code doit avoir au moins 3 caractères.').max(15, 'Le code ne doit pas dépasser 15 caractères.'),
 });
@@ -99,7 +198,6 @@ function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
                         />
                         <Button type="submit" size="lg" className="w-full btn-neumorphic-light dark:btn-neumorphic-dark font-bold text-lg">
                             Vérifier le code
-                            <ArrowRight className="ml-2 h-5 w-5" />
                         </Button>
                     </form>
                 </Form>
@@ -109,14 +207,12 @@ function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
 }
 
 function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: (values: PartnerFormValues) => void, isSubmitting: boolean }) {
-  const { user, isUserLoading } = useFirebase();
+  const { user } = useFirebase();
   
   const form = useForm<PartnerFormValues>({
     resolver: zodResolver(partnerFormSchema),
     defaultValues: {
       fullName: user?.displayName || '',
-      email: user?.email || '',
-      phone: '',
       socialLinks: [{ value: '' }],
       promoCode: '',
     },
@@ -127,10 +223,6 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
     name: 'socialLinks',
   });
   
-  if (isUserLoading) {
-    return <LoadingSpinner />;
-  }
-
   return (
     <NeumorphicCard className="w-full max-w-2xl mx-auto">
     <h2 className="text-2xl font-bold font-headline text-center mb-6">Formulaire de Partenariat</h2>
@@ -158,34 +250,6 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
                 <FormLabel>Code Promo Suggeré</FormLabel>
                 <FormControl>
                     <Input placeholder="EX: CRISTAN10" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                    <Input type="email" placeholder="votre@email.com" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
-                </FormControl>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-            <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Téléphone</FormLabel>
-                <FormControl>
-                    <Input type="tel" placeholder="+33 6..." {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -258,31 +322,24 @@ const PageWrapper = ({ children, showBackButton = true }: { children: React.Reac
                 </Link>
             </Button>
         )}
-        {children}
+        <div className="flex justify-center items-center min-h-[60vh]">
+            {children}
+        </div>
     </div>
 );
 
-function PartnerRegistrationContent() {
+function PartnerPortalContent() {
   const [isCodeVerified, setIsCodeVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const { toast } = useToast();
   const { firestore, user } = useFirebase();
-  const router = useRouter();
 
   const partnerRef = useMemoFirebase(() => {
-      if (!user) return null;
+      if (!user || !firestore) return null;
       return doc(firestore, 'submissions', user.uid);
-  }, [user]);
+  }, [user, firestore]);
 
-  const { data: existingSubmission, isLoading: isSubmissionLoading } = useDoc(partnerRef);
-  
-  useEffect(() => {
-    if(!isSubmissionLoading && existingSubmission) {
-        router.replace('/partner/dashboard');
-    }
-  }, [isSubmissionLoading, existingSubmission, router])
-
+  const { data: partnerData, isLoading } = useDoc<PartnerData>(partnerRef);
 
   const handleFormSubmit = async (values: PartnerFormValues) => {
       if (!firestore || !user) {
@@ -290,12 +347,16 @@ function PartnerRegistrationContent() {
         return;
       }
       setIsSubmitting(true);
+      
       const submissionData = {
-          ...values,
+          fullName: values.fullName,
+          email: user.email,
+          phone: user.phoneNumber || 'N/A', // Add phone if available
           socialLinks: values.socialLinks.map(link => link.value),
+          promoCode: values.promoCode,
           type: 'Partenariat',
           userId: user.uid,
-          status: 'en attente',
+          status: 'en attente' as const,
           promoCodeUses: 0,
           promoCodeTotalUses: 0,
           createdAt: serverTimestamp(),
@@ -304,73 +365,70 @@ function PartnerRegistrationContent() {
 
       const submissionDocRef = doc(firestore, 'submissions', user.uid);
       
-      try {
-        await setDoc(submissionDocRef, submissionData)
-        setShowSuccessDialog(true);
-      } catch(e) {
-          console.error("Error submitting partnership request", e);
-          toast({ variant: 'destructive', title: 'Erreur', description: 'Une erreur est survenue lors de la soumission.'});
-      } finally {
-        setIsSubmitting(false)
-      }
+      setDoc(submissionDocRef, submissionData, { merge: true })
+        .then(() => {
+            toast({ variant: 'success', title: 'Demande envoyée !', description: 'Nous examinons votre profil.'});
+        })
+        .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: submissionDocRef.path,
+                operation: 'create',
+                requestResourceData: submissionData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        })
+        .finally(() => {
+            setIsSubmitting(false);
+        });
   };
   
-  const handleDialogClose = (isOpen: boolean) => {
-      setShowSuccessDialog(isOpen);
-      if (!isOpen) {
-          router.push('/partner/dashboard');
-      }
-  }
-  
-  if (isSubmissionLoading) {
-      return <LoadingSpinner />
-  }
-  
-  if (existingSubmission) {
-      return <LoadingSpinner />;
-  }
+    if (isLoading) {
+        return <LoadingSpinner />;
+    }
 
-  return (
-      <PageWrapper>
-        {isCodeVerified ? (
-            <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
-        ) : (
-            <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
-        )}
-         <Dialog open={showSuccessDialog} onOpenChange={handleDialogClose}>
-            <DialogContent className="max-w-sm bg-transparent border-none shadow-none">
-                <NeumorphicCard className="relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-blue-300/20 to-purple-300/20 animate-[spin_20s_linear_infinite]"></div>
-                    <div className="absolute inset-0 sparkle-mask"></div>
-                    <div className="relative flex flex-col items-center text-center py-8 px-4">
-                        <DialogHeader>
-                            <DialogTitle className="text-center text-2xl font-bold font-headline">Demande envoyée !</DialogTitle>
-                        </DialogHeader>
-                        <div className="text-7xl my-6 animate-bounce">
-                            <PartyPopper className="h-20 w-20 text-primary" />
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                            Nous avons bien reçu vos informations. Vous serez redirigé vers votre page d'attente.
-                        </p>
-                        <Button 
-                            onClick={() => handleDialogClose(false)} 
-                            className="mt-8 btn-neumorphic-light dark:btn-neumorphic-dark"
-                        >
-                            Fermer
-                        </Button>
+    // SCENARIO 1: User has a submission record
+    if (partnerData) {
+        if (partnerData.status === 'confirmé') {
+            // SHOW DASHBOARD
+            return <PageWrapper><PartnerDashboardContent partnerData={partnerData} /></PageWrapper>;
+        } else {
+            // SHOW PENDING / REJECTED STATUS
+            return (
+                <PageWrapper>
+                    <div className="max-w-xl mx-auto text-center">
+                        <NeumorphicCard>
+                            <Hourglass className="w-16 h-16 mx-auto text-primary mb-6" />
+                            <h1 className="text-2xl font-bold font-headline">Demande en cours d'examen</h1>
+                            <p className="text-muted-foreground mt-2">
+                            {partnerData.status === 'en attente' 
+                                ? "Merci pour votre demande ! Votre compte partenaire est en cours de vérification par notre équipe. Vous serez notifié par e-mail une fois votre compte approuvé."
+                                : "Malheureusement, votre demande de partenariat n'a pas été approuvée pour le moment. Pour plus d'informations, veuillez nous contacter."
+                            }
+                            </p>
+                        </NeumorphicCard>
                     </div>
-                </NeumorphicCard>
-            </DialogContent>
-        </Dialog>
-      </PageWrapper>
-  );
+                </PageWrapper>
+            );
+        }
+    }
+
+    // SCENARIO 2: User does NOT have a submission record
+    return (
+        <PageWrapper>
+            {isCodeVerified ? (
+                <PartnerApplicationForm onFormSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
+            ) : (
+                <PartnerCodeForm onCodeVerified={() => setIsCodeVerified(true)} />
+            )}
+        </PageWrapper>
+    );
 }
 
 export default function PartnerRegisterPage() {
     return (
         <Suspense fallback={<LoadingSpinner />}>
             <AuthGuard>
-                <PartnerRegistrationContent />
+                <PartnerPortalContent />
             </AuthGuard>
         </Suspense>
     )
