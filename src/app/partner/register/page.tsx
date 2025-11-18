@@ -9,18 +9,22 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, LogOut, BarChart2, User, Trophy, Copy, Hourglass } from 'lucide-react';
+import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, BarChart2, User, Trophy, Copy, Hourglass, LogOut } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { AuthGuard } from '@/components/auth-guard';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 // ========= Dashboard Components =========
 
@@ -43,26 +47,32 @@ type PartnerData = {
     status: 'en attente' | 'confirmé' | 'refusé';
 };
 
-function PartnerDashboardContent({ partnerData }: { partnerData: PartnerData }) {
+function PartnerDashboardContent({ partnerData, userId }: { partnerData: PartnerData, userId: string }) {
     const router = useRouter();
     const { toast } = useToast();
-    const { auth } = useFirebase();
+    const { auth, firestore } = useFirebase();
     const [motivation, setMotivation] = useState({ text: "", color: ""});
     
     useEffect(() => {
         setMotivation(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
     }, []);
 
-    const handleSignOut = async () => {
-        if (auth) {
-            await auth.signOut();
-            router.push('/');
-        }
-    };
-
     const handleCopy = (textToCopy: string, type: string) => {
         navigator.clipboard.writeText(textToCopy);
         toast({ variant: 'success', title: `${type} copié !` });
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!firestore) return;
+        const docRef = doc(firestore, 'submissions', userId);
+        try {
+            await deleteDoc(docRef);
+            toast({ variant: 'success', title: "Compte supprimé", description: "Votre compte partenaire a été supprimé." });
+            // The component will unmount and re-render the form.
+        } catch(e) {
+            console.error(e)
+            toast({ variant: 'destructive', title: "Erreur", description: "Impossible de supprimer le compte." });
+        }
     };
     
     const uses = partnerData.promoCodeUses || 0;
@@ -70,9 +80,35 @@ function PartnerDashboardContent({ partnerData }: { partnerData: PartnerData }) 
 
     return (
         <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-                <h1 className="text-3xl sm:text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
+            <div className="relative text-center mb-12">
+                 <h1 className="text-3xl sm:text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
                 <p className="text-muted-foreground mt-2">Bienvenue, {partnerData.fullName} !</p>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button 
+                            variant="destructive" 
+                            size="sm"
+                            className="absolute -top-4 right-0"
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Supprimer le compte
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Cette action est irréversible. Votre compte partenaire et toutes les données associées seront définitivement supprimés. Vous pourrez créer un nouveau compte si vous le souhaitez.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteAccount}>
+                                Oui, supprimer mon compte
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center transition-transform duration-300 hover:scale-105">
@@ -109,12 +145,6 @@ function PartnerDashboardContent({ partnerData }: { partnerData: PartnerData }) 
                     <p className={cn("font-semibold", motivation.color)}>{motivation.text}</p>
                 </div>
             </NeumorphicCard>
-                <div className="mt-8 text-center">
-                <Button variant="outline" onClick={handleSignOut}>
-                        <LogOut className="mr-2 h-4 w-4"/>
-                        Se déconnecter
-                </Button>
-            </div>
         </div>
     );
 }
@@ -388,9 +418,9 @@ function PartnerPortalContent() {
 
     // SCENARIO 1: User has a submission record
     if (partnerData) {
-        if (partnerData.status === 'confirmé') {
+        if (partnerData.status === 'confirmé' && user) {
             // SHOW DASHBOARD
-            return <PageWrapper><PartnerDashboardContent partnerData={partnerData} /></PageWrapper>;
+            return <PageWrapper><PartnerDashboardContent partnerData={partnerData} userId={user.uid} /></PageWrapper>;
         } else {
             // SHOW PENDING / REJECTED STATUS
             return (
@@ -398,7 +428,9 @@ function PartnerPortalContent() {
                     <div className="max-w-xl mx-auto text-center">
                         <NeumorphicCard>
                             <Hourglass className="w-16 h-16 mx-auto text-primary mb-6" />
-                            <h1 className="text-2xl font-bold font-headline">Demande en cours d'examen</h1>
+                            <h1 className="text-2xl font-bold font-headline">
+                                {partnerData.status === 'en attente' ? "Demande en cours d'examen" : "Demande refusée"}
+                            </h1>
                             <p className="text-muted-foreground mt-2">
                             {partnerData.status === 'en attente' 
                                 ? "Merci pour votre demande ! Votre compte partenaire est en cours de vérification par notre équipe. Vous serez notifié par e-mail une fois votre compte approuvé."
@@ -433,3 +465,5 @@ export default function PartnerRegisterPage() {
         </Suspense>
     )
 }
+
+    
