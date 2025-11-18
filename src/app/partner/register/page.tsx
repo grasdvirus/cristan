@@ -79,19 +79,19 @@ function PartnerDashboardContent({ partnerData, userId }: { partnerData: Partner
     const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto w-full">
             <div className="relative text-center mb-12">
-                 <h1 className="text-3xl sm:text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
+                <h1 className="text-3xl sm:text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
                 <p className="text-muted-foreground mt-2">Bienvenue, {partnerData.fullName} !</p>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button 
-                            variant="destructive" 
-                            size="sm"
-                            className="absolute -top-4 right-0"
+                        <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-0 right-0 rounded-full"
                         >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Supprimer le compte
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Supprimer le compte</span>
                         </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
@@ -337,21 +337,21 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
 }
 
 
-const PageWrapper = ({ children, showBackButton = true }: { children: React.ReactNode, showBackButton?: boolean }) => (
+const PageWrapper = ({ children }: { children: React.ReactNode }) => (
     <div className="container mx-auto px-4 py-16 sm:py-24 relative">
-        {showBackButton && (
+        <div className="absolute left-4 top-4 sm:left-6 sm:top-10">
             <Button 
                 asChild
                 variant="ghost" 
                 size="icon"
-                className="absolute left-4 top-4 sm:left-6 sm:top-10 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+                className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                 aria-label="Retour"
             >
                 <Link href="/">
                     <ArrowLeft className="h-5 w-5" />
                 </Link>
             </Button>
-        )}
+        </div>
         <div className="flex justify-center items-center min-h-[60vh]">
             {children}
         </div>
@@ -465,5 +465,3 @@ export default function PartnerRegisterPage() {
         </Suspense>
     )
 }
-
-    
