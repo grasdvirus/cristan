@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, Suspense, useEffect } from 'react';
@@ -16,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, BarChart2, User, Trophy, Copy, Hourglass, LogOut } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { AuthGuard } from '@/components/auth-guard';
@@ -85,12 +83,12 @@ function PartnerDashboardContent({ partnerData, userId }: { partnerData: Partner
                 <p className="text-muted-foreground mt-2">Bienvenue, {partnerData.fullName} !</p>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button
-                            variant="destructive"
+                       <Button
+                            variant="ghost"
                             size="icon"
-                            className="absolute top-0 right-0 rounded-full"
+                            className="absolute top-0 right-0 rounded-full text-yellow-800 dark:text-yellow-400 hover:bg-yellow-100/50 dark:hover:bg-yellow-900/50"
                         >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-5 w-5" />
                             <span className="sr-only">Supprimer le compte</span>
                         </Button>
                     </AlertDialogTrigger>
