@@ -234,7 +234,7 @@ export function ContractForm({ projectId }: ContractFormProps) {
                           <PartyPopper className="h-20 w-20 text-primary" />
                       </div>
                       <p className="text-sm text-muted-foreground">
-                          Nous avons bien reçu vos informations et vous recontacterons bientôt.
+                          nous avons reçus votre demande nous vous contacterons dans moins de 10 min pour récupérer votre projet MERCI 🙏
                       </p>
                       <Button 
                           onClick={() => handleDialogClose(false)} 
