@@ -33,7 +33,7 @@ function ContractPageContent() {
   }
 
   const getDescription = () => {
-    if (project) return 'Veuillez remplir les informations ci-dessous pour démarrer votre projet.';
+    if (project) return 'Veuillez remplir les informations ci-dessous pour soumettre la demande.';
     return 'Laissez-nous un message et nous vous recontacterons rapidement.'
   }
 
