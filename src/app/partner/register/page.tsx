@@ -157,6 +157,7 @@ const partnerCodeSchema = z.object({
 
 const partnerFormSchema = z.object({
   fullName: z.string().min(2, 'Le nom est requis.'),
+  phone: z.string().min(8, 'Le numéro de téléphone est requis.'),
   socialLinks: z.array(z.object({ value: z.string().url('URL invalide.') })).min(1, 'Ajoutez au moins un lien social.'),
   promoCode: z.string().min(3, 'Le code doit avoir au moins 3 caractères.').max(15, 'Le code ne doit pas dépasser 15 caractères.'),
 });
@@ -241,6 +242,7 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
     resolver: zodResolver(partnerFormSchema),
     defaultValues: {
       fullName: user?.displayName || '',
+      phone: user?.phoneNumber || '',
       socialLinks: [{ value: '' }],
       promoCode: '',
     },
@@ -252,11 +254,11 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
   });
   
   return (
-    <NeumorphicCard className="w-full max-w-2xl mx-auto">
+    <NeumorphicCard className="w-full max-w-3xl mx-auto">
     <h2 className="text-2xl font-bold font-headline text-center mb-6">Formulaire de Partenariat</h2>
     <Form {...form}>
         <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
             control={form.control}
             name="fullName"
@@ -271,18 +273,33 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
             )}
             />
             <FormField
-            control={form.control}
-            name="promoCode"
-            render={({ field }) => (
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
                 <FormItem>
-                <FormLabel>Code Promo Suggeré</FormLabel>
-                <FormControl>
-                    <Input placeholder="EX: CRISTAN10" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
-                </FormControl>
-                <FormMessage />
+                  <FormLabel>Numéro de téléphone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+225 01 02 03 04 05" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
-            )}
+              )}
             />
+             <div className="md:col-span-2">
+                <FormField
+                control={form.control}
+                name="promoCode"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Code Promo Suggeré</FormLabel>
+                    <FormControl>
+                        <Input placeholder="EX: CRISTAN10" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark" />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
         </div>
         
         <div>
@@ -379,7 +396,7 @@ function PartnerPortalContent() {
       const submissionData = {
           fullName: values.fullName,
           email: user.email,
-          phone: user.phoneNumber || 'N/A', // Add phone if available
+          phone: values.phone,
           socialLinks: values.socialLinks.map(link => link.value),
           promoCode: values.promoCode,
           type: 'Partenariat',

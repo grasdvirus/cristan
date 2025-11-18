@@ -12,12 +12,13 @@ import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Trophy, TrendingUp, Copy, Plus, Minus, Edit2, Trash2 } from 'lucide-react';
+import { CheckCircle, XCircle, Trophy, TrendingUp, Copy, Plus, Minus, Edit2, Trash2, Link as LinkIcon, Phone } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 import type { ContractSubmission } from '@/app/admin/page';
 
@@ -302,7 +303,8 @@ export function PartnersManager({ submissions, isLoading, searchTerm = '' }: Par
             <TableHeader>
               <TableRow>
                 <TableHead>Nom</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Réseaux</TableHead>
                 <TableHead>Code Promo</TableHead>
                 <TableHead className="text-center">Cycle</TableHead>
                 <TableHead className="text-center">Total</TableHead>
@@ -315,7 +317,21 @@ export function PartnersManager({ submissions, isLoading, searchTerm = '' }: Par
               {partners.map((partner) => (
                 <TableRow key={partner.id}>
                   <TableCell className="font-medium">{partner.fullName}</TableCell>
-                  <TableCell className="text-sm">{partner.email}</TableCell>
+                  <TableCell>
+                      <div className="flex flex-col gap-1">
+                          <a href={`mailto:${partner.email}`} className="text-xs text-primary hover:underline">{partner.email}</a>
+                          {partner.phone && <span className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3"/> {partner.phone}</span>}
+                      </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      {partner.socialLinks?.map((link, i) => (
+                          <a key={i} href={link} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                            <LinkIcon className="w-3 h-3"/> Lien {i + 1}
+                          </a>
+                      ))}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
