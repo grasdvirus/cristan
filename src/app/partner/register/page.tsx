@@ -47,9 +47,8 @@ type PartnerData = {
 };
 
 function PartnerDashboardContent({ partnerData, userId }: { partnerData: PartnerData, userId: string }) {
-    const router = useRouter();
     const { toast } = useToast();
-    const { auth, firestore } = useFirebase();
+    const { firestore } = useFirebase();
     const [motivation, setMotivation] = useState({ text: "", color: ""});
     
     useEffect(() => {
@@ -60,20 +59,6 @@ function PartnerDashboardContent({ partnerData, userId }: { partnerData: Partner
         navigator.clipboard.writeText(textToCopy);
         toast({ variant: 'success', title: `${type} copié !` });
     };
-
-    const handleDeleteAccount = async () => {
-        if (!firestore || !userId) return;
-        const docRef = doc(firestore, 'submissions', userId);
-        try {
-            await deleteDoc(docRef);
-            toast({ variant: 'success', title: "Compte supprimé", description: "Votre compte partenaire a été supprimé." });
-            // The component will re-render automatically because the partnerData will become null,
-            // showing the registration form again.
-        } catch(e) {
-            console.error(e)
-            toast({ variant: 'destructive', title: "Erreur", description: "Impossible de supprimer le compte." });
-        }
-    };
     
     const uses = partnerData.promoCodeUses || 0;
     const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
@@ -83,32 +68,6 @@ function PartnerDashboardContent({ partnerData, userId }: { partnerData: Partner
             <div className="relative text-center mb-12">
                 <h1 className="text-3xl sm:text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
                 <p className="text-muted-foreground mt-2">Bienvenue, {partnerData.fullName} !</p>
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                       <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-0 right-0 rounded-full text-yellow-800 dark:text-yellow-400 hover:bg-yellow-100/50 dark:hover:bg-yellow-900/50"
-                        >
-                            <Trash2 className="h-5 w-5" />
-                            <span className="sr-only">Supprimer le compte</span>
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Cette action est irréversible. Votre compte partenaire et toutes les données associées seront définitivement supprimés. Vous pourrez créer un nouveau compte si vous le souhaitez.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteAccount}>
-                                Oui, supprimer mon compte
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center transition-transform duration-300 hover:scale-105">
@@ -244,7 +203,7 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
     resolver: zodResolver(partnerFormSchema),
     defaultValues: {
       fullName: user?.displayName || '',
-      phone: user?.phoneNumber || '',
+      phone: '',
       socialLinks: [{ value: '' }],
       promoCode: '',
     },
