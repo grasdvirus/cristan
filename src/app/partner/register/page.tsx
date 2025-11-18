@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, Suspense, useEffect } from 'react';
@@ -61,12 +62,13 @@ function PartnerDashboardContent({ partnerData, userId }: { partnerData: Partner
     };
 
     const handleDeleteAccount = async () => {
-        if (!firestore) return;
+        if (!firestore || !userId) return;
         const docRef = doc(firestore, 'submissions', userId);
         try {
             await deleteDoc(docRef);
             toast({ variant: 'success', title: "Compte supprimé", description: "Votre compte partenaire a été supprimé." });
-            // The component will unmount and re-render the form.
+            // The component will re-render automatically because the partnerData will become null,
+            // showing the registration form again.
         } catch(e) {
             console.error(e)
             toast({ variant: 'destructive', title: "Erreur", description: "Impossible de supprimer le compte." });
