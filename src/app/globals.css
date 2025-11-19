@@ -371,7 +371,7 @@
     fill: hsl(var(--primary-foreground));
   }
 
-  .custom-project-button:hover {
+  .custom-project-button:hover, .custom-project-button.expanded {
     width: 180px;
     border-radius: 50px;
     transition-duration: 0.3s;
@@ -379,7 +379,7 @@
     align-items: center;
   }
 
-  .custom-project-button:hover .svgIcon {
+  .custom-project-button:hover .svgIcon, .custom-project-button.expanded .svgIcon {
     transition-duration: 0.3s;
     transform: translateY(-200%);
   }
@@ -392,7 +392,7 @@
     font-size: 0px;
   }
 
-  .custom-project-button:hover::before {
+  .custom-project-button:hover::before, .custom-project-button.expanded::before {
     font-size: 13px;
     opacity: 1;
     bottom: unset;
@@ -418,5 +418,3 @@
     100% { transform: translateY(-100px); }
   }
 }
-
-    
