@@ -12,6 +12,7 @@ import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Handshake } from 'lucide-react';
 import Link from 'next/link';
+import { CustomProjectButton } from '@/components/custom-project-button';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('sites');
@@ -60,6 +61,15 @@ export default function Home() {
                   <div className="mt-12">
                      <TabsContent value="sites">
                         <ProjectsGrid />
+                        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-12">
+                            <Button asChild size="lg" variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                                <Link href="/internet">
+                                    Voir plus
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Link>
+                            </Button>
+                            <CustomProjectButton />
+                        </div>
                      </TabsContent>
                      <TabsContent value="videos">
                         <HomeTVSection />
