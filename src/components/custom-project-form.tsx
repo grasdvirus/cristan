@@ -178,8 +178,9 @@ export function CustomProjectForm() {
                 </motion.div>
             </AnimatePresence>
             <div className="flex justify-between pt-4">
-                <Button type="button" onClick={prev} className="btn-neumorphic-light dark:btn-neumorphic-dark" disabled={currentStep === 0}>
-                    <ArrowLeft className="mr-2 h-4 w-4"/> Retour
+                <Button type="button" onClick={prev} variant="ghost" size="icon" className="rounded-full" disabled={currentStep === 0}>
+                    <ArrowLeft className="h-5 w-5"/>
+                    <span className="sr-only">Retour</span>
                 </Button>
                 
                 {currentStep === steps.length - 1 ? (
@@ -188,8 +189,9 @@ export function CustomProjectForm() {
                         {isSubmitting ? 'Envoi...' : 'Soumettre'}
                     </Button>
                 ) : (
-                     <Button type="button" onClick={next} className="btn-neumorphic-light dark:btn-neumorphic-dark">
-                        Suivant <ArrowRight className="ml-2 h-4 w-4"/>
+                     <Button type="button" onClick={next} variant="ghost" size="icon" className="rounded-full">
+                        <ArrowRight className="h-5 w-5"/>
+                        <span className="sr-only">Suivant</span>
                     </Button>
                 )}
             </div>
