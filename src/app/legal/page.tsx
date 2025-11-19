@@ -37,8 +37,20 @@ export default function LegalPage() {
             <NeumorphicCard inset className="p-4 sm:p-6 space-y-3">
               <p className="flex items-center gap-3"><UserCircle className="w-5 h-5 text-muted-foreground"/> <strong>Nom :</strong> Cristan</p>
               <p className="flex items-center gap-3"><Building className="w-5 h-5 text-muted-foreground"/> <strong>Adresse :</strong> Côte d'Ivoire, Abidjan, Cocody Angré</p>
-              <p className="flex items-center gap-3"><Phone className="w-5 h-5 text-muted-foreground"/> <strong>Contact :</strong> 07 04 54 29 09</p>
-              <p className="flex items-center gap-3"><Mail className="w-5 h-5 text-muted-foreground"/> <strong>E-mail :</strong> kingstartup2@gmail.com</p>
+              <div className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-muted-foreground"/>
+                <strong>Contact :</strong>
+                <a href="https://wa.me/2250704542909" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  07 04 54 29 09
+                </a>
+              </div>
+              <div className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-muted-foreground"/>
+                <strong>E-mail :</strong>
+                <a href="mailto:kingstartup2@gmail.com" className="text-primary hover:underline">
+                  kingstartup2@gmail.com
+                </a>
+              </div>
               <p className="flex items-center gap-3"><UserCircle className="w-5 h-5 text-muted-foreground"/> <strong>Représentant Légal :</strong> Cristan Dev</p>
             </NeumorphicCard>
           </section>
