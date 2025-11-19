@@ -40,19 +40,19 @@ function ContractPageContent() {
 
   return (
     <div className="container mx-auto px-0 sm:px-4 py-16 sm:py-24">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto relative">
+        <Button 
+            asChild
+            variant="ghost" 
+            size="icon"
+            className="absolute left-4 -top-8 sm:left-0 sm:-top-8 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+            aria-label="Retour"
+        >
+            <Link href={projectId ? `/projects/${projectId}` : '/'}>
+                <ArrowLeft className="h-5 w-5" />
+            </Link>
+        </Button>
         <div className="relative text-center mb-8 px-4">
-            <Button 
-                asChild
-                variant="ghost" 
-                size="icon"
-                className="absolute left-4 sm:left-0 top-1/2 -translate-y-1/2 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
-                aria-label="Retour"
-            >
-                <Link href={projectId ? `/projects/${projectId}` : '/'}>
-                    <ArrowLeft className="h-5 w-5" />
-                </Link>
-            </Button>
             <h1 className="text-4xl font-bold font-headline">{getTitle()}</h1>
             <p className="text-muted-foreground mt-2">
                 {getDescription()}

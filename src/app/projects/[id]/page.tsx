@@ -69,7 +69,12 @@ export default function ProjectDetailsPage() {
 
   return (
     <div className="container mx-auto px-0 sm:px-4 py-8 sm:py-16">
-      <NeumorphicCard className="max-w-5xl mx-auto p-0 sm:p-4 md:p-6">
+      <NeumorphicCard className="max-w-5xl mx-auto p-0 sm:p-4 md:p-6 relative">
+         <Button asChild variant="ghost" size="icon" className="absolute left-4 top-4 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark z-10">
+            <Link href="/internet">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+            </Link>
+        </Button>
         <div className="relative mb-8 sm:rounded-2xl overflow-hidden sm:neumorphic-card-inset-light sm:dark:neumorphic-card-inset-dark">
             {project.imageUrl && (project.imageUrl.startsWith('http') || project.imageUrl.startsWith('/')) ? (
               <Image
@@ -88,11 +93,6 @@ export default function ProjectDetailsPage() {
         </div>
 
         <div className="px-4 sm:px-0">
-            <Link href="/internet" className="flex items-center text-sm text-muted-foreground hover:text-primary mb-4 w-fit">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Retour aux projets
-            </Link>
-
             <h1 className="text-3xl sm:text-4xl font-bold font-headline">{project.title}</h1>
             <p className="text-base sm:text-lg text-muted-foreground mt-2">
             {project.description}

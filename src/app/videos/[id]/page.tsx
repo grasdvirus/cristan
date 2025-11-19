@@ -105,10 +105,10 @@ export default function VideoDetailsPage() {
             <Button 
                 variant="ghost" 
                 onClick={() => router.push('/tv')} 
-                className="btn-neumorphic-light dark:btn-neumorphic-dark"
+                className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+                size="icon"
             >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Retour
+                <ArrowLeft className="h-5 w-5" />
             </Button>
         </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
