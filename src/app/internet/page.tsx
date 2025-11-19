@@ -8,13 +8,15 @@ import { NeumorphicCard } from "@/components/neumorphic-card";
 export default function InternetPage() {
     return (
         <div className="container mx-auto px-4 py-16 sm:py-24">
-            <div className="relative flex flex-col sm:flex-row justify-between items-center mb-12 gap-4">
-                 <Button asChild variant="ghost" size="icon" className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
+            <div className="mb-8">
+                 <Button asChild variant="ghost" size="icon" className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
                     <Link href="/">
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                 </Button>
-                 <h1 className="text-3xl sm:text-4xl font-bold font-headline text-center sm:text-left sm:pl-16">
+            </div>
+            <div className="relative flex flex-col sm:flex-row justify-center items-center mb-12 gap-4">
+                 <h1 className="text-3xl sm:text-4xl font-bold font-headline text-center">
                     Tous les Sites Internet
                 </h1>
             </div>
