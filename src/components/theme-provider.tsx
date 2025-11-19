@@ -4,12 +4,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { intelligentThemeSwitching } from '@/ai/flows/intelligent-theme-switching';
 
-type Theme = "light" | "dark" | "image";
+type Theme = "light" | "dark";
 
 type ThemeProviderState = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  toggleTheme: () => void; // For the old switch
+  toggleTheme: () => void;
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState | undefined>(undefined);
@@ -32,7 +32,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           else if (hours >= 22 || hours < 6) timeOfDay = 'night';
           
           const result = await intelligentThemeSwitching({ timeOfDay });
-          const aiTheme = result.theme as 'light' | 'dark'; // AI only suggests light/dark
+          const aiTheme = result.theme as 'light' | 'dark';
           setThemeState(aiTheme);
           localStorage.setItem('theme', aiTheme);
         } catch (error) {
@@ -50,22 +50,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   
   useEffect(() => {
     const root = window.document.documentElement;
-    const body = window.document.body;
-
     root.classList.remove('light', 'dark');
-    body.style.backgroundImage = '';
-    body.style.backgroundSize = '';
-    body.style.backgroundAttachment = '';
-
-    if (theme === 'image') {
-        body.style.backgroundImage = "url('/arri.jpg')";
-        body.style.backgroundSize = 'cover';
-        body.style.backgroundAttachment = 'fixed';
-        // You might want a default class for text readability over the image
-        root.classList.add('dark'); 
-    } else {
-        root.classList.add(theme);
-    }
+    root.classList.add(theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
@@ -74,10 +60,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
   
   const toggleTheme = () => {
-    setThemeState((prevTheme) => {
-        if (prevTheme === 'image') return 'light';
-        return prevTheme === 'light' ? 'dark' : 'light';
-    });
+    setThemeState((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
   };
   
   const value = { theme, setTheme, toggleTheme };
@@ -96,3 +79,5 @@ export const useTheme = () => {
   }
   return context;
 };
+
+    
