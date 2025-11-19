@@ -107,6 +107,7 @@ export default function VideoDetailsPage() {
                 onClick={() => router.back()} 
                 className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                 size="icon"
+                aria-label="Retour"
             >
                 <ArrowLeft className="h-5 w-5" />
             </Button>
