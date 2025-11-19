@@ -114,7 +114,7 @@ export function CustomProjectForm() {
     const progressValue = ((currentStep + 1) / steps.length) * 100;
 
   return (
-    <NeumorphicCard className="p-6 sm:p-8">
+    <div className="p-6 sm:p-8">
       <Progress value={progressValue} className="mb-8" />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -197,6 +197,6 @@ export function CustomProjectForm() {
             </div>
         </form>
       </Form>
-    </NeumorphicCard>
+    </div>
   )
 }
