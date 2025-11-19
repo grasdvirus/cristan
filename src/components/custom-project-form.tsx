@@ -31,6 +31,7 @@ import { useFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { ArrowLeft, ArrowRight, Loader2, Send } from 'lucide-react';
 import { Progress } from './ui/progress';
+import { NeumorphicCard } from './neumorphic-card';
 
 const formSchema = z.object({
   projectName: z.string().min(2, { message: "Le nom du projet est requis." }),
@@ -113,7 +114,7 @@ export function CustomProjectForm() {
     const progressValue = ((currentStep + 1) / steps.length) * 100;
 
   return (
-    <div className="p-6">
+    <NeumorphicCard className="p-6 sm:p-8">
       <Progress value={progressValue} className="mb-8" />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -194,6 +195,6 @@ export function CustomProjectForm() {
             </div>
         </form>
       </Form>
-    </div>
+    </NeumorphicCard>
   )
 }

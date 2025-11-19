@@ -2,7 +2,6 @@
 'use client';
 
 import { Suspense } from 'react';
-import { NeumorphicCard } from '@/components/neumorphic-card';
 import { CustomProjectForm } from '@/components/custom-project-form';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -30,9 +29,9 @@ function CustomProjectPageContent() {
             </p>
         </div>
         
-        <NeumorphicCard className="mt-8 mx-4 sm:mx-0">
+        <div className="mt-8 mx-4 sm:mx-0">
             <CustomProjectForm />
-        </NeumorphicCard>
+        </div>
 
       </div>
     </div>
