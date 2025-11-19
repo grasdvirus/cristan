@@ -16,14 +16,14 @@ function CustomProjectPageContent() {
                 asChild
                 variant="ghost" 
                 size="icon"
-                className="absolute left-4 sm:left-0 top-1/2 -translate-y-1/2 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+                className="absolute left-4 sm:left-0 top-0 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                 aria-label="Retour"
             >
                 <Link href="/">
                     <ArrowLeft className="h-5 w-5" />
                 </Link>
             </Button>
-            <h1 className="text-4xl font-bold font-headline">Projet sur Mesure</h1>
+            <h1 className="text-4xl font-bold font-headline pt-16 sm:pt-0">Projet sur Mesure</h1>
             <p className="text-muted-foreground mt-2">
                 Suivez les étapes pour nous décrire le projet de vos rêves.
             </p>
