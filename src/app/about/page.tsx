@@ -112,27 +112,33 @@ export default function AboutPage() {
               <NeumorphicCard inset className="p-4 sm:p-6">
                   <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="item-1">
-                      <AccordionTrigger className="text-left font-semibold">Quels sont les délais de livraison ?</AccordionTrigger>
+                      <AccordionTrigger className="text-left font-semibold">Comment commander un projet ?</AccordionTrigger>
                       <AccordionContent className="text-muted-foreground">
-                      Le délai de livraison varie en fonction de la complexité du projet. En général, un site vitrine prend entre 2 et 4 semaines, tandis qu'une application e-commerce peut prendre de 4 à 8 semaines. Nous vous fournirons une estimation précise lors de notre premier contact.
+                      C'est très simple ! Allez sur la page <Link href="/internet" className="text-primary underline">"Internet"</Link>, choisissez un modèle qui vous plaît, puis cliquez sur le bouton "Plus" pour voir les détails. Sur la page du projet, cliquez sur "Commander" pour accéder au formulaire. Remplissez-le, et nous vous contacterons rapidement.
                       </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="item-2">
-                      <AccordionTrigger className="text-left font-semibold">Proposez-vous des services de maintenance ?</AccordionTrigger>
+                      <AccordionTrigger className="text-left font-semibold">Quelle est la différence entre un projet standard et un projet sur mesure ?</AccordionTrigger>
                       <AccordionContent className="text-muted-foreground">
-                      Oui, nous proposons des forfaits de maintenance pour assurer que votre site reste à jour, sécurisé et performant. Ces forfaits incluent les mises à jour logicielles, les sauvegardes et un support technique de base.
+                      Les projets standards sont basés sur nos modèles prédéfinis, ce qui permet un développement plus rapide et un coût maîtrisé. Un <Link href="/custom-project" className="text-primary underline">projet sur mesure</Link> est créé de A à Z selon vos spécifications uniques, offrant une flexibilité totale en termes de design et de fonctionnalités.
                       </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="item-3">
-                      <AccordionTrigger className="text-left font-semibold">Puis-je modifier mon site moi-même après la livraison ?</AccordionTrigger>
+                      <AccordionTrigger className="text-left font-semibold">Comment fonctionne le programme de partenariat ?</AccordionTrigger>
                       <AccordionContent className="text-muted-foreground">
-                      Absolument. Pour les projets qui le nécessitent, nous pouvons intégrer un système de gestion de contenu (CMS) simple qui vous permettra de mettre à jour le texte, les images et d'autres contenus sans avoir besoin de connaissances techniques.
+                      Après avoir créé un compte, vous pouvez postuler au programme partenaire via la section dédiée. Une fois approuvé, vous recevez un code promo personnalisé. Chaque fois que quelqu'un utilise votre code pour un achat, vous gagnez une commission et progressez vers des récompenses. Vous pouvez suivre toutes vos statistiques sur votre tableau de bord.
                       </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="item-4">
+                      <AccordionTrigger className="text-left font-semibold">Que se passe-t-il après avoir soumis une demande de projet ?</AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">
+                      Une fois que vous avez rempli et soumis un formulaire de contact ou de commande, notre équipe reçoit une notification. Nous vous contacterons par e-mail ou téléphone dans les plus brefs délais (généralement moins de 10 minutes) pour discuter de votre projet, clarifier les détails et vous expliquer les prochaines étapes.
+                      </AccordionContent>
+                  </AccordionItem>
+                   <AccordionItem value="item-5">
                       <AccordionTrigger className="text-left font-semibold">Quelles sont les options de paiement ?</AccordionTrigger>
                       <AccordionContent className="text-muted-foreground">
-                      Nous acceptons les virements bancaires ainsi que les paiements mobiles. Un acompte de 50% est généralement demandé pour commencer le projet, le solde étant dû à la livraison.
+                      Nous acceptons les virements bancaires ainsi que les paiements mobiles (Orange Money, Wave, etc.). Un acompte de 50% est généralement demandé pour commencer le projet, le solde étant dû à la livraison.
                       </AccordionContent>
                   </AccordionItem>
                   </Accordion>
