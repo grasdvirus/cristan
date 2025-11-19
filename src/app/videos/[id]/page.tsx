@@ -26,9 +26,8 @@ export type Video = {
 
 
 export default function VideoDetailsPage() {
-  const params = useParams();
+  const { id } = useParams();
   const router = useRouter();
-  const { id } = params;
   const { firestore } = useFirebase();
   const [isPlaying, setIsPlaying] = useState(false);
 

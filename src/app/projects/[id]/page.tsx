@@ -26,8 +26,7 @@ export type Project = {
 };
 
 export default function ProjectDetailsPage() {
-  const params = useParams();
-  const { id } = params;
+  const { id } = useParams();
   const { firestore } = useFirebase();
 
   const projectRef = useMemoFirebase(() => {
