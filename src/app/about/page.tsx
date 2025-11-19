@@ -15,19 +15,19 @@ export default function AboutPage() {
   return (
     <div className="container mx-auto px-0 sm:px-4 py-16 sm:py-24">
       <NeumorphicCard className="max-w-5xl mx-auto p-4 sm:p-6 md:p-8 relative">
-        <Button 
-            asChild
-            variant="ghost" 
-            size="icon"
-            className="absolute left-4 top-4 sm:left-6 sm:top-6 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
-            aria-label="Retour"
-        >
-            <Link href="/">
-                <ArrowLeft className="h-5 w-5" />
-            </Link>
-        </Button>
+        <div className="relative text-center mb-12 sm:pt-0">
+          <Button 
+              asChild
+              variant="ghost" 
+              size="icon"
+              className="absolute left-0 top-1/2 -translate-y-1/2 sm:top-0 sm:translate-y-0 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+              aria-label="Retour"
+          >
+              <Link href="/">
+                  <ArrowLeft className="h-5 w-5" />
+              </Link>
+          </Button>
 
-        <div className="text-center mb-12 pt-8 sm:pt-0">
           <h1 className="text-3xl sm:text-4xl font-bold font-headline">À Propos de Cristan</h1>
           <p className="text-muted-foreground mt-2">
             Découvrez notre histoire, notre mission et comment nous fonctionnons.

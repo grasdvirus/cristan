@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense } from 'react';
@@ -45,7 +46,7 @@ function ContractPageContent() {
                 asChild
                 variant="ghost" 
                 size="icon"
-                className="absolute left-4 top-0 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+                className="absolute left-4 sm:left-0 top-1/2 -translate-y-1/2 sm:top-0 sm:translate-y-0 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                 aria-label="Retour"
             >
                 <Link href={projectId ? `/projects/${projectId}` : '/'}>
