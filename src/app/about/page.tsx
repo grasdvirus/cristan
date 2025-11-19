@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -10,9 +9,10 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
-import { BookOpen, HelpCircle, Zap, Handshake, ArrowLeft } from 'lucide-react';
+import { BookOpen, HelpCircle, Zap, Handshake, ArrowLeft, Bot } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Chatbot } from '@/components/chatbot';
 
 export default function AboutPage() {
   const router = useRouter();
@@ -143,6 +143,17 @@ export default function AboutPage() {
                   </AccordionItem>
                   </Accordion>
               </NeumorphicCard>
+            </section>
+
+            <Separator />
+            
+            {/* Section Chatbot */}
+            <section>
+              <div className="flex items-center gap-4 mb-4">
+                <Bot className="w-8 h-8 text-primary" />
+                <h2 className="text-2xl font-bold font-headline">Assistant Virtuel</h2>
+              </div>
+              <Chatbot />
             </section>
           </div>
         </NeumorphicCard>
