@@ -104,7 +104,7 @@ export default function VideoDetailsPage() {
        <div className="mb-8">
             <Button 
                 variant="ghost" 
-                onClick={() => router.push('/tv')} 
+                onClick={() => router.back()} 
                 className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                 size="icon"
             >

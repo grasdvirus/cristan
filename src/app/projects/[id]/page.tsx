@@ -72,7 +72,7 @@ export default function ProjectDetailsPage() {
       <NeumorphicCard className="max-w-5xl mx-auto p-0 sm:p-4 md:p-6 relative">
          <Button asChild variant="ghost" size="icon" className="absolute left-4 top-4 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark z-10">
             <Link href="/internet">
-                <ArrowLeft className="mr-2 h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" />
             </Link>
         </Button>
         <div className="relative mb-8 sm:rounded-2xl overflow-hidden sm:neumorphic-card-inset-light sm:dark:neumorphic-card-inset-dark">
