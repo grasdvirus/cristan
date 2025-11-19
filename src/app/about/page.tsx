@@ -1,4 +1,3 @@
-
 'use client';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
@@ -9,24 +8,14 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
-import { BookOpen, HelpCircle, Zap, ArrowLeft, Handshake } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { BookOpen, HelpCircle, Zap, Handshake } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AboutPage() {
-  const router = useRouter();
-
   return (
     <div className="container mx-auto px-0 sm:px-4 py-16 sm:py-24">
       <NeumorphicCard className="max-w-5xl mx-auto p-4 sm:p-6 md:p-8 relative">
-        <button 
-            onClick={() => router.back()}
-            className="absolute left-4 top-4 sm:left-6 sm:top-6 h-10 w-10 inline-flex items-center justify-center rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
-            aria-label="Retour"
-        >
-            <ArrowLeft className="h-5 w-5" />
-        </button>
-
-        <div className="relative text-center mb-12 pt-12 sm:pt-0">
+        <div className="text-center mb-12 pt-12 sm:pt-0">
           <h1 className="text-3xl sm:text-4xl font-bold font-headline">À Propos de Cristan</h1>
           <p className="text-muted-foreground mt-2">
             Découvrez notre histoire, notre mission et comment nous fonctionnons.
