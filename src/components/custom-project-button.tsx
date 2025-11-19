@@ -27,7 +27,7 @@ export function CustomProjectButton() {
   }
 
   return (
-    <Link href="/contract" passHref>
+    <Link href="/custom-project" passHref>
       <button
         className={cn('custom-project-button', { expanded: isExpanded })}
         onClick={handleClick}
