@@ -79,20 +79,23 @@ export default function AboutPage() {
               </div>
               <NeumorphicCard inset className="p-4 sm:p-6">
                   <p className="text-muted-foreground leading-relaxed mb-4">
-                      Rejoignez notre programme de partenariat pour bénéficier d'avantages exclusifs et collaborer avec nous. Voici comment procéder :
+                      Rejoignez notre programme pour obtenir un code promo unique, suivre vos performances et gagner des récompenses. Voici les étapes à suivre :
                   </p>
                   <ol className="list-decimal list-inside space-y-3 text-muted-foreground">
                       <li>
-                          <span className="font-semibold text-foreground">Accédez à la section Partenariat :</span> Depuis la page d'accueil, cliquez sur l'onglet "Partenariat" pour commencer.
+                          <span className="font-semibold text-foreground">Créez votre compte :</span> La première étape est de vous <Link href="/login" className='text-primary underline'>connecter ou créer un compte</Link> sur notre site. C'est essentiel pour associer votre partenariat à votre profil.
                       </li>
                       <li>
-                          <span className="font-semibold text-foreground">Entrez le code d'accès :</span> Pour accéder au formulaire, vous devrez entrer le code d'accès partenaire. Le code est <span className="font-mono text-primary p-1 rounded-md bg-muted">CRISTAN-PAT</span>.
+                          <span className="font-semibold text-foreground">Accédez à l'espace partenaire :</span> Une fois connecté, allez dans la section "Partenariat" <Link href="/partner/register" className='text-primary underline'>en cliquant ici</Link> ou via l'onglet sur la page d'accueil.
                       </li>
                       <li>
-                          <span className="font-semibold text-foreground">Remplissez le formulaire :</span> Fournissez vos informations, vos liens vers les réseaux sociaux et le code promotionnel que vous aimeriez utiliser.
+                          <span className="font-semibold text-foreground">Entrez le code d'accès :</span> Pour accéder au formulaire, vous devrez entrer le code d'accès partenaire : <span className="font-mono text-primary p-1 rounded-md bg-muted">CRISTAN-PAT</span>.
                       </li>
                       <li>
-                          <span className="font-semibold text-foreground">Attendez la confirmation :</span> Notre équipe examinera votre demande. Une fois approuvée, vous aurez accès à votre tableau de bord partenaire pour suivre les utilisations de votre code et vos récompenses.
+                          <span className="font-semibold text-foreground">Remplissez le formulaire :</span> Fournissez vos informations, vos liens vers les réseaux sociaux et le code promotionnel personnalisé que vous souhaitez proposer à votre audience.
+                      </li>
+                      <li>
+                          <span className="font-semibold text-foreground">Attendez la confirmation :</span> Notre équipe examinera votre demande. Une fois votre statut "confirmé", vous aurez accès à votre tableau de bord partenaire pour suivre les utilisations de votre code et vos récompenses en temps réel.
                       </li>
                   </ol>
               </NeumorphicCard>
