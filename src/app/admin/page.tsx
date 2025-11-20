@@ -20,6 +20,7 @@ import { SlideForm } from '@/components/admin/slide-form';
 import { ProjectForm, type ProjectFormValues } from '@/components/admin/project-form';
 import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
 import { GameForm, type GameFormValues } from '@/components/admin/game-form';
+import { NewsForm, type NewsFormValues } from '@/components/admin/news-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
 import { PartnersManager } from '@/components/admin/partners-manager';
 import { CustomProjectsManager } from '@/components/admin/custom-projects-manager';
@@ -68,6 +69,16 @@ export type Game = {
     affiliateUrl: string;
     imageUrl: string;
     imageHint?: string;
+};
+
+export type NewsItem = {
+    id: string;
+    title: string;
+    description: string;
+    mediaUrl: string;
+    mediaType: 'image' | 'video';
+    externalLink?: string;
+    createdAt: { seconds: number, nanoseconds: number };
 };
 
 export type ContractSubmission = {
@@ -595,6 +606,129 @@ function GamesManager() {
     );
 }
 
+function NewsManager() {
+    const { firestore } = useFirebase();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
+
+    const newsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'news'));
+    }, [firestore]);
+
+    const { data: newsItems, isLoading } = useCollection<NewsItem>(newsQuery);
+
+    const handleFormSubmit = async (values: NewsFormValues) => {
+        if (!firestore) return;
+        setIsSubmitting(true);
+        const dataToSave = {
+            ...values,
+            mediaUrl: values.mediaType === 'video' ? convertToEmbedUrl(values.mediaUrl) : values.mediaUrl,
+            createdAt: editingNews?.createdAt || new Date(),
+        };
+
+        try {
+            if (editingNews) {
+                await updateDoc(doc(firestore, 'news', editingNews.id), dataToSave);
+            } else {
+                await addDoc(collection(firestore, 'news'), dataToSave);
+            }
+            toast({ variant: 'success', title: `Actualité ${editingNews ? 'modifiée' : 'ajoutée'} avec succès.` });
+            setDialogOpen(false);
+            setEditingNews(null);
+        } catch (error) {
+            console.error("Error saving news item: ", error);
+            toast({ title: 'Erreur', description: `Impossible de sauvegarder l'actualité.`, variant: 'destructive' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!firestore) return;
+        try {
+            await deleteDoc(doc(firestore, 'news', id));
+            toast({ variant: 'success', title: 'Actualité supprimée.' });
+        } catch (error) {
+            console.error("Error deleting news item: ", error);
+            toast({ title: 'Erreur', description: 'Impossible de supprimer l'actualité.', variant: 'destructive' });
+        }
+    };
+
+    const openEditDialog = (news: NewsItem) => {
+        setEditingNews(news);
+        setDialogOpen(true);
+    };
+
+    const openAddDialog = () => {
+        setEditingNews(null);
+        setDialogOpen(true);
+    };
+
+    return (
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Gestion des Actualités</h2>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
+                            <Plus className="mr-2 h-4 w-4" /> Ajouter une actualité
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{editingNews ? 'Modifier' : 'Ajouter'} une actualité</DialogTitle>
+                        </DialogHeader>
+                        <NewsForm
+                            initialData={editingNews}
+                            onSubmit={handleFormSubmit}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </div>
+            {isLoading ? <Skeleton className="h-40 w-full" /> : (
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Titre</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {newsItems?.map((item) => (
+                        <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.title}</TableCell>
+                            <TableCell>{item.mediaType}</TableCell>
+                            <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}><Edit className="h-4 w-4" /></Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
+                                        <AlertDialogDescription>Cette action est irréversible et supprimera définitivement l'actualité.</AlertDialogDescription>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDelete(item.id)}>Supprimer</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+            )}
+        </NeumorphicCard>
+    );
+}
+
+
 function AdminPageContent() {
     const { firestore, user, isUserLoading } = useFirebase();
     const [searchTerm, setSearchTerm] = useState('');
@@ -647,6 +781,7 @@ function AdminPageContent() {
                             <TabsTrigger value="internet">Internet</TabsTrigger>
                             <TabsTrigger value="tv">TV</TabsTrigger>
                             <TabsTrigger value="games">Gamme</TabsTrigger>
+                            <TabsTrigger value="news">Actualités</TabsTrigger>
                             <TabsTrigger value="submissions">Demandes</TabsTrigger>
                             <TabsTrigger value="custom_projects">Sur Mesure</TabsTrigger>
                             <TabsTrigger value="partners">Partenaires</TabsTrigger>
@@ -668,6 +803,10 @@ function AdminPageContent() {
 
                     <TabsContent value="games">
                         <GamesManager />
+                    </TabsContent>
+
+                     <TabsContent value="news">
+                        <NewsManager />
                     </TabsContent>
 
                     <TabsContent value="submissions">
