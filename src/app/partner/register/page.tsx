@@ -14,7 +14,7 @@ import { doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, BarChart2, User, Trophy, Copy, Hourglass, LogOut } from 'lucide-react';
+import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, BarChart2, User, Trophy, Copy, Hourglass, LogOut, Gift } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
@@ -66,6 +66,14 @@ function PartnerDashboardContent({ partnerData, userId }: { partnerData: Partner
     return (
         <div className="max-w-4xl mx-auto w-full">
             <div className="relative text-center mb-12">
+                <div className="absolute top-0 right-0">
+                    <Button asChild className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                        <Link href="/partner/reward">
+                            <Gift className="mr-2 h-4 w-4" />
+                            Demander une récompense
+                        </Link>
+                    </Button>
+                </div>
                 <h1 className="text-3xl sm:text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
                 <p className="text-muted-foreground mt-2">Bienvenue, {partnerData.fullName} !</p>
             </div>
