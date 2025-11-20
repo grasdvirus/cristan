@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -22,6 +21,7 @@ import { ProjectForm, type ProjectFormValues } from '@/components/admin/project-
 import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
 import { GameForm, type GameFormValues } from '@/components/admin/game-form';
 import { NewsForm, type NewsFormValues } from '@/components/admin/news-form';
+import { MarqueeForm, type MarqueeFormValues } from '@/components/admin/marquee-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
 import { PartnersManager } from '@/components/admin/partners-manager';
 import { CustomProjectsManager } from '@/components/admin/custom-projects-manager';
@@ -80,6 +80,11 @@ export type NewsItem = {
     mediaType: 'image' | 'video';
     externalLink?: string;
     createdAt: { seconds: number, nanoseconds: number };
+};
+
+export type MarqueeItem = {
+  id: string;
+  text: string;
 };
 
 export type ContractSubmission = {
@@ -729,6 +734,120 @@ function NewsManager() {
     );
 }
 
+function MarqueeManager() {
+    const { firestore } = useFirebase();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<MarqueeItem | null>(null);
+
+    const marqueeQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'marqueeItems'));
+    }, [firestore]);
+
+    const { data: marqueeItems, isLoading } = useCollection<MarqueeItem>(marqueeQuery);
+
+    const handleFormSubmit = async (values: MarqueeFormValues) => {
+        if (!firestore) return;
+        setIsSubmitting(true);
+        try {
+            if (editingItem) {
+                await updateDoc(doc(firestore, 'marqueeItems', editingItem.id), values);
+            } else {
+                await addDoc(collection(firestore, 'marqueeItems'), values);
+            }
+            toast({ variant: 'success', title: `Message ${editingItem ? 'modifié' : 'ajouté'}.` });
+            setDialogOpen(false);
+            setEditingItem(null);
+        } catch (error) {
+            console.error("Error saving marquee item: ", error);
+            toast({ title: 'Erreur', description: `Impossible de sauvegarder le message.`, variant: 'destructive' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!firestore) return;
+        try {
+            await deleteDoc(doc(firestore, 'marqueeItems', id));
+            toast({ variant: 'success', title: 'Message supprimé.' });
+        } catch (error) {
+            console.error("Error deleting marquee item: ", error);
+            toast({ title: 'Erreur', description: 'Impossible de supprimer le message.', variant: 'destructive' });
+        }
+    };
+
+    const openEditDialog = (item: MarqueeItem) => {
+        setEditingItem(item);
+        setDialogOpen(true);
+    };
+
+    const openAddDialog = () => {
+        setEditingItem(null);
+        setDialogOpen(true);
+    };
+
+    return (
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Gestion du Marquee</h2>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
+                            <Plus className="mr-2 h-4 w-4" /> Ajouter un message
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{editingItem ? 'Modifier' : 'Ajouter'} un message</DialogTitle>
+                        </DialogHeader>
+                        <MarqueeForm
+                            initialData={editingItem}
+                            onSubmit={handleFormSubmit}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </div>
+            {isLoading ? <Skeleton className="h-40 w-full" /> : (
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Texte</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {marqueeItems?.map((item) => (
+                        <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.text}</TableCell>
+                            <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}><Edit className="h-4 w-4" /></Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
+                                        <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDelete(item.id)}>Supprimer</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+            )}
+        </NeumorphicCard>
+    );
+}
+
 
 function AdminPageContent() {
     const { firestore, user, isUserLoading } = useFirebase();
@@ -779,6 +898,7 @@ function AdminPageContent() {
                     <ScrollArea className="w-full whitespace-nowrap">
                         <TabsList className="inline-flex h-auto p-1 mb-8">
                             <TabsTrigger value="slides">Slides</TabsTrigger>
+                            <TabsTrigger value="marquee">Marquee</TabsTrigger>
                             <TabsTrigger value="internet">Internet</TabsTrigger>
                             <TabsTrigger value="tv">TV</TabsTrigger>
                             <TabsTrigger value="games">Gamme</TabsTrigger>
@@ -792,6 +912,10 @@ function AdminPageContent() {
                     
                     <TabsContent value="slides">
                         <SlidesManager />
+                    </TabsContent>
+                    
+                    <TabsContent value="marquee">
+                        <MarqueeManager />
                     </TabsContent>
 
                     <TabsContent value="internet">
@@ -846,5 +970,3 @@ export default function AdminPage() {
         </AuthGuard>
     )
 }
-
-    

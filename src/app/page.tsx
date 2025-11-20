@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import HeroSection from '@/components/sections/hero-section';
+import MarqueeSection from '@/components/sections/marquee-section';
 import ProjectsGrid from '@/components/sections/projects-grid';
 import { HomeTVSection } from '@/components/sections/videos-grid';
 import GamesGrid from '@/components/sections/games-grid';
@@ -44,6 +45,7 @@ export default function Home() {
   return (
     <div>
       <HeroSection />
+      <MarqueeSection />
       <div className="bg-background">
         <div className="container mx-auto px-4 py-16 sm:py-24">
           <div className="flex flex-col items-center mb-12">
