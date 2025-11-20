@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -102,7 +103,7 @@ export function SubmissionsManager({ submissions, isLoading, searchTerm = '' }: 
 
     const filteredSubmissions = useMemo(() => {
         if (!submissions) return [];
-        const projectSubmissions = submissions.filter(s => s.type !== 'Partenariat');
+        const projectSubmissions = submissions.filter(s => s.type === 'Projet');
         if (!searchTerm) return projectSubmissions;
 
         return projectSubmissions.filter(s => 
