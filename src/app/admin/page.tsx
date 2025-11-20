@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -640,7 +641,7 @@ function NewsManager() {
             setEditingNews(null);
         } catch (error) {
             console.error("Error saving news item: ", error);
-            toast({ title: 'Erreur', description: `Impossible de sauvegarder l'actualité.`, variant: 'destructive' });
+            toast({ title: 'Erreur', description: `Impossible de sauvegarder l\'actualité.`, variant: 'destructive' });
         } finally {
             setIsSubmitting(false);
         }
@@ -653,7 +654,7 @@ function NewsManager() {
             toast({ variant: 'success', title: 'Actualité supprimée.' });
         } catch (error) {
             console.error("Error deleting news item: ", error);
-            toast({ title: 'Erreur', description: 'Impossible de supprimer l'actualité.', variant: 'destructive' });
+            toast({ title: 'Erreur', description: 'Impossible de supprimer l\'actualité.', variant: 'destructive' });
         }
     };
 
@@ -845,3 +846,5 @@ export default function AdminPage() {
         </AuthGuard>
     )
 }
+
+    
