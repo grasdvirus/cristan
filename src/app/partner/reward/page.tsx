@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
@@ -39,6 +39,17 @@ type PartnerData = {
     fullName: string;
     promoCode: string;
 };
+
+// Helper functions for number formatting
+const formatNumber = (value: number | string): string => {
+    const num = String(value).replace(/\D/g, '');
+    return new Intl.NumberFormat('fr-FR').format(Number(num));
+};
+
+const parseFormattedNumber = (value: string): number => {
+    return Number(String(value).replace(/\./g, ''));
+};
+
 
 function RewardForm() {
     const { firestore, user } = useFirebase();
@@ -126,7 +137,16 @@ function RewardForm() {
                             <FormItem>
                                 <FormLabel>Montant demandé (FCFA)</FormLabel>
                                 <FormControl>
-                                    <Input type="number" placeholder="1000000" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"/>
+                                   <Input 
+                                        type="text" 
+                                        placeholder="1.000.000" 
+                                        value={field.value ? formatNumber(field.value) : ''}
+                                        onChange={(e) => {
+                                            const rawValue = parseFormattedNumber(e.target.value);
+                                            field.onChange(rawValue);
+                                        }}
+                                        className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"
+                                    />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
