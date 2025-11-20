@@ -4,11 +4,43 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { Home, User, Bell } from 'lucide-react';
-import { useFirebase } from '@/firebase';
+import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { CustomThemeSwitch } from '../custom-theme-switch';
+import { useState, useEffect } from 'react';
+import { collection, query, orderBy, limit, Timestamp } from 'firebase/firestore';
+
+type NewsItem = {
+    id: string;
+    createdAt: Timestamp;
+};
 
 export default function Header() {
   const { user } = useFirebase();
+  const { firestore } = useFirebase();
+  const [hasNewNews, setHasNewNews] = useState(false);
+
+  // Query for the latest news item
+  const latestNewsQuery = useMemoFirebase(
+    () => firestore ? query(collection(firestore, 'news'), orderBy('createdAt', 'desc'), limit(1)) : null,
+    [firestore]
+  );
+  const { data: latestNewsItems } = useCollection<NewsItem>(latestNewsQuery);
+
+  useEffect(() => {
+    if (latestNewsItems && latestNewsItems.length > 0) {
+      const latestNewsTimestamp = latestNewsItems[0].createdAt.seconds;
+      const lastSeenNewsTimestamp = localStorage.getItem('lastSeenNewsTimestamp');
+      
+      if (!lastSeenNewsTimestamp || latestNewsTimestamp > Number(lastSeenNewsTimestamp)) {
+        setHasNewNews(true);
+      } else {
+        setHasNewNews(false);
+      }
+    } else {
+      setHasNewNews(false);
+    }
+  }, [latestNewsItems]);
+
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm">
@@ -28,8 +60,14 @@ export default function Header() {
               <Bell className="h-[1.2rem] w-[1.2rem]" />
               {/* Red dot for new content notification */}
               <span className="absolute top-2 right-2 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                <span className={cn(
+                  "absolute inline-flex h-full w-full rounded-full bg-red-400",
+                  hasNewNews ? "animate-ping opacity-75" : "opacity-0"
+                )}></span>
+                <span className={cn(
+                  "relative inline-flex rounded-full h-2 w-2 bg-red-500",
+                   !hasNewNews && "opacity-30"
+                )}></span>
               </span>
             </Button>
           </Link>

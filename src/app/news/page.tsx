@@ -1,6 +1,6 @@
 'use client';
 
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,6 +10,7 @@ import { fr } from 'date-fns/locale';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
 
 type NewsItem = {
     id: string;
@@ -18,7 +19,7 @@ type NewsItem = {
     mediaUrl: string;
     mediaType: 'image' | 'video';
     externalLink?: string;
-    createdAt: { seconds: number; nanoseconds: number; };
+    createdAt: Timestamp;
 };
 
 function NewsSkeleton() {
@@ -47,9 +48,17 @@ export default function NewsPage() {
     );
     const { data: newsItems, isLoading } = useCollection<NewsItem>(newsQuery);
     
-    const formatDate = (timestamp: { seconds: number; }) => {
+    useEffect(() => {
+        if (newsItems && newsItems.length > 0) {
+            // When the user visits the page, store the timestamp of the latest news item.
+            const latestNewsTimestamp = newsItems[0].createdAt.seconds.toString();
+            localStorage.setItem('lastSeenNewsTimestamp', latestNewsTimestamp);
+        }
+    }, [newsItems]);
+    
+    const formatDate = (timestamp: Timestamp | null) => {
         if (!timestamp) return 'Date inconnue';
-        const date = new Date(timestamp.seconds * 1000);
+        const date = timestamp.toDate();
         return format(date, "d MMMM yyyy", { locale: fr });
     };
 
