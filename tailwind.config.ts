@@ -96,12 +96,12 @@ export default {
           },
         },
         'marquee': {
-          '0%': { transform: 'translateX(0%)' },
-          '100%': { transform: 'translateX(-100%)' },
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-100%)' },
         },
         'marquee2': {
-          '0%': { transform: 'translateX(100%)' },
-          '100%': { transform: 'translateX(0%)' },
+          from: { transform: 'translateX(100%)' },
+          to: { transform: 'translateX(0)' },
         },
       },
       animation: {
