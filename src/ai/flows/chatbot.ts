@@ -24,26 +24,6 @@ export async function chatWithBot(input: z.infer<typeof ChatbotInputSchema>): Pr
   return chatbotFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'chatbotPrompt',
-  input: { schema: ChatbotInputSchema },
-  output: { schema: ChatbotOutputSchema },
-  prompt: `Vous êtes un assistant virtuel pour le site "Cristan". Votre rôle est de répondre aux questions des utilisateurs de manière concise, amicale et professionnelle, en français uniquement.
-
-  Informations sur Cristan :
-  - Mission : Fournir des solutions web esthétiques et fonctionnelles (sites vitrines, e-commerce, portfolios) avec un design neumorphique.
-  - Processus de projet : L'utilisateur choisit un modèle, remplit un formulaire, puis l'équipe Cristan le contacte.
-  - Projet sur mesure : Cristan propose aussi des projets créés de A à Z.
-  - Partenariat : Les utilisateurs peuvent devenir partenaires en créant un compte et en postulant via un formulaire dédié. Ils obtiennent un code promo et un tableau de bord pour suivre leurs gains. Le code d'accès est CRISTAN-PAT.
-  - Paiement : Virement bancaire et paiements mobiles (Orange Money, Wave). Un acompte de 50% est demandé.
-  - Contact : 07 04 54 29 09, kingstartup2@gmail.com.
-
-  Répondez à la question suivante de l'utilisateur. Soyez bref et allez droit au but.
-
-  Question de l'utilisateur : {{{message}}}
-  `,
-});
-
 const chatbotFlow = ai.defineFlow(
   {
     name: 'chatbotFlow',
@@ -51,14 +31,26 @@ const chatbotFlow = ai.defineFlow(
     outputSchema: ChatbotOutputSchema,
   },
   async ({ history, message }) => {
-    const { output } = await ai.generate({
+    
+    // The history and the new message are passed to ai.generate
+    const response = await ai.generate({
       model: 'googleai/gemini-2.5-flash',
+      history: history,
       prompt: message,
-      history,
-      // The instruction to be a virtual assistant is now implicitly handled by the context of the conversation history
-      // but you could add a system prompt here if needed:
-      // system: "You are a helpful assistant for the Cristan website..."
+      system: `Vous êtes un assistant virtuel pour le site "Cristan". Votre rôle est de répondre aux questions des utilisateurs de manière concise, amicale et professionnelle, en français uniquement.
+
+      Informations sur Cristan :
+      - Mission : Fournir des solutions web esthétiques et fonctionnelles (sites vitrines, e-commerce, portfolios) avec un design neumorphique.
+      - Processus de projet : L'utilisateur choisit un modèle, remplit un formulaire, puis l'équipe Cristan le contacte.
+      - Projet sur mesure : Cristan propose aussi des projets créés de A à Z.
+      - Partenariat : Les utilisateurs peuvent devenir partenaires en créant un compte et en postulant via un formulaire dédié avec le code d'accès "CRISTAN-PAT". Ils obtiennent un code promo et un tableau de bord pour suivre leurs gains.
+      - Paiement : Virement bancaire et paiements mobiles (Orange Money, Wave). Un acompte de 50% est demandé.
+      - Contact : 07 04 54 29 09, kingstartup2@gmail.com.
+      
+      Répondez à la question de l'utilisateur. Soyez bref et allez droit au but.
+      `,
     });
-    return output?.text || "Désolé, je n'ai pas pu générer de réponse. Veuillez reformuler votre question.";
+    
+    return response.text || "Désolé, je n'ai pas pu générer de réponse. Veuillez reformuler votre question.";
   }
 );
