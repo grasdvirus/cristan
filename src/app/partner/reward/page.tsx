@@ -13,14 +13,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ArrowLeft, Share2, Info } from 'lucide-react';
+import { ArrowLeft, Share2, Info, Plus, Minus, RotateCcw } from 'lucide-react';
 
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { AuthGuard } from '@/components/auth-guard';
 import { LoadingSpinner } from '@/components/loading-spinner';
-import { doc } from 'firebase/firestore';
+import { doc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 const rewardSchema = z.object({
   paymentMethod: z.string().min(1, "Veuillez choisir un mode de paiement."),
@@ -32,30 +35,22 @@ const rewardSchema = z.object({
     }),
 });
 
+type RewardFormValues = z.infer<typeof rewardSchema>;
+
 type PartnerData = {
     id: string;
     fullName: string;
     promoCode: string;
 };
 
-function RewardForm() {
+function RewardForm({ form }: { form: ReturnType<typeof useForm<RewardFormValues>> }) {
     const { firestore, user } = useFirebase();
-    const { toast } = useToast();
-
+    
     const partnerRef = useMemoFirebase(() => {
       if (!user || !firestore) return null;
       return doc(firestore, 'submissions', user.uid);
     }, [user, firestore]);
     const { data: partnerData, isLoading } = useDoc<PartnerData>(partnerRef);
-    
-    const form = useForm<z.infer<typeof rewardSchema>>({
-        resolver: zodResolver(rewardSchema),
-        defaultValues: {
-            paymentMethod: '',
-            paymentDetails: '',
-            amount: 1000000,
-        },
-    });
     
     if (isLoading) {
         return <LoadingSpinner />;
@@ -66,6 +61,12 @@ function RewardForm() {
     }
     
     const whatsappLink = `https://wa.me/2250704542909`;
+
+    const handleAmountChange = (increment: boolean) => {
+        const currentAmount = form.getValues('amount');
+        const newAmount = increment ? currentAmount + 1000000 : Math.max(1000000, currentAmount - 1000000);
+        form.setValue('amount', newAmount, { shouldValidate: true });
+    };
 
     return (
         <NeumorphicCard className="max-w-2xl mx-auto w-full">
@@ -95,15 +96,23 @@ function RewardForm() {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Montant demandé (FCFA)</FormLabel>
-                                <FormControl>
-                                    <Input 
-                                        type="text"
-                                        placeholder="1.000.000"
-                                        value={new Intl.NumberFormat('fr-FR').format(field.value)}
-                                        readOnly
-                                        className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark text-center font-mono" 
-                                    />
-                                </FormControl>
+                                <div className="flex items-center justify-between gap-2 neumorphic-card-inset-light dark:neumorphic-card-inset-dark rounded-md p-2">
+                                     <Button type="button" size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleAmountChange(false)}>
+                                        <Minus className="h-4 w-4"/>
+                                    </Button>
+                                    <FormControl>
+                                        <Input
+                                            type="text"
+                                            readOnly
+                                            className="text-center font-mono text-lg bg-transparent border-none focus-visible:ring-0"
+                                            {...field}
+                                            value={new Intl.NumberFormat('fr-FR').format(field.value)}
+                                        />
+                                    </FormControl>
+                                    <Button type="button" size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleAmountChange(true)}>
+                                        <Plus className="h-4 w-4"/>
+                                    </Button>
+                                </div>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -184,9 +193,24 @@ function RewardForm() {
 }
 
 function RewardPageContent() {
+    const defaultValues = {
+        paymentMethod: '',
+        paymentDetails: '',
+        amount: 1000000,
+    };
+    
+    const form = useForm<z.infer<typeof rewardSchema>>({
+        resolver: zodResolver(rewardSchema),
+        defaultValues,
+    });
+
+    const handleReset = () => {
+        form.reset(defaultValues);
+    };
+
     return (
         <div className="container mx-auto px-4 py-16 sm:py-24">
-            <div className="relative mb-8">
+            <div className="relative flex justify-between items-center mb-8">
                 <Button 
                     asChild
                     variant="ghost" 
@@ -198,8 +222,17 @@ function RewardPageContent() {
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                 </Button>
+                 <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={handleReset}
+                    className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+                    aria-label="Réinitialiser la demande"
+                >
+                    <RotateCcw className="h-5 w-5" />
+                </Button>
             </div>
-            <RewardForm />
+            <RewardForm form={form} />
         </div>
     );
 }
