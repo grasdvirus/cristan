@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { CustomProjectButton } from '@/components/custom-project-button';
 import { useToast } from '@/components/ui/use-toast';
 import { ToastAction } from '@/components/ui/toast';
+import AvisClientsMarquee from '@/components/sections/avis-clients-marquee';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('sites');
@@ -115,6 +116,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+      <AvisClientsMarquee />
     </div>
   );
 }

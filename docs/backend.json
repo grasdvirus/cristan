@@ -249,6 +249,20 @@
         }
       },
       "required": ["id", "text"]
+    },
+    "AvisClient": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AvisClient",
+      "type": "object",
+      "description": "Représente un témoignage de client.",
+      "properties": {
+        "id": { "type": "string", "description": "Identifiant unique pour l'avis." },
+        "name": { "type": "string", "description": "Nom du client." },
+        "message": { "type": "string", "description": "Message du témoignage." },
+        "rating": { "type": "number", "description": "Note de 1 à 5." },
+        "avatarUrl": { "type": "string", "format": "uri", "description": "URL de l'avatar du client (optionnel)." }
+      },
+      "required": ["id", "name", "message", "rating"]
     }
   },
   "auth": {
@@ -376,6 +390,22 @@
             {
               "name": "marqueeItemId",
               "description": "The unique identifier for the marquee item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/avisClients/{avisClientId}",
+        "definition": {
+          "entityName": "AvisClient",
+          "schema": {
+            "$ref": "#/backend/entities/AvisClient"
+          },
+          "description": "Stores customer testimonials. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "avisClientId",
+              "description": "The unique identifier for the client testimonial."
             }
           ]
         }

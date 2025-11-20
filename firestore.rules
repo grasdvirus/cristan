@@ -80,5 +80,10 @@ service cloud.firestore {
                                                                     allow get, list: if true;
                                                                     allow create, update, delete: if isAdmin();
                                                                 }
+
+                                                                match /avisClients/{avisClientId} {
+                                                                    allow get, list: if true;
+                                                                    allow create, update, delete: if isAdmin();
+                                                                }
       }
 }
