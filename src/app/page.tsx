@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import HeroSection from '@/components/sections/hero-section';
 import ProjectsGrid from '@/components/sections/projects-grid';
@@ -13,9 +12,30 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Handshake } from 'lucide-react';
 import Link from 'next/link';
 import { CustomProjectButton } from '@/components/custom-project-button';
+import { useToast } from '@/components/ui/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('sites');
+  const { toast } = useToast();
+  const router = useRouter();
+
+  useEffect(() => {
+    const hasVisited = sessionStorage.getItem('hasVisitedCristan');
+    if (!hasVisited) {
+      const timer = setTimeout(() => {
+        toast({
+          variant: 'default',
+          title: "Besoin d'aide ?",
+          description: "Notre assistant virtuel peut répondre à vos questions.",
+          action: <ToastAction altText="Discuter" onClick={() => router.push('/about')}>Discuter</ToastAction>,
+        });
+        sessionStorage.setItem('hasVisitedCristan', 'true');
+      }, 5000); // 5 secondes
+
+      return () => clearTimeout(timer);
+    }
+  }, [toast, router]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);

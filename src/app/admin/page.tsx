@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -23,6 +22,7 @@ import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
 import { GameForm, type GameFormValues } from '@/components/admin/game-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
 import { PartnersManager } from '@/components/admin/partners-manager';
+import { CustomProjectsManager } from '@/components/admin/custom-projects-manager';
 import { convertToEmbedUrl } from '@/lib/utils';
 import { AuthGuard } from '@/components/auth-guard';
 import { Input } from '@/components/ui/input';
@@ -91,6 +91,22 @@ export type ContractSubmission = {
     userId: string;
 };
 
+export type CustomProjectSubmission = {
+    id: string;
+    projectName: string;
+    companyName?: string;
+    companyDescription?: string;
+    contact: string;
+    howYouFoundUs: string;
+    projectBrief: string;
+    createdAt: {
+        seconds: number;
+        nanoseconds: number;
+    };
+    status: 'Nouveau' | 'Vu' | 'En cours' | 'Terminé';
+    type: 'Projet Personnalisé';
+    userId: string;
+};
 
 function SlidesManager() {
     const { firestore } = useFirebase();
@@ -587,7 +603,7 @@ function AdminPageContent() {
         return query(collection(firestore, 'submissions'));
     }, [firestore, user]);
 
-    const { data: allSubmissions, isLoading: isSubmissionsLoading } = useCollection<ContractSubmission>(submissionsQuery);
+    const { data: allSubmissions, isLoading: isSubmissionsLoading } = useCollection<ContractSubmission | CustomProjectSubmission>(submissionsQuery);
 
     if (isUserLoading) {
         return <LoadingSpinner />;
@@ -625,12 +641,13 @@ function AdminPageContent() {
 
 
                 <Tabs defaultValue="slides" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-8">
+                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 mb-8">
                         <TabsTrigger value="slides">Slides</TabsTrigger>
                         <TabsTrigger value="internet">Internet</TabsTrigger>
                         <TabsTrigger value="tv">TV</TabsTrigger>
                         <TabsTrigger value="games">Gamme</TabsTrigger>
                         <TabsTrigger value="submissions">Demandes</TabsTrigger>
+                        <TabsTrigger value="custom_projects">Sur Mesure</TabsTrigger>
                         <TabsTrigger value="partners">Partenaires</TabsTrigger>
                     </TabsList>
                     
@@ -655,6 +672,14 @@ function AdminPageContent() {
                             submissions={allSubmissions}
                             isLoading={isSubmissionsLoading}
                             searchTerm={searchTerm} 
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="custom_projects">
+                        <CustomProjectsManager
+                            submissions={allSubmissions}
+                            isLoading={isSubmissionsLoading}
+                            searchTerm={searchTerm}
                         />
                     </TabsContent>
                     
