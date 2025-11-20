@@ -66,14 +66,6 @@ function PartnerDashboardContent({ partnerData, userId }: { partnerData: Partner
     return (
         <div className="max-w-4xl mx-auto w-full">
             <div className="relative text-center mb-12">
-                <div className="absolute top-0 right-0">
-                    <Button asChild className="btn-neumorphic-light dark:btn-neumorphic-dark">
-                        <Link href="/partner/reward">
-                            <Gift className="mr-2 h-4 w-4" />
-                            Demander une récompense
-                        </Link>
-                    </Button>
-                </div>
                 <h1 className="text-3xl sm:text-4xl font-bold font-headline">Tableau de Bord Partenaire</h1>
                 <p className="text-muted-foreground mt-2">Bienvenue, {partnerData.fullName} !</p>
             </div>
@@ -321,9 +313,9 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
 }
 
 
-const PageWrapper = ({ children }: { children: React.ReactNode }) => (
-    <div className="container mx-auto px-4 py-16 sm:py-24 relative">
-        <div className="absolute left-4 top-4 sm:left-6 sm:top-10">
+const PageWrapper = ({ children, showControls = false }: { children: React.ReactNode, showControls?: boolean }) => (
+    <div className="container mx-auto px-4 py-16 sm:py-24">
+        <div className="relative flex justify-between items-center mb-8">
             <Button 
                 asChild
                 variant="ghost" 
@@ -335,6 +327,19 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => (
                     <ArrowLeft className="h-5 w-5" />
                 </Link>
             </Button>
+            {showControls && (
+                 <Button 
+                    asChild
+                    variant="ghost" 
+                    size="icon"
+                    className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
+                    aria-label="Demander une récompense"
+                >
+                    <Link href="/partner/reward">
+                        <Gift className="h-5 w-5" />
+                    </Link>
+                </Button>
+            )}
         </div>
         <div className="flex justify-center items-center min-h-[60vh]">
             {children}
@@ -404,7 +409,7 @@ function PartnerPortalContent() {
     if (partnerData) {
         if (partnerData.status === 'confirmé' && user) {
             // SHOW DASHBOARD
-            return <PageWrapper><PartnerDashboardContent partnerData={partnerData} userId={user.uid} /></PageWrapper>;
+            return <PageWrapper showControls><PartnerDashboardContent partnerData={partnerData} userId={user.uid} /></PageWrapper>;
         } else {
             // SHOW PENDING / REJECTED STATUS
             return (

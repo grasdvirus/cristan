@@ -189,8 +189,8 @@ function RewardForm() {
 
 function RewardPageContent() {
     return (
-        <div className="container mx-auto px-4 py-16 sm:py-24 relative">
-             <div className="absolute left-4 top-4 sm:left-6 sm:top-10">
+        <div className="container mx-auto px-4 py-16 sm:py-24">
+            <div className="relative mb-8">
                 <Button 
                     asChild
                     variant="ghost" 
