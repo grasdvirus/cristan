@@ -127,12 +127,10 @@ service cloud.firestore {
 
     match /rewardRequests/{requestId} {
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow read, get, update, delete: if isAdmin();
-      // `list` must be on the collection, not the document. See below.
+      allow read, update, delete: if isAdmin();
     }
 
     match /rewardRequests/{document=**} {
-      // Admin can list all requests.
       allow list: if isAdmin();
     }
   }
