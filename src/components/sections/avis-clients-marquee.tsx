@@ -39,7 +39,7 @@ export default function AvisClientsMarquee() {
     const duplicatedItems = [...items, ...items, ...items];
 
     return (
-        <section className="py-16 sm:py-24 bg-background">
+        <section className="py-8 sm:py-12 bg-background">
             <div className="container">
                  <h2 className="text-3xl sm:text-4xl font-bold font-headline mb-8 text-left">
                     Ce que disent nos clients
