@@ -23,6 +23,7 @@ import { GameForm, type GameFormValues } from '@/components/admin/game-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
 import { PartnersManager } from '@/components/admin/partners-manager';
 import { CustomProjectsManager } from '@/components/admin/custom-projects-manager';
+import { RewardRequestsManager } from '@/components/admin/reward-requests-manager';
 import { convertToEmbedUrl } from '@/lib/utils';
 import { AuthGuard } from '@/components/auth-guard';
 import { Input } from '@/components/ui/input';
@@ -108,6 +109,22 @@ export type CustomProjectSubmission = {
     type: 'Projet Personnalisé';
     userId: string;
 };
+
+export type RewardRequest = {
+    id: string;
+    userId: string;
+    userName: string;
+    promoCode: string;
+    amount: number;
+    paymentMethod: 'wave' | 'djamo' | 'orange_money' | 'bank_transfer';
+    paymentDetails: string;
+    status: 'en attente' | 'traitée' | 'refusée';
+    createdAt: {
+        seconds: number;
+        nanoseconds: number;
+    };
+}
+
 
 function SlidesManager() {
     const { firestore } = useFirebase();
@@ -603,8 +620,13 @@ function AdminPageContent() {
         if (!firestore || !user || user.email !== 'grasdvirus@gmail.com') return null;
         return query(collection(firestore, 'submissions'));
     }, [firestore, user]);
-
     const { data: allSubmissions, isLoading: isSubmissionsLoading } = useCollection<ContractSubmission | CustomProjectSubmission>(submissionsQuery);
+    
+    const rewardRequestsQuery = useMemoFirebase(() => {
+        if (!firestore || !user || user.email !== 'grasdvirus@gmail.com') return null;
+        return query(collection(firestore, 'rewardRequests'));
+    }, [firestore, user]);
+    const { data: rewardRequests, isLoading: areRewardsLoading } = useCollection<RewardRequest>(rewardRequestsQuery);
 
     if (isUserLoading) {
         return <LoadingSpinner />;
@@ -651,6 +673,7 @@ function AdminPageContent() {
                             <TabsTrigger value="submissions">Demandes</TabsTrigger>
                             <TabsTrigger value="custom_projects">Sur Mesure</TabsTrigger>
                             <TabsTrigger value="partners">Partenaires</TabsTrigger>
+                            <TabsTrigger value="rewards">Récompenses</TabsTrigger>
                         </TabsList>
                         <ScrollBar orientation="horizontal" />
                     </ScrollArea>
@@ -692,6 +715,14 @@ function AdminPageContent() {
                             submissions={allSubmissions}
                             isLoading={isSubmissionsLoading}
                             searchTerm={searchTerm} 
+                        />
+                    </TabsContent>
+                    
+                    <TabsContent value="rewards">
+                        <RewardRequestsManager
+                            requests={rewardRequests}
+                            isLoading={areRewardsLoading}
+                            searchTerm={searchTerm}
                         />
                     </TabsContent>
 
