@@ -34,7 +34,7 @@ const chatbotFlow = ai.defineFlow(
     
     // The history and the new message are passed to ai.generate
     const response = await ai.generate({
-      model: 'googleai/gemini-2.5-flash',
+      model: 'googleai/gemini-pro',
       history: history,
       prompt: message,
       system: `Vous êtes un assistant virtuel pour le site "Cristan". Votre rôle est de répondre aux questions des utilisateurs de manière concise, amicale et professionnelle, en français uniquement.
@@ -50,6 +50,8 @@ const chatbotFlow = ai.defineFlow(
       - Programme Partenaire : Les utilisateurs peuvent devenir partenaires en créant un compte et en postulant via un formulaire dédié avec le code d'accès "CRISTAN-PAT". Une fois approuvés, ils obtiennent un code promo et un tableau de bord pour suivre leurs gains et les utilisations de leur code.
       - Système d'Avis Interactif : Dans leur page de profil, les utilisateurs peuvent laisser des avis sur les services de Cristan. Ils peuvent aussi répondre aux avis laissés par d'autres utilisateurs, créant ainsi une communauté.
       - Thème Sombre Intelligent : L'application choisit désormais automatiquement entre le thème clair et le thème sombre en fonction de l'heure de la journée pour un confort visuel optimal. L'utilisateur peut aussi changer manuellement le thème.
+      - Section Actualités : Une page dédiée "Actualités" affiche les dernières nouvelles, annonces et publicités. Un indicateur visuel (point rouge) sur l'icône de cloche dans l'en-tête signale les nouveaux contenus.
+      - Sections TV & Gamme : Des espaces dédiés pour découvrir les vidéos (TV) et les produits (Gamme) proposés par Cristan.
       
       Répondez à la question de l'utilisateur. Soyez bref et allez droit au but.
       `,
