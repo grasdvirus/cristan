@@ -1,9 +1,8 @@
 
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,15 +13,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ArrowLeft, Loader2, Send, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Camera, Send, Plus, Minus, Share2 } from 'lucide-react';
 
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { AuthGuard } from '@/components/auth-guard';
 import { LoadingSpinner } from '@/components/loading-spinner';
-import { doc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useToast } from '@/components/ui/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Image from 'next/image';
 
 const rewardSchema = z.object({
   paymentMethod: z.string().min(1, "Veuillez choisir un mode de paiement."),
@@ -52,9 +51,9 @@ const formatNumber = (value: number | string): string => {
 
 function RewardForm() {
     const { firestore, user } = useFirebase();
-    const router = useRouter();
     const { toast } = useToast();
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+    const [isCapturing, setIsCapturing] = useState(false);
 
     const partnerRef = useMemoFirebase(() => {
       if (!user || !firestore) return null;
@@ -87,41 +86,49 @@ function RewardForm() {
         form.setValue('amount', newAmount, { shouldValidate: true });
     };
 
-    const onSubmit = async (values: RewardFormValues) => {
-        if (!firestore || !user || !partnerData) {
-            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de soumettre la demande.' });
-            return;
-        }
-        setIsSubmitting(true);
-
-        const rewardRequestData = {
-            ...values,
-            userId: user.uid,
-            userName: partnerData.fullName,
-            promoCode: partnerData.promoCode,
-            status: 'en attente' as const,
-            createdAt: serverTimestamp(),
-        };
-
-        const rewardCollectionRef = collection(firestore, 'rewardRequests');
-        
-        addDoc(rewardCollectionRef, rewardRequestData)
-            .then(() => {
-                toast({ variant: 'success', title: 'Demande envoyée !', description: 'Votre demande de récompense est en cours de traitement.' });
-                router.push('/partner/register');
-            })
-            .catch(async (serverError) => {
-                const permissionError = new FirestorePermissionError({
-                    path: rewardCollectionRef.path,
-                    operation: 'create',
-                    requestResourceData: rewardRequestData,
-                });
-                errorEmitter.emit('permission-error', permissionError);
-            })
-            .finally(() => {
-                setIsSubmitting(false);
+    const handleScreenshot = async () => {
+        setIsCapturing(true);
+        toast({
+            title: 'Préparez-vous à capturer',
+            description: 'Veuillez sélectionner la fenêtre ou l\'onglet de l\'application à partager.',
+        });
+        try {
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: { cursor: "always" },
+                audio: false,
             });
-    }
+
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                video.play();
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext('2d');
+                if (context) {
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const url = canvas.toDataURL('image/png');
+                    setScreenshotUrl(url);
+                    toast({
+                        variant: 'success',
+                        title: 'Capture réussie !',
+                        description: 'Vous pouvez maintenant envoyer la capture via WhatsApp.',
+                    });
+                }
+                stream.getTracks().forEach(track => track.stop());
+            };
+        } catch (error) {
+            console.error('Erreur de capture d\'écran:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Capture annulée ou échouée',
+                description: 'Assurez-vous d\'autoriser la capture d\'écran.',
+            });
+        } finally {
+            setIsCapturing(false);
+        }
+    };
     
     if (isLoading) {
         return <LoadingSpinner />;
@@ -130,18 +137,20 @@ function RewardForm() {
     if (!partnerData) {
         return <p>Données partenaire non trouvées.</p>;
     }
+    
+    const whatsappLink = `https://wa.me/2250704542909`;
 
     return (
         <NeumorphicCard className="max-w-2xl mx-auto w-full">
             <div className="relative text-center mb-8">
                 <h1 className="text-3xl sm:text-4xl font-bold font-headline">Demande de Récompense</h1>
                 <p className="text-muted-foreground mt-2">
-                    Remplissez le formulaire pour recevoir votre paiement. Voulez-vous retirer les 1.000.000 F des 100 achats entrés par votre code promo ?
+                    Remplissez le formulaire, prenez une capture d'écran, puis envoyez-la nous sur WhatsApp.
                 </p>
             </div>
             
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <Label>Nom</Label>
@@ -236,12 +245,45 @@ function RewardForm() {
                         />
                     )}
 
-                    <div className="flex justify-end pt-4">
-                        <Button type="submit" disabled={isSubmitting} size="lg" className="btn-neumorphic-light dark:btn-neumorphic-dark">
-                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                            Envoyer la demande
+                    <div className="flex flex-col gap-4 items-center justify-center pt-4">
+                        <Button 
+                            type="button" 
+                            onClick={handleScreenshot} 
+                            disabled={isCapturing}
+                            size="lg" 
+                            className="w-full sm:w-auto btn-neumorphic-light dark:btn-neumorphic-dark"
+                        >
+                            <Camera className="mr-2 h-4 w-4" />
+                            {isCapturing ? 'Capture en cours...' : '1. Capture d\'écran'}
+                        </Button>
+                        
+                        <Button 
+                            type="button"
+                            asChild 
+                            size="lg"
+                            className="w-full sm:w-auto btn-neumorphic-light dark:btn-neumorphic-dark"
+                            disabled={!screenshotUrl}
+                        >
+                            <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+                                <Share2 className="mr-2 h-4 w-4" />
+                                2. Envoyer sur WhatsApp
+                            </a>
                         </Button>
                     </div>
+
+                    {screenshotUrl && (
+                        <div className="mt-6">
+                             <Alert>
+                                <AlertTitle>Aperçu de la capture</AlertTitle>
+                                <AlertDescription>
+                                    Voici l'image que vous avez capturée. Vous pouvez la télécharger ou la copier pour l'envoyer.
+                                </AlertDescription>
+                                <NeumorphicCard inset className="mt-4 p-2">
+                                     <Image src={screenshotUrl} alt="Aperçu de la capture d'écran" width={800} height={450} className="rounded-md w-full h-auto" />
+                                </NeumorphicCard>
+                            </Alert>
+                        </div>
+                    )}
                 </form>
             </Form>
         </NeumorphicCard>
