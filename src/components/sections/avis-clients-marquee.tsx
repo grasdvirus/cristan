@@ -41,12 +41,9 @@ export default function AvisClientsMarquee() {
     return (
         <section className="py-16 sm:py-24 bg-background">
             <div className="container text-center">
-                 <h2 className="text-3xl sm:text-4xl font-bold font-headline mb-4 text-center">
+                 <h2 className="text-3xl sm:text-4xl font-bold font-headline mb-12 text-center">
                     Ce que disent nos clients
                 </h2>
-                <p className='text-muted-foreground max-w-2xl mx-auto mb-12'>
-                    Nous sommes fiers de livrer des produits exceptionnels et un service client de premier ordre. Voici ce que certains de nos clients satisfaits ont à dire.
-                </p>
             </div>
             <div className="relative flex overflow-x-hidden group">
                  <div className="animate-marquee group-hover:pause flex min-w-full shrink-0 items-center justify-around gap-8">
