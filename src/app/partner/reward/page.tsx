@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ArrowLeft, Loader2, Send } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, Plus, Minus } from 'lucide-react';
 
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { AuthGuard } from '@/components/auth-guard';
@@ -40,15 +40,11 @@ type PartnerData = {
     promoCode: string;
 };
 
-// Helper functions for number formatting
+// Helper function for number formatting
 const formatNumber = (value: number | string): string => {
     const num = String(value).replace(/\D/g, '');
-    if (!num) return '';
+    if (!num) return '0';
     return new Intl.NumberFormat('fr-FR').format(Number(num));
-};
-
-const parseFormattedNumber = (value: string): number => {
-    return Number(String(value).replace(/\./g, ''));
 };
 
 
@@ -57,8 +53,6 @@ function RewardForm() {
     const router = useRouter();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [formattedAmount, setFormattedAmount] = useState('1.000.000');
-
 
     const partnerRef = useMemoFirebase(() => {
       if (!user || !firestore) return null;
@@ -78,10 +72,18 @@ function RewardForm() {
     const paymentMethod = form.watch('paymentMethod');
     const amountValue = form.watch('amount');
 
-    useEffect(() => {
-        setFormattedAmount(formatNumber(amountValue));
-    }, [amountValue]);
+    const handleAmountChange = (operation: 'increment' | 'decrement') => {
+        const currentAmount = form.getValues('amount');
+        const increment = 1000000;
+        let newAmount = currentAmount;
 
+        if (operation === 'increment') {
+            newAmount += increment;
+        } else {
+            newAmount = Math.max(1000000, currentAmount - increment);
+        }
+        form.setValue('amount', newAmount, { shouldValidate: true });
+    };
 
     const onSubmit = async (values: RewardFormValues) => {
         if (!firestore || !user || !partnerData) {
@@ -146,17 +148,30 @@ function RewardForm() {
                             <FormItem>
                                 <FormLabel>Montant demandé (FCFA)</FormLabel>
                                 <FormControl>
-                                   <Input 
-                                        type="text" 
-                                        placeholder="1.000.000" 
-                                        value={formattedAmount}
-                                        onChange={(e) => {
-                                            const rawValue = parseFormattedNumber(e.target.value);
-                                            field.onChange(isNaN(rawValue) ? 0 : rawValue);
-                                            setFormattedAmount(formatNumber(e.target.value));
-                                        }}
-                                        className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"
-                                    />
+                                   <div className="flex items-center gap-2">
+                                        <Button
+                                            type="button"
+                                            size="icon"
+                                            variant="outline"
+                                            className="btn-neumorphic-light dark:btn-neumorphic-dark"
+                                            onClick={() => handleAmountChange('decrement')}
+                                            disabled={amountValue <= 1000000}
+                                        >
+                                            <Minus className="h-4 w-4" />
+                                        </Button>
+                                        <div className="flex-1 text-center font-mono text-lg p-2 rounded-md neumorphic-card-inset-light dark:neumorphic-card-inset-dark">
+                                            {formatNumber(amountValue)}
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            size="icon"
+                                            variant="outline"
+                                            className="btn-neumorphic-light dark:btn-neumorphic-dark"
+                                            onClick={() => handleAmountChange('increment')}
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                   </div>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
