@@ -21,8 +21,8 @@ export default function MarqueeSection() {
     const duplicatedItems = [...items, ...items];
 
     return (
-        <div className="relative flex overflow-x-hidden border-y bg-background neumorphic-card-inset-light dark:neumorphic-card-inset-dark">
-            <div className="py-3 animate-marquee whitespace-nowrap flex">
+        <div className="relative flex overflow-x-hidden border-y bg-background neumorphic-card-inset-light dark:neumorphic-card-inset-dark my-4 mx-2 sm:mx-4 rounded-lg">
+            <div className="py-3 marquee whitespace-nowrap flex">
                 {duplicatedItems.map((item, index) => (
                     <div key={`${item.id}-${index}`} className="flex items-center">
                         <span className="mx-8 text-sm font-semibold">{item.text}</span>
