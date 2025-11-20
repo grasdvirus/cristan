@@ -209,7 +209,18 @@
             "password": { "type": "string", "description": "Password set by the partner for their dashboard access." },
             "promoCodeUses": { "type": "number", "description": "Resettable count of promo code uses for rewards." },
             "promoCodeTotalUses": { "type": "number", "description": "Lifetime total uses of the promo code." },
-            "socialLinks": { "type": "array", "items": { "type": "string", "format": "uri" }, "description": "Social media links for partners." },
+            "socialLinks": {
+              "type": "array",
+              "description": "Social media links for partners.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "platform": {"type": "string", "description": "The social media platform (e.g., 'instagram', 'facebook')."},
+                  "username": {"type": "string", "description": "The user's handle or username on the platform."}
+                },
+                "required": ["platform", "username"]
+              }
+            },
             "type": { "type": "string", "description": "Type of submission, e.g., 'Projet' or 'Partenariat'." },
             "status": { "type": "string", "enum": ["en attente", "confirmé", "refusé", "Nouveau", "Vu", "En cours", "Terminé"], "description": "Status of the partnership or project request." },
             "userId": { "type": "string", "description": "The Firebase Auth UID of the user who submitted the request." },

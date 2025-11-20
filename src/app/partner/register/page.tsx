@@ -14,7 +14,7 @@ import { doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, BarChart2, User, Trophy, Copy, Hourglass, LogOut, Gift } from 'lucide-react';
+import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, BarChart2, User, Trophy, Copy, Hourglass, LogOut, Gift, Facebook, Instagram, Linkedin, Twitter, Youtube, Globe } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
@@ -23,6 +23,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 // ========= Dashboard Components =========
@@ -116,15 +117,31 @@ const partnerCodeSchema = z.object({
   code: z.string().min(1, "Le code est requis."),
 });
 
+const socialLinkSchema = z.object({
+  platform: z.string().min(1, 'Veuillez sélectionner une plateforme.'),
+  username: z.string().min(1, 'Le nom d\'utilisateur est requis.'),
+});
+
 const partnerFormSchema = z.object({
   fullName: z.string().min(2, 'Le nom est requis.'),
   phone: z.string().min(8, 'Le numéro de téléphone est requis.'),
-  socialLinks: z.array(z.object({ value: z.string().url('URL invalide.') })).min(1, 'Ajoutez au moins un lien social.'),
+  socialLinks: z.array(socialLinkSchema).min(1, 'Ajoutez au moins un lien social.'),
   promoCode: z.string().min(3, 'Le code doit avoir au moins 3 caractères.').max(15, 'Le code ne doit pas dépasser 15 caractères.'),
 });
 
 type PartnerCodeValues = z.infer<typeof partnerCodeSchema>;
 type PartnerFormValues = z.infer<typeof partnerFormSchema>;
+
+const socialPlatforms = {
+  instagram: { icon: Instagram, baseUrl: 'https://instagram.com/' },
+  facebook: { icon: Facebook, baseUrl: 'https://facebook.com/' },
+  linkedin: { icon: Linkedin, baseUrl: 'https://linkedin.com/in/' },
+  twitter: { icon: Twitter, baseUrl: 'https://twitter.com/' },
+  youtube: { icon: Youtube, baseUrl: 'https://youtube.com/' },
+  website: { icon: Globe, baseUrl: '' },
+};
+type SocialPlatformKey = keyof typeof socialPlatforms;
+
 
 function PartnerCodeForm({ onCodeVerified }: { onCodeVerified: () => void }) {
     const { toast } = useToast();
@@ -204,7 +221,7 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
     defaultValues: {
       fullName: user?.displayName || '',
       phone: '',
-      socialLinks: [{ value: '' }],
+      socialLinks: [{ platform: 'instagram', username: '' }],
       promoCode: '',
     },
   });
@@ -267,36 +284,59 @@ function PartnerApplicationForm({ onFormSubmit, isSubmitting }: { onFormSubmit: 
             <FormLabel>Réseaux Sociaux</FormLabel>
             <div className="space-y-2 mt-2">
             {fields.map((field, index) => (
-                <FormField
-                key={field.id}
-                control={form.control}
-                name={`socialLinks.${index}.value`}
-                render={({ field }) => (
-                    <FormItem>
-                    <div className="flex items-center gap-2">
-                        <FormControl>
-                        <Input placeholder="https://linkedin.com/in/..." {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"/>
-                        </FormControl>
-                        {fields.length > 1 && (
-                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+                <div key={field.id} className="flex items-start gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`socialLinks.${index}.platform`}
+                      render={({ field }) => (
+                          <FormItem className="w-1/3">
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                      <SelectTrigger className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark">
+                                          <SelectValue placeholder="Plateforme" />
+                                      </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                      {Object.entries(socialPlatforms).map(([key, { icon: Icon }]) => (
+                                          <SelectItem key={key} value={key}>
+                                              <div className="flex items-center gap-2">
+                                                  <Icon className="h-4 w-4" />
+                                                  <span className="capitalize">{key}</span>
+                                              </div>
+                                          </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                              </Select>
+                              <FormMessage />
+                          </FormItem>
+                      )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name={`socialLinks.${index}.username`}
+                        render={({ field }) => (
+                            <FormItem className="flex-1">
+                                <FormControl>
+                                    <Input placeholder="Votre nom d'utilisateur" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"/>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
                         )}
-                    </div>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
+                    />
+                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-destructive shrink-0 mt-1">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
             ))}
             </div>
             <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() => append({ value: '' })}
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => append({ platform: 'instagram', username: '' })}
             >
-            <Plus className="mr-2 h-4 w-4" /> Ajouter un lien
+                <Plus className="mr-2 h-4 w-4" /> Ajouter un réseau
             </Button>
         </div>
 
@@ -371,7 +411,7 @@ function PartnerPortalContent() {
           fullName: values.fullName,
           email: user.email,
           phone: values.phone,
-          socialLinks: values.socialLinks.map(link => link.value),
+          socialLinks: values.socialLinks,
           promoCode: values.promoCode,
           type: 'Partenariat',
           userId: user.uid,

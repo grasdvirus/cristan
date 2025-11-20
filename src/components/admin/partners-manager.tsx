@@ -12,15 +12,23 @@ import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Trophy, TrendingUp, Copy, Plus, Minus, Edit2, Trash2, Link as LinkIcon, Phone } from 'lucide-react';
+import { CheckCircle, XCircle, Trophy, TrendingUp, Copy, Plus, Minus, Edit2, Trash2, Phone, Facebook, Instagram, Linkedin, Twitter, Youtube, Globe } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Link from 'next/link';
 
 import type { ContractSubmission } from '@/app/admin/page';
+
+type SocialLink = {
+    platform: string;
+    username: string;
+};
+
+type PartnerSubmission = Omit<ContractSubmission, 'socialLinks'> & {
+    socialLinks?: SocialLink[];
+};
 
 interface PartnersManagerProps {
   submissions?: ContractSubmission[];
@@ -28,12 +36,21 @@ interface PartnersManagerProps {
   searchTerm?: string;
 }
 
+const socialPlatforms: Record<string, { icon: React.FC<any>, baseUrl: string }> = {
+  instagram: { icon: Instagram, baseUrl: 'https://instagram.com/' },
+  facebook: { icon: Facebook, baseUrl: 'https://facebook.com/' },
+  linkedin: { icon: Linkedin, baseUrl: 'https://linkedin.com/in/' },
+  twitter: { icon: Twitter, baseUrl: 'https://twitter.com/' },
+  youtube: { icon: Youtube, baseUrl: 'https://youtube.com/' },
+  website: { icon: Globe, baseUrl: '' },
+};
+
 export function PartnersManager({ submissions, isLoading, searchTerm = '' }: PartnersManagerProps) {
   const { firestore } = useFirebase();
   const { toast } = useToast();
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [incrementDialogOpen, setIncrementDialogOpen] = useState(false);
-  const [selectedPartner, setSelectedPartner] = useState<ContractSubmission | null>(null);
+  const [selectedPartner, setSelectedPartner] = useState<PartnerSubmission | null>(null);
   const [incrementAmount, setIncrementAmount] = useState<number>(1);
   const [editCodeDialogOpen, setEditCodeDialogOpen] = useState(false);
   const [newPromoCode, setNewPromoCode] = useState('');
@@ -42,8 +59,7 @@ export function PartnersManager({ submissions, isLoading, searchTerm = '' }: Par
   const partners = useMemo(() => {
     if (!submissions) return [];
     
-    return submissions
-      .filter((sub) => sub.type === 'Partenariat')
+    return (submissions.filter((sub) => sub.type === 'Partenariat') as PartnerSubmission[])
       .filter((partner) => {
         if (!searchTerm) return true;
         const search = searchTerm.toLowerCase();
@@ -324,12 +340,18 @@ export function PartnersManager({ submissions, isLoading, searchTerm = '' }: Par
                       </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-1">
-                      {partner.socialLinks?.map((link, i) => (
-                          <a key={i} href={link} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
-                            <LinkIcon className="w-3 h-3"/> Lien {i + 1}
-                          </a>
-                      ))}
+                    <div className="flex items-center gap-2">
+                      {partner.socialLinks?.map((link, i) => {
+                          const platform = socialPlatforms[link.platform as keyof typeof socialPlatforms];
+                          if (!platform) return null;
+                          const Icon = platform.icon;
+                          const url = platform.baseUrl ? `${platform.baseUrl}${link.username}` : link.username;
+                          return (
+                            <a key={i} href={url} target="_blank" rel="noopener noreferrer" title={`${link.platform}: ${link.username}`}>
+                               <Icon className="w-4 h-4 text-muted-foreground hover:text-primary"/>
+                            </a>
+                          )
+                      })}
                     </div>
                   </TableCell>
                   <TableCell>
