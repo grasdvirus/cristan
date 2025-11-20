@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Suspense, useState, useEffect, useRef } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -118,13 +118,16 @@ function RewardForm() {
                 }
                 stream.getTracks().forEach(track => track.stop());
             };
-        } catch (error) {
-            console.error('Erreur de capture d\'écran:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Capture annulée ou échouée',
-                description: 'Assurez-vous d\'autoriser la capture d\'écran.',
-            });
+        } catch (err: any) {
+            console.error('Erreur de capture d\'écran:', err);
+             // Don't show an error if the user just cancels the screen share prompt
+            if (err.name !== 'NotAllowedError' && err.name !== 'AbortError') {
+                toast({
+                    variant: 'destructive',
+                    title: 'Capture échouée',
+                    description: 'Assurez-vous d\'autoriser la capture d\'écran dans les paramètres de votre navigateur.',
+                });
+            }
         } finally {
             setIsCapturing(false);
         }
