@@ -21,6 +21,8 @@ import { AuthGuard } from '@/components/auth-guard';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { doc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/components/ui/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const rewardSchema = z.object({
   paymentMethod: z.string().min(1, "Veuillez choisir un mode de paiement."),
@@ -92,23 +94,33 @@ function RewardForm() {
         }
         setIsSubmitting(true);
 
-        try {
-            await addDoc(collection(firestore, 'rewardRequests'), {
-                ...values,
-                userId: user.uid,
-                userName: partnerData.fullName,
-                promoCode: partnerData.promoCode,
-                status: 'en attente',
-                createdAt: serverTimestamp(),
+        const rewardRequestData = {
+            ...values,
+            userId: user.uid,
+            userName: partnerData.fullName,
+            promoCode: partnerData.promoCode,
+            status: 'en attente' as const,
+            createdAt: serverTimestamp(),
+        };
+
+        const rewardCollectionRef = collection(firestore, 'rewardRequests');
+        
+        addDoc(rewardCollectionRef, rewardRequestData)
+            .then(() => {
+                toast({ variant: 'success', title: 'Demande envoyée !', description: 'Votre demande de récompense est en cours de traitement.' });
+                router.push('/partner/register');
+            })
+            .catch(async (serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: rewardCollectionRef.path,
+                    operation: 'create',
+                    requestResourceData: rewardRequestData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsSubmitting(false);
             });
-            toast({ variant: 'success', title: 'Demande envoyée !', description: 'Votre demande de récompense est en cours de traitement.' });
-            router.push('/partner/register');
-        } catch (error) {
-            console.error("Error submitting reward request:", error);
-            toast({ variant: 'destructive', title: 'Erreur', description: "Une erreur s'est produite lors de l'envoi." });
-        } finally {
-            setIsSubmitting(false);
-        }
     }
     
     if (isLoading) {
