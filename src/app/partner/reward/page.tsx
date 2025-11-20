@@ -43,6 +43,7 @@ type PartnerData = {
 // Helper functions for number formatting
 const formatNumber = (value: number | string): string => {
     const num = String(value).replace(/\D/g, '');
+    if (!num) return '';
     return new Intl.NumberFormat('fr-FR').format(Number(num));
 };
 
@@ -56,6 +57,8 @@ function RewardForm() {
     const router = useRouter();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formattedAmount, setFormattedAmount] = useState('1.000.000');
+
 
     const partnerRef = useMemoFirebase(() => {
       if (!user || !firestore) return null;
@@ -73,6 +76,12 @@ function RewardForm() {
     });
     
     const paymentMethod = form.watch('paymentMethod');
+    const amountValue = form.watch('amount');
+
+    useEffect(() => {
+        setFormattedAmount(formatNumber(amountValue));
+    }, [amountValue]);
+
 
     const onSubmit = async (values: RewardFormValues) => {
         if (!firestore || !user || !partnerData) {
@@ -140,10 +149,11 @@ function RewardForm() {
                                    <Input 
                                         type="text" 
                                         placeholder="1.000.000" 
-                                        value={field.value ? formatNumber(field.value) : ''}
+                                        value={formattedAmount}
                                         onChange={(e) => {
                                             const rawValue = parseFormattedNumber(e.target.value);
-                                            field.onChange(rawValue);
+                                            field.onChange(isNaN(rawValue) ? 0 : rawValue);
+                                            setFormattedAmount(formatNumber(e.target.value));
                                         }}
                                         className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"
                                     />
