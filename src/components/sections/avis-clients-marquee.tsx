@@ -27,6 +27,13 @@ const StarRating = ({ rating }: { rating: number }) => (
   </div>
 );
 
+const descriptions = [
+  "Des projets qui inspirent confiance.",
+  "Une qualité de service inégalée.",
+  "La créativité au cœur de chaque design.",
+  "Des résultats qui dépassent les attentes.",
+];
+
 export default function AvisClientsMarquee() {
     const { firestore } = useFirebase();
     const avisQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'avisClients'), orderBy('name')) : null, [firestore]);
@@ -41,9 +48,16 @@ export default function AvisClientsMarquee() {
     return (
         <section className="py-8 sm:py-12 bg-background">
             <div className="container">
-                 <h2 className="text-3xl sm:text-4xl font-bold font-headline mb-8 text-left">
-                    Ce que disent nos clients
+                 <h2 className="text-3xl sm:text-4xl font-bold font-headline mb-2 text-left">
+                    "Nos Clients"
                 </h2>
+                <div className="h-8 relative overflow-hidden mb-8">
+                  <div className="absolute top-0 animate-text-scroll">
+                    {descriptions.map((desc, index) => (
+                      <p key={index} className="text-lg text-muted-foreground mb-8">{desc}</p>
+                    ))}
+                  </div>
+                </div>
             </div>
             <div className="relative flex overflow-x-hidden group">
                  <div className="animate-marquee group-hover:pause flex min-w-full shrink-0 items-center justify-around gap-8">
