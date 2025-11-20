@@ -16,6 +16,12 @@ type Message = {
   sender: 'user' | 'bot';
 };
 
+type GenkitMessage = {
+  role: 'user' | 'model';
+  content: Array<{ text: string }>;
+};
+
+
 export function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     { sender: 'bot', text: 'Bonjour ! Comment puis-je vous aider aujourd\'hui ?' }
@@ -33,7 +39,16 @@ export function Chatbot() {
     setIsLoading(true);
 
     try {
-      const response = await chatWithBot(input);
+      const history: GenkitMessage[] = messages.map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'model',
+        content: [{ text: msg.text }],
+      }));
+
+      const response = await chatWithBot({
+        history: history,
+        message: input,
+      });
+
       const botMessage: Message = { text: response, sender: 'bot' };
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
@@ -47,7 +62,11 @@ export function Chatbot() {
 
   const getInitials = (name?: string | null) => {
     if (!name || name.length === 0) return '?';
-    return name[0].toUpperCase();
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   }
 
   return (

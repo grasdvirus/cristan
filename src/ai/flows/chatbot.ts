@@ -1,14 +1,23 @@
 'use server';
 /**
- * @fileOverview A Genkit flow for a simple Q&A chatbot.
+ * @fileOverview A Genkit flow for a simple Q&A chatbot with history.
  *
- * - chatWithBot - A function that takes a user's query and returns a text response.
+ * - chatWithBot - A function that takes a user's query and conversation history, and returns a text response.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const ChatbotInputSchema = z.string();
+const MessageSchema = z.object({
+  role: z.enum(['user', 'model']),
+  content: z.array(z.object({ text: z.string() })),
+});
+
+const ChatbotInputSchema = z.object({
+  history: z.array(MessageSchema),
+  message: z.string(),
+});
+
 const ChatbotOutputSchema = z.string();
 
 export async function chatWithBot(input: z.infer<typeof ChatbotInputSchema>): Promise<z.infer<typeof ChatbotOutputSchema>> {
@@ -31,7 +40,7 @@ const prompt = ai.definePrompt({
 
   Répondez à la question suivante de l'utilisateur. Soyez bref et allez droit au but.
 
-  Question de l'utilisateur : {{{prompt}}}
+  Question de l'utilisateur : {{{message}}}
   `,
 });
 
@@ -41,8 +50,15 @@ const chatbotFlow = ai.defineFlow(
     inputSchema: ChatbotInputSchema,
     outputSchema: ChatbotOutputSchema,
   },
-  async (query) => {
-    const { output } = await prompt(query);
-    return output || "Désolé, je n'ai pas pu générer de réponse. Veuillez reformuler votre question.";
+  async ({ history, message }) => {
+    const { output } = await ai.generate({
+      model: 'googleai/gemini-2.5-flash',
+      prompt: message,
+      history,
+      // The instruction to be a virtual assistant is now implicitly handled by the context of the conversation history
+      // but you could add a system prompt here if needed:
+      // system: "You are a helpful assistant for the Cristan website..."
+    });
+    return output?.text || "Désolé, je n'ai pas pu générer de réponse. Veuillez reformuler votre question.";
   }
 );
