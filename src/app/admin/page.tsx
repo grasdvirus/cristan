@@ -27,6 +27,7 @@ import { convertToEmbedUrl } from '@/lib/utils';
 import { AuthGuard } from '@/components/auth-guard';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/loading-spinner';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 // Define types based on backend.json
 export type Slide = {
@@ -641,15 +642,18 @@ function AdminPageContent() {
 
 
                 <Tabs defaultValue="slides" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 mb-8">
-                        <TabsTrigger value="slides">Slides</TabsTrigger>
-                        <TabsTrigger value="internet">Internet</TabsTrigger>
-                        <TabsTrigger value="tv">TV</TabsTrigger>
-                        <TabsTrigger value="games">Gamme</TabsTrigger>
-                        <TabsTrigger value="submissions">Demandes</TabsTrigger>
-                        <TabsTrigger value="custom_projects">Sur Mesure</TabsTrigger>
-                        <TabsTrigger value="partners">Partenaires</TabsTrigger>
-                    </TabsList>
+                    <ScrollArea className="w-full whitespace-nowrap">
+                        <TabsList className="inline-flex h-auto p-1 mb-8">
+                            <TabsTrigger value="slides">Slides</TabsTrigger>
+                            <TabsTrigger value="internet">Internet</TabsTrigger>
+                            <TabsTrigger value="tv">TV</TabsTrigger>
+                            <TabsTrigger value="games">Gamme</TabsTrigger>
+                            <TabsTrigger value="submissions">Demandes</TabsTrigger>
+                            <TabsTrigger value="custom_projects">Sur Mesure</TabsTrigger>
+                            <TabsTrigger value="partners">Partenaires</TabsTrigger>
+                        </TabsList>
+                        <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
                     
                     <TabsContent value="slides">
                         <SlidesManager />
