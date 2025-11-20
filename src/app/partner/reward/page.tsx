@@ -25,7 +25,11 @@ import { useToast } from '@/components/ui/use-toast';
 const rewardSchema = z.object({
   paymentMethod: z.string().min(1, "Veuillez choisir un mode de paiement."),
   paymentDetails: z.string().min(8, "Veuillez fournir les détails de paiement."),
-  amount: z.coerce.number().min(1, "Le montant doit être supérieur à 0."),
+  amount: z.coerce.number()
+    .min(1000000, "Le montant minimum est de 1 000 000 FCFA.")
+    .refine((value) => value % 1000000 === 0, {
+      message: "Le montant doit être un multiple de 1 000 000 FCFA.",
+    }),
 });
 
 type RewardFormValues = z.infer<typeof rewardSchema>;
@@ -53,7 +57,7 @@ function RewardForm() {
         defaultValues: {
             paymentMethod: '',
             paymentDetails: '',
-            amount: 0,
+            amount: 1000000,
         },
     });
     
@@ -122,7 +126,7 @@ function RewardForm() {
                             <FormItem>
                                 <FormLabel>Montant demandé (FCFA)</FormLabel>
                                 <FormControl>
-                                    <Input type="number" placeholder="5000" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"/>
+                                    <Input type="number" placeholder="1000000" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"/>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
