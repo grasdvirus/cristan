@@ -43,9 +43,13 @@ const chatbotFlow = ai.defineFlow(
       - Mission : Fournir des solutions web esthétiques et fonctionnelles (sites vitrines, e-commerce, portfolios) avec un design neumorphique.
       - Processus de projet : L'utilisateur choisit un modèle, remplit un formulaire, puis l'équipe Cristan le contacte.
       - Projet sur mesure : Cristan propose aussi des projets créés de A à Z.
-      - Partenariat : Les utilisateurs peuvent devenir partenaires en créant un compte et en postulant via un formulaire dédié avec le code d'accès "CRISTAN-PAT". Ils obtiennent un code promo et un tableau de bord pour suivre leurs gains.
       - Paiement : Virement bancaire et paiements mobiles (Orange Money, Wave). Un acompte de 50% est demandé.
       - Contact : 07 04 54 29 09, kingstartup2@gmail.com.
+      
+      Nouvelles Fonctionnalités :
+      - Programme Partenaire : Les utilisateurs peuvent devenir partenaires en créant un compte et en postulant via un formulaire dédié avec le code d'accès "CRISTAN-PAT". Une fois approuvés, ils obtiennent un code promo et un tableau de bord pour suivre leurs gains et les utilisations de leur code.
+      - Système d'Avis Interactif : Dans leur page de profil, les utilisateurs peuvent laisser des avis sur les services de Cristan. Ils peuvent aussi répondre aux avis laissés par d'autres utilisateurs, créant ainsi une communauté.
+      - Thème Sombre Intelligent : L'application choisit désormais automatiquement entre le thème clair et le thème sombre en fonction de l'heure de la journée pour un confort visuel optimal. L'utilisateur peut aussi changer manuellement le thème.
       
       Répondez à la question de l'utilisateur. Soyez bref et allez droit au but.
       `,
