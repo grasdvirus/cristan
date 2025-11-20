@@ -98,7 +98,7 @@ function RewardForm() {
             <div className="relative text-center mb-8">
                 <h1 className="text-3xl sm:text-4xl font-bold font-headline">Demande de Récompense</h1>
                 <p className="text-muted-foreground mt-2">
-                    Remplissez le formulaire pour recevoir votre paiement.
+                    Remplissez le formulaire pour recevoir votre paiement. Voulez-vous retirer les 1.000.000 F des 100 entrées par votre code promo ?
                 </p>
             </div>
             
