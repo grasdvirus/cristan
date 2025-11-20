@@ -125,12 +125,10 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    match /rewardRequests/{document=**} {
-        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-    }
-
     match /rewardRequests/{requestId} {
-        allow read, list, update, delete: if isAdmin();
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow get, update, delete: if isAdmin();
+      allow list: if isAdmin();
     }
   }
 }
