@@ -34,7 +34,6 @@ const chatbotFlow = ai.defineFlow(
     
     // The history and the new message are passed to ai.generate
     const response = await ai.generate({
-      model: 'googleai/gemini-2.5-flash',
       history: history,
       prompt: message,
       system: `Vous êtes un assistant virtuel pour le site "Cristan". Votre rôle est de répondre aux questions des utilisateurs de manière concise, amicale et professionnelle, en français uniquement.
