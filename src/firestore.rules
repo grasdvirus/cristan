@@ -124,7 +124,13 @@ service cloud.firestore {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();
     }
+
+    match /rewardRequests/{document=**} {
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /rewardRequests/{requestId} {
+        allow read, list, update, delete: if isAdmin();
+    }
   }
 }
-
-    
