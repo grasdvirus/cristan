@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { ArrowLeft, ExternalLink, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
+import { convertToEmbedUrl } from '@/lib/utils';
 
 type NewsItem = {
     id: string;
@@ -95,7 +96,7 @@ export default function NewsPage() {
                                             <Image src={item.mediaUrl} alt={item.title} fill className="object-cover"/>
                                         ) : (
                                             <iframe
-                                                src={item.mediaUrl}
+                                                src={convertToEmbedUrl(item.mediaUrl)}
                                                 title={item.title}
                                                 frameBorder="0"
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
