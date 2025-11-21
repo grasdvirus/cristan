@@ -8,6 +8,7 @@ import { NeumorphicCard } from '../neumorphic-card';
 import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
+import { getYoutubeThumbnailUrl } from '@/lib/utils';
 
 interface ImageUploadProps {
   value: string;
@@ -69,6 +70,9 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
     e.stopPropagation();
     onChange('');
   };
+  
+  const displayUrl = getYoutubeThumbnailUrl(value) || value;
+  const isYoutube = value.includes('youtube.com') || value.includes('youtu.be');
 
   return (
     <div>
@@ -78,17 +82,18 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
         className={cn(
           'w-full h-48 flex items-center justify-center text-center border-2 border-dashed border-muted-foreground/30 transition-colors cursor-pointer',
           isDragActive && 'border-primary',
-          (disabled || isUploading) && 'cursor-not-allowed opacity-50'
+          (disabled || isUploading) && 'cursor-not-allowed opacity-50',
+          isYoutube && 'pointer-events-none'
         )}
       >
         <input {...getInputProps()} />
         {value && !isUploading ? (
           <div className="relative w-full h-full">
-            <Image src={value} alt="Aperçu de l'image" layout="fill" className="object-contain rounded-md" />
+            <Image src={displayUrl} alt="Aperçu" layout="fill" className="object-contain rounded-md" />
             <button
               type="button"
               onClick={handleRemove}
-              className="absolute top-1 right-1 bg-background/50 rounded-full p-1 text-destructive hover:bg-background"
+              className="absolute top-1 right-1 bg-background/50 rounded-full p-1 text-destructive hover:bg-background z-10"
             >
               <X className="w-4 h-4" />
             </button>
@@ -106,6 +111,9 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
           </div>
         )}
       </NeumorphicCard>
+      {isYoutube && (
+          <p className="text-xs text-muted-foreground mt-1">Aperçu généré depuis l'URL YouTube. Pour changer l'image, supprimez d'abord l'URL.</p>
+      )}
     </div>
   );
 }
