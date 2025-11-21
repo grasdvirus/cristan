@@ -18,6 +18,7 @@ import type { NewsItem } from '@/app/admin/page';
 import { ImageUpload } from './image-upload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { getYoutubeThumbnailUrl } from '@/lib/utils';
+import { useEffect } from 'react';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Le titre est requis.'),
@@ -50,16 +51,33 @@ export function NewsForm({ initialData, onSubmit, isSubmitting }: NewsFormProps)
   });
 
   const mediaType = form.watch('mediaType');
+  const mediaUrlValue = form.watch('mediaUrl');
+
+  useEffect(() => {
+    if (mediaType === 'video') {
+        const thumbnailUrl = getYoutubeThumbnailUrl(mediaUrlValue);
+        if (thumbnailUrl) {
+            form.setValue('mediaUrl', thumbnailUrl, { shouldValidate: true });
+        }
+    }
+  }, [mediaType, mediaUrlValue, form]);
 
   const handleFormSubmit = (values: NewsFormValues) => {
     let submissionValues = { ...values };
+    
     if (values.mediaType === 'video') {
-      submissionValues.videoUrl = values.mediaUrl;
-      const thumbnailUrl = getYoutubeThumbnailUrl(values.mediaUrl);
+      // The videoUrl should be the original youtube link. The mediaUrl is now the thumbnail.
+      // But if the user changed the URL, `mediaUrlValue` is the new video URL.
+      const thumbnailUrl = getYoutubeThumbnailUrl(mediaUrlValue);
       if (thumbnailUrl) {
-        submissionValues.mediaUrl = thumbnailUrl;
+        submissionValues.videoUrl = mediaUrlValue; // The raw youtube URL
+        submissionValues.mediaUrl = thumbnailUrl; // The thumbnail URL
+      } else {
+         // It might be that the initialData already has a valid thumbnail
+         submissionValues.videoUrl = values.mediaUrl;
       }
     } else {
+        // If it's an image, clear the videoUrl
         submissionValues.videoUrl = '';
     }
     onSubmit(submissionValues);
