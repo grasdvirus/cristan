@@ -17,12 +17,14 @@ import { Textarea } from '@/components/ui/textarea';
 import type { NewsItem } from '@/app/admin/page';
 import { ImageUpload } from './image-upload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { getYoutubeThumbnailUrl } from '@/lib/utils';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Le titre est requis.'),
   description: z.string().min(1, 'La description est requise.'),
   mediaType: z.enum(['image', 'video'], { required_error: 'Le type de média est requis.' }),
   mediaUrl: z.string().min(1, "L'URL du média ou l'image est requise."),
+  videoUrl: z.string().optional(),
   externalLink: z.string().url('URL invalide').optional().or(z.literal('')),
 });
 
@@ -42,15 +44,30 @@ export function NewsForm({ initialData, onSubmit, isSubmitting }: NewsFormProps)
       description: '',
       mediaType: 'image',
       mediaUrl: '',
+      videoUrl: '',
       externalLink: '',
     },
   });
 
   const mediaType = form.watch('mediaType');
 
+  const handleFormSubmit = (values: NewsFormValues) => {
+    let submissionValues = { ...values };
+    if (values.mediaType === 'video') {
+      submissionValues.videoUrl = values.mediaUrl;
+      const thumbnailUrl = getYoutubeThumbnailUrl(values.mediaUrl);
+      if (thumbnailUrl) {
+        submissionValues.mediaUrl = thumbnailUrl;
+      }
+    } else {
+        submissionValues.videoUrl = '';
+    }
+    onSubmit(submissionValues);
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
         <FormField
           control={form.control}
           name="title"

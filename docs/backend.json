@@ -237,7 +237,8 @@
         "id": { "type": "string", "description": "Unique identifier for the news item." },
         "title": { "type": "string", "description": "The title of the news item." },
         "description": { "type": "string", "description": "The main content/body of the news item." },
-        "mediaUrl": { "type": "string", "format": "uri", "description": "URL for the associated image or video." },
+        "mediaUrl": { "type": "string", "format": "uri", "description": "URL for the associated image or video thumbnail." },
+        "videoUrl": { "type": "string", "format": "uri", "description": "URL for the video if mediaType is video." },
         "mediaType": { "type": "string", "enum": ["image", "video"], "description": "Type of the media." },
         "externalLink": { "type": "string", "format": "uri", "description": "Optional external link for more information." },
         "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the news item was published." }

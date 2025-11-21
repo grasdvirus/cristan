@@ -79,6 +79,7 @@ export type NewsItem = {
     description: string;
     mediaUrl: string;
     mediaType: 'image' | 'video';
+    videoUrl?: string;
     externalLink?: string;
     createdAt: { seconds: number, nanoseconds: number };
 };
@@ -112,7 +113,7 @@ export type ContractSubmission = {
     password?: string;
     promoCodeUses?: number;
     promoCodeTotalUses?: number;
-    socialLinks?: string[];
+    socialLinks?: { platform: string; username: string }[];
     type?: string;
     status: 'en attente' | 'confirmé' | 'refusé' | 'Nouveau' | 'Vu' | 'En cours' | 'Terminé';
     userId: string;
@@ -640,7 +641,6 @@ function NewsManager() {
         setIsSubmitting(true);
         const dataToSave = {
             ...values,
-            mediaUrl: values.mediaType === 'video' ? convertToEmbedUrl(values.mediaUrl) : values.mediaUrl,
             createdAt: editingNews?.createdAt || new Date(),
         };
 

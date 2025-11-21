@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
-import { ArrowLeft, ExternalLink, PlayCircle } from 'lucide-react';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 import { convertToEmbedUrl } from '@/lib/utils';
@@ -19,6 +19,7 @@ type NewsItem = {
     description: string;
     mediaUrl: string;
     mediaType: 'image' | 'video';
+    videoUrl?: string; // Ajout pour l'URL de la vidéo
     externalLink?: string;
     createdAt: Timestamp;
 };
@@ -51,7 +52,6 @@ export default function NewsPage() {
     
     useEffect(() => {
         if (newsItems && newsItems.length > 0) {
-            // When the user visits the page, store the timestamp of the latest news item.
             const latestNewsTimestamp = newsItems[0].createdAt.seconds.toString();
             localStorage.setItem('lastSeenNewsTimestamp', latestNewsTimestamp);
         }
@@ -92,11 +92,12 @@ export default function NewsPage() {
                              newsItems.map(item => (
                                 <NeumorphicCard key={item.id} className="overflow-hidden p-0 sm:p-2">
                                     <div className="relative aspect-video bg-muted neumorphic-card-inset-light dark:neumorphic-card-inset-dark sm:rounded-xl overflow-hidden">
-                                        {item.mediaType === 'image' ? (
+                                        {item.mediaType === 'image' && (
                                             <Image src={item.mediaUrl} alt={item.title} fill className="object-cover"/>
-                                        ) : (
+                                        )}
+                                        {item.mediaType === 'video' && item.videoUrl && (
                                             <iframe
-                                                src={convertToEmbedUrl(item.mediaUrl)}
+                                                src={convertToEmbedUrl(item.videoUrl)}
                                                 title={item.title}
                                                 frameBorder="0"
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
