@@ -1,15 +1,13 @@
-
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import React, { useState } from 'react';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
 } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
-import React from 'react';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { CardTitle } from '../ui/card';
@@ -18,6 +16,7 @@ import { collection, query } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '../ui/skeleton';
 import { Button } from '../ui/button';
+import { convertToEmbedUrl } from '@/lib/utils';
 
 type Video = {
     id: string;
@@ -26,7 +25,67 @@ type Video = {
     views: string;
     thumbnailUrl: string;
     thumbnailHint: string;
+    videoUrl: string;
 };
+
+function VideoCard({ video }: { video: Video }) {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const embedUrl = isPlaying ? `${convertToEmbedUrl(video.videoUrl)}?autoplay=1&modestbranding=1&controls=1&rel=0&playsinline=1` : '';
+
+    return (
+        <NeumorphicCard className="group overflow-hidden flex flex-col h-full p-0 transition-all duration-300 hover:-translate-y-1">
+            <div className="relative overflow-hidden aspect-video">
+                {isPlaying ? (
+                     <iframe
+                        src={embedUrl}
+                        title={video.title}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        className="w-full h-full"
+                    ></iframe>
+                ) : (
+                    <>
+                    {video.thumbnailUrl && (video.thumbnailUrl.startsWith('http') || video.thumbnailUrl.startsWith('/')) ? (
+                        <Image
+                            src={video.thumbnailUrl}
+                            alt={video.title}
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            data-ai-hint={video.thumbnailHint}
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                            <span className="text-sm text-muted-foreground">Pas de miniature</span>
+                        </div>
+                    )}
+                    <div 
+                        className="absolute inset-0 bg-black/30 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        onClick={() => setIsPlaying(true)}
+                    >
+                        <PlayCircle className="w-16 h-16 text-white" />
+                    </div>
+                    </>
+                )}
+            </div>
+            <div className="p-6 flex flex-col flex-grow">
+                <CardTitle className="font-headline text-xl mb-3 leading-tight">
+                    {video.title}
+                </CardTitle>
+                <div className="flex items-center text-sm text-muted-foreground mt-auto gap-4">
+                    <div className='flex items-center gap-2'>
+                        <Calendar className='w-4 h-4'/>
+                        <span>{video.uploadDate}</span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                        <Eye className='w-4 h-4'/>
+                        <span>{video.views}</span>
+                    </div>
+                </div>
+            </div>
+        </NeumorphicCard>
+    )
+}
 
 function VideoGridSkeleton() {
     return (
@@ -123,48 +182,11 @@ export default function VideosGrid() {
 
     return (
         <section id="videos" className="w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {videos.map((video) => (
-                <Link href={`/videos/${video.id}`} key={video.id} className="group">
-                    <NeumorphicCard className="group overflow-hidden flex flex-col h-full p-0 transition-all duration-300 hover:-translate-y-1">
-                        <div className="relative overflow-hidden">
-                        {video.thumbnailUrl && (video.thumbnailUrl.startsWith('http') || video.thumbnailUrl.startsWith('/')) ? (
-                            <Image
-                                src={video.thumbnailUrl}
-                                alt={video.title}
-                                width={500}
-                                height={350}
-                                className="w-full h-52 object-cover transition-transform duration-300 group-hover:scale-105"
-                                data-ai-hint={video.thumbnailHint}
-                            />
-                        ) : (
-                            <div className="w-full h-52 bg-muted flex items-center justify-center">
-                                <span className="text-sm text-muted-foreground">Pas de miniature</span>
-                            </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <PlayCircle className="w-16 h-16 text-white" />
-                        </div>
-                        </div>
-                        <div className="p-6 flex flex-col flex-grow">
-                            <CardTitle className="font-headline text-xl mb-3 leading-tight">
-                                {video.title}
-                            </CardTitle>
-                            <div className="flex items-center text-sm text-muted-foreground mt-auto gap-4">
-                                <div className='flex items-center gap-2'>
-                                    <Calendar className='w-4 h-4'/>
-                                    <span>{video.uploadDate}</span>
-                                </div>
-                                <div className='flex items-center gap-2'>
-                                    <Eye className='w-4 h-4'/>
-                                    <span>{video.views}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </NeumorphicCard>
-                </Link>
-            ))}
-        </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {videos.map((video) => (
+                    <VideoCard key={video.id} video={video} />
+                ))}
+            </div>
         </section>
     );
 }
