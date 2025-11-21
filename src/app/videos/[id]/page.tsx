@@ -122,14 +122,10 @@ export default function VideoDetailsPage() {
                         src={embedUrl}
                         title={video.title}
                         frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowFullScreen
                         className="w-full h-full"
                     ></iframe>
-                    {/* Overlay to block clicks on the top part (title) of the video */}
-                    <div className="absolute top-0 left-0 right-0 h-[50px]"></div>
-                    {/* Overlay to block clicks on the bottom right (youtube logo) of the video */}
-                    <div className="absolute bottom-0 right-0 w-[100px] h-[40px]"></div>
                   </div>
               ) : (
                 <>

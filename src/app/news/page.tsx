@@ -99,7 +99,7 @@ export default function NewsPage() {
                                                 src={convertToEmbedUrl(item.mediaUrl)}
                                                 title={item.title}
                                                 frameBorder="0"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                                 allowFullScreen
                                                 className="w-full h-full"
                                             ></iframe>
