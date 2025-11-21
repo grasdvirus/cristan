@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
@@ -48,7 +49,7 @@ export default function AvisClientsMarquee() {
     return (
         <section className="py-8 sm:py-12 bg-background">
             <div className="container">
-                 <h2 className="text-3xl sm:text-4xl font-bold font-headline mb-2 text-left">
+                 <h2 className="text-2xl sm:text-3xl font-bold font-headline mb-2 text-left">
                     "Nos Clients"
                 </h2>
                 <div className="h-8 relative overflow-hidden mb-8">
