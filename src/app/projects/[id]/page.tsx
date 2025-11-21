@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -26,12 +25,13 @@ export type Project = {
 };
 
 export default function ProjectDetailsPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params.id as string;
   const { firestore } = useFirebase();
 
   const projectRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
-    return doc(firestore, 'projects', id as string);
+    return doc(firestore, 'projects', id);
   }, [firestore, id]);
 
   const { data: project, isLoading } = useDoc<Project>(projectRef);

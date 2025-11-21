@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
@@ -26,7 +25,8 @@ export type Video = {
 
 
 export default function VideoDetailsPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
   const { firestore } = useFirebase();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -34,7 +34,7 @@ export default function VideoDetailsPage() {
 
   const videoRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
-    return doc(firestore, 'videos', id as string);
+    return doc(firestore, 'videos', id);
   }, [firestore, id]);
   const { data: video, isLoading: isVideoLoading } = useDoc<Video>(videoRef);
 
