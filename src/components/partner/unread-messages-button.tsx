@@ -46,7 +46,7 @@ export function UnreadMessagesButton() {
       <Link href="/partner/messages">
         <Mail className="mr-2 h-4 w-4" />
         {unreadCount > 0
-          ? `${unreadCount} message${unreadCount > 1 ? 's' : ''} non lu${unreadCount > 1 ? 's' : ''}`
+          ? `+${unreadCount} message${unreadCount > 1 ? 's' : ''} non lu${unreadCount > 1 ? 's' : ''}`
           : 'Boîte de réception'}
         {unreadCount > 0 && (
           <span className="relative flex h-3 w-3 ml-2">
