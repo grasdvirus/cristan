@@ -23,6 +23,7 @@ import { GameForm, type GameFormValues } from '@/components/admin/game-form';
 import { NewsForm, type NewsFormValues } from '@/components/admin/news-form';
 import { MarqueeForm, type MarqueeFormValues } from '@/components/admin/marquee-form';
 import { AvisClientForm, type AvisClientFormValues } from '@/components/admin/avis-client-form';
+import { PartnerMessageForm, type PartnerMessageFormValues } from '@/components/admin/partner-message-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
 import { PartnersManager } from '@/components/admin/partners-manager';
 import { CustomProjectsManager } from '@/components/admin/custom-projects-manager';
@@ -96,6 +97,14 @@ export type AvisClient = {
     rating: number;
     avatarUrl?: string;
 };
+
+export type PartnerMessage = {
+    id: string;
+    title: string;
+    content: string;
+    createdAt: { seconds: number, nanoseconds: number };
+};
+
 
 export type ContractSubmission = {
     id: string;
@@ -975,6 +984,125 @@ function AvisClientsManager() {
     );
 }
 
+function PartnerMessagesManager() {
+    const { firestore } = useFirebase();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingMessage, setEditingMessage] = useState<PartnerMessage | null>(null);
+
+    const messagesQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'partnerMessages'));
+    }, [firestore]);
+
+    const { data: messages, isLoading } = useCollection<PartnerMessage>(messagesQuery);
+
+    const handleFormSubmit = async (values: PartnerMessageFormValues) => {
+        if (!firestore) return;
+        setIsSubmitting(true);
+        const dataToSave = {
+            ...values,
+            createdAt: editingMessage?.createdAt || new Date(),
+        };
+
+        try {
+            if (editingMessage) {
+                await updateDoc(doc(firestore, 'partnerMessages', editingMessage.id), dataToSave);
+            } else {
+                await addDoc(collection(firestore, 'partnerMessages'), dataToSave);
+            }
+            toast({ variant: 'success', title: `Message ${editingMessage ? 'modifié' : 'ajouté'} avec succès.` });
+            setDialogOpen(false);
+            setEditingMessage(null);
+        } catch (error) {
+            console.error("Error saving message: ", error);
+            toast({ title: 'Erreur', description: `Impossible de sauvegarder le message.`, variant: 'destructive' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!firestore) return;
+        try {
+            await deleteDoc(doc(firestore, 'partnerMessages', id));
+            toast({ variant: 'success', title: 'Message supprimé.' });
+        } catch (error) {
+            console.error("Error deleting message: ", error);
+            toast({ title: 'Erreur', description: 'Impossible de supprimer le message.', variant: 'destructive' });
+        }
+    };
+
+    const openEditDialog = (message: PartnerMessage) => {
+        setEditingMessage(message);
+        setDialogOpen(true);
+    };
+
+    const openAddDialog = () => {
+        setEditingMessage(null);
+        setDialogOpen(true);
+    };
+
+    return (
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Messages aux Partenaires</h2>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
+                            <Plus className="mr-2 h-4 w-4" /> Ajouter un message
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{editingMessage ? 'Modifier' : 'Ajouter'} un message</DialogTitle>
+                        </DialogHeader>
+                        <PartnerMessageForm
+                            initialData={editingMessage}
+                            onSubmit={handleFormSubmit}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </div>
+            {isLoading ? <Skeleton className="h-40 w-full" /> : (
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Titre</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {messages?.map((item) => (
+                        <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.title}</TableCell>
+                            <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}><Edit className="h-4 w-4" /></Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
+                                        <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDelete(item.id)}>Supprimer</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+            )}
+        </NeumorphicCard>
+    );
+}
+
 function AdminPageContent() {
     const { firestore, user, isUserLoading } = useFirebase();
     const [searchTerm, setSearchTerm] = useState('');
@@ -1033,6 +1161,7 @@ function AdminPageContent() {
                             <TabsTrigger value="submissions">Demandes</TabsTrigger>
                             <TabsTrigger value="custom_projects">Sur Mesure</TabsTrigger>
                             <TabsTrigger value="partners">Partenaires</TabsTrigger>
+                            <TabsTrigger value="partner_messages">Messages Partenaires</TabsTrigger>
                         </TabsList>
                         <ScrollBar orientation="horizontal" />
                     </ScrollArea>
@@ -1087,6 +1216,9 @@ function AdminPageContent() {
                             isLoading={isSubmissionsLoading}
                             searchTerm={searchTerm} 
                         />
+                    </TabsContent>
+                     <TabsContent value="partner_messages">
+                        <PartnerMessagesManager />
                     </TabsContent>
                 </Tabs>
             </NeumorphicCard>

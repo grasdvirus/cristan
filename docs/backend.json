@@ -275,6 +275,19 @@
         "avatarUrl": { "type": "string", "format": "uri", "description": "URL de l'avatar du client (optionnel)." }
       },
       "required": ["id", "name", "message", "rating"]
+    },
+     "PartnerMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PartnerMessage",
+      "type": "object",
+      "description": "Represents a message or announcement for partners.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the message." },
+        "title": { "type": "string", "description": "The title of the message." },
+        "content": { "type": "string", "description": "The content of the message." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the message was published." }
+      },
+      "required": ["id", "title", "content", "createdAt"]
     }
   },
   "auth": {
@@ -418,6 +431,22 @@
             {
               "name": "avisClientId",
               "description": "The unique identifier for the client testimonial."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/partnerMessages/{messageId}",
+        "definition": {
+          "entityName": "PartnerMessage",
+          "schema": {
+            "$ref": "#/backend/entities/PartnerMessage"
+          },
+          "description": "Stores messages for partners. Readable by any authenticated user, writable only by admin.",
+          "params": [
+            {
+              "name": "messageId",
+              "description": "The unique identifier for the partner message."
             }
           ]
         }

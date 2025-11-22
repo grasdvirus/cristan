@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, Suspense, useEffect } from 'react';
@@ -8,13 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
-import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { useFirebase, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, setDoc, serverTimestamp, deleteDoc, collection, query, orderBy, Timestamp } from 'firebase/firestore';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, BarChart2, User, Trophy, Copy, Hourglass, LogOut, Gift, Facebook, Instagram, Linkedin, Twitter, Youtube, Globe } from 'lucide-react';
+import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, BarChart2, User, Trophy, Copy, Hourglass, Gift, Facebook, Instagram, Linkedin, Twitter, Youtube, Globe, MessageSquare, Newspaper } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
@@ -24,7 +23,9 @@ import { cn } from '@/lib/utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Separator } from '@/components/ui/separator';
 
 // ========= Dashboard Components =========
 
@@ -47,9 +48,54 @@ type PartnerData = {
     status: 'en attente' | 'confirmé' | 'refusé';
 };
 
+type PartnerMessage = {
+    id: string;
+    title: string;
+    content: string;
+    createdAt: Timestamp;
+};
+
+function PartnerMessages() {
+    const { firestore } = useFirebase();
+    const messagesQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'partnerMessages'), orderBy('createdAt', 'desc'));
+    }, [firestore]);
+    const { data: messages, isLoading } = useCollection<PartnerMessage>(messagesQuery);
+
+    const formatRelativeTime = (timestamp: Timestamp | null) => {
+        if (!timestamp) return 'à l\'instant';
+        return formatDistanceToNow(timestamp.toDate(), { addSuffix: true, locale: fr });
+    }
+
+    return (
+        <NeumorphicCard className='mt-8'>
+            <div className="flex items-center gap-4 mb-4">
+                <Newspaper className="w-8 h-8 text-primary"/>
+                <h2 className="text-2xl font-bold font-headline">Messages de l'équipe</h2>
+            </div>
+            {isLoading ? <p>Chargement des messages...</p> : (
+            <div className="space-y-6">
+                {messages && messages.length > 0 ? messages.map(msg => (
+                    <div key={msg.id}>
+                        <NeumorphicCard inset className="p-4">
+                           <h3 className="font-semibold">{msg.title}</h3>
+                           <p className="text-xs text-muted-foreground mb-2">{formatRelativeTime(msg.createdAt)}</p>
+                           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{msg.content}</p>
+                        </NeumorphicCard>
+                    </div>
+                )) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">Aucun message pour le moment.</p>
+                )}
+            </div>
+            )}
+        </NeumorphicCard>
+    )
+}
+
+
 function PartnerDashboardContent({ partnerData, userId }: { partnerData: PartnerData, userId: string }) {
     const { toast } = useToast();
-    const { firestore } = useFirebase();
     const [motivation, setMotivation] = useState({ text: "", color: ""});
     
     useEffect(() => {
@@ -62,8 +108,8 @@ function PartnerDashboardContent({ partnerData, userId }: { partnerData: Partner
     };
     
     const uses = partnerData.promoCodeUses || 0;
-    const progress = Math.min((uses / REWARD_GOAL) * 100, 100);
     const isGoalReached = uses >= REWARD_GOAL;
+    const progress = isGoalReached ? 100 : (uses / REWARD_GOAL) * 100;
 
     return (
         <div className="max-w-4xl mx-auto w-full">
@@ -108,6 +154,8 @@ function PartnerDashboardContent({ partnerData, userId }: { partnerData: Partner
                     <p className={cn("font-semibold", isGoalReached ? "text-green-500" : motivation.color)}>{isGoalReached ? "Objectif atteint ! 🎉" : motivation.text}</p>
                 </div>
             </NeumorphicCard>
+
+            <PartnerMessages />
         </div>
     );
 }
