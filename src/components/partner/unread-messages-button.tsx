@@ -42,7 +42,7 @@ export function UnreadMessagesButton() {
   }
 
   return (
-    <Button asChild variant="outline" className="flex-1 btn-neumorphic-light dark:btn-neumorphic-dark" onClick={handlePress}>
+    <Button asChild variant="secondary" className="flex-1 btn-neumorphic-light dark:btn-neumorphic-dark" onClick={handlePress}>
       <Link href="/partner/messages">
         <Mail className="mr-2 h-4 w-4" />
         {unreadCount > 0
