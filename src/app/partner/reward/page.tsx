@@ -29,9 +29,9 @@ const rewardSchema = z.object({
   paymentMethod: z.string().min(1, "Veuillez choisir un mode de paiement."),
   paymentDetails: z.string().min(8, "Veuillez fournir les détails de paiement."),
   amount: z.coerce.number()
-    .min(1000000, "Le montant minimum est de 1 000 000 FCFA.")
-    .refine((value) => value % 1000000 === 0, {
-      message: "Le montant doit être un multiple de 1 000 000 FCFA.",
+    .min(200000, "Le montant minimum est de 200 000 FCFA.")
+    .refine((value) => value % 200000 === 0, {
+      message: "Le montant doit être un multiple de 200 000 FCFA.",
     }),
 });
 
@@ -64,7 +64,7 @@ function RewardForm({ form }: { form: ReturnType<typeof useForm<RewardFormValues
 
     const handleAmountChange = (increment: boolean) => {
         const currentAmount = form.getValues('amount');
-        const newAmount = increment ? currentAmount + 1000000 : Math.max(1000000, currentAmount - 1000000);
+        const newAmount = increment ? currentAmount + 200000 : Math.max(200000, currentAmount - 200000);
         form.setValue('amount', newAmount, { shouldValidate: true });
     };
 
@@ -196,7 +196,7 @@ function RewardPageContent() {
     const defaultValues = {
         paymentMethod: '',
         paymentDetails: '',
-        amount: 1000000,
+        amount: 200000,
     };
     
     const form = useForm<z.infer<typeof rewardSchema>>({
