@@ -102,8 +102,8 @@ export default function Home() {
                      <TabsContent value="sites">
                         <div className="flex justify-between items-center mb-8 px-4 sm:px-0">
                            <div className="w-44 text-left">
-                               <Button asChild className="btn-neumorphic-light dark:btn-neumorphic-dark rounded-full p-2 h-auto w-auto">
-                                   <Link href="/internet" className="flex items-center gap-1">
+                               <Button asChild variant="ghost" className="rounded-full p-2 h-auto w-auto">
+                                   <Link href="/internet" className="flex items-center">
                                        <Plus className="h-5 w-5 stroke-[3]"/>
                                        <span className="font-bold text-lg">{allProjects?.length || 0}</span>
                                    </Link>
