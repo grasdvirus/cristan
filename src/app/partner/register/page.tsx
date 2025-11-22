@@ -8,12 +8,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { useFirebase, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, setDoc, serverTimestamp, deleteDoc, collection, query, orderBy, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, deleteDoc, collection, query, orderBy, Timestamp, limit } from 'firebase/firestore';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, BarChart2, User, Trophy, Copy, Hourglass, Gift, Facebook, Instagram, Linkedin, Twitter, Youtube, Globe, MessageSquare, Newspaper } from 'lucide-react';
+import { ArrowLeft, KeyRound, Plus, Trash2, Send, Loader2, PartyPopper, BarChart2, User, Trophy, Copy, Hourglass, Gift, Facebook, Instagram, Linkedin, Twitter, Youtube, Globe, MessageSquare, Newspaper, CornerUpRight } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { LoadingSpinner } from '@/components/loading-spinner';
@@ -59,7 +59,7 @@ function PartnerMessages() {
     const { firestore } = useFirebase();
     const messagesQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return query(collection(firestore, 'partnerMessages'), orderBy('createdAt', 'desc'));
+        return query(collection(firestore, 'partnerMessages'), orderBy('createdAt', 'desc'), limit(3));
     }, [firestore]);
     const { data: messages, isLoading } = useCollection<PartnerMessage>(messagesQuery);
 
@@ -70,9 +70,16 @@ function PartnerMessages() {
 
     return (
         <NeumorphicCard className='mt-8'>
-            <div className="flex items-center gap-4 mb-4">
-                <Newspaper className="w-8 h-8 text-primary"/>
-                <h2 className="text-2xl font-bold font-headline">Messages de l'équipe</h2>
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                    <Newspaper className="w-8 h-8 text-primary"/>
+                    <h2 className="text-2xl font-bold font-headline">Messages Récents</h2>
+                </div>
+                <Button asChild variant="ghost" size="sm" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                    <Link href="/partner/messages">
+                        Voir tout <CornerUpRight className="ml-2 h-4 w-4" />
+                    </Link>
+                </Button>
             </div>
             {isLoading ? <p>Chargement des messages...</p> : (
             <div className="space-y-6">
