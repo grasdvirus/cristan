@@ -347,7 +347,7 @@
   .custom-project-button {
     width: 50px;
     height: 50px;
-    border-radius: 50%;
+    border-radius: 9999px;
     background-color: hsl(var(--primary));
     border: none;
     font-weight: 600;
@@ -372,7 +372,7 @@
 
   .custom-project-button:hover, .custom-project-button.expanded {
     width: 180px;
-    border-radius: 50px;
+    border-radius: 9999px;
     transition-duration: 0.3s;
     background-color: hsl(var(--primary));
     align-items: center;
