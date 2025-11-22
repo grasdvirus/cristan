@@ -103,9 +103,9 @@ export default function Home() {
                         <div className="flex justify-between items-center mb-8 px-4 sm:px-0">
                            <div className="w-44 text-left">
                                 <div className="relative inline-block">
-                                    <Button asChild variant="ghost" size="icon" className="w-14 h-14 rounded-full bg-chart-1 text-white hover:bg-chart-1/90">
+                                    <Button asChild variant="ghost" className="w-7 h-7 rounded-full bg-chart-1 text-white hover:bg-chart-1/90">
                                         <Link href="/internet">
-                                            <Plus className="h-6 w-6" strokeWidth={2.5}/>
+                                            <Plus className="h-4 w-4" strokeWidth={3}/>
                                         </Link>
                                     </Button>
                                      <div className="project-count-badge">
