@@ -24,7 +24,6 @@
     --border: 210 17% 85%;
     --input: 210 17% 90%;
     --ring: 0 0% 20%;
-    --radius: 0.8rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -400,8 +399,8 @@
   }
   .project-count-badge {
     position: absolute;
-    top: -2px;
-    right: -2px;
+    top: -4px;
+    right: -4px;
     color: hsl(var(--chart-2));
     font-size: 14px;
     font-weight: 700;
