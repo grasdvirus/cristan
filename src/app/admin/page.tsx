@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { collection, query, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirebase, useMemoFirebase, useDoc } from '@/firebase';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 
@@ -32,6 +32,7 @@ import { AuthGuard } from '@/components/auth-guard';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ImageUpload } from '@/components/admin/image-upload';
 
 // Define types based on backend.json
 export type Slide = {
@@ -454,7 +455,7 @@ function VideosManager() {
     return (
         <NeumorphicCard inset className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
-                <h2 className="text-xl sm:text-2xl font-bold font-headline">Gestion des Vidéos</h2>
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Gestion des Vidéos TV</h2>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                         <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
@@ -510,6 +511,83 @@ function VideosManager() {
                 </TableBody>
             </Table>
             )}
+        </NeumorphicCard>
+    );
+}
+
+function PromoVideoManager() {
+    const { firestore } = useFirebase();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const PROMO_VIDEO_ID = 'promo-video';
+
+    const promoVideoRef = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return doc(firestore, 'videos', PROMO_VIDEO_ID);
+    }, [firestore]);
+
+    const { data: promoVideo, isLoading } = useDoc<Video>(promoVideoRef);
+    
+    const [videoUrl, setVideoUrl] = useState('');
+    const [thumbnailUrl, setThumbnailUrl] = useState('');
+
+    useState(() => {
+        if (promoVideo) {
+            setVideoUrl(promoVideo.videoUrl);
+            setThumbnailUrl(promoVideo.thumbnailUrl);
+        }
+    });
+
+    const handleSave = async () => {
+        if (!firestore) return;
+        setIsSubmitting(true);
+        try {
+            const dataToSave = {
+                id: PROMO_VIDEO_ID,
+                title: 'Vidéo Promotionnelle',
+                videoUrl,
+                thumbnailUrl,
+            };
+            await updateDoc(doc(firestore, 'videos', PROMO_VIDEO_ID), dataToSave, { merge: true });
+            toast({ variant: 'success', title: 'Vidéo promotionnelle mise à jour.' });
+        } catch (error) {
+            console.error('Error saving promo video:', error);
+            toast({ title: 'Erreur', description: 'Impossible de sauvegarder la vidéo.', variant: 'destructive' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+    
+    if (isLoading) {
+        return <Skeleton className="h-64 w-full" />;
+    }
+
+    return (
+        <NeumorphicCard inset className="p-4 sm:p-6 space-y-4">
+            <h2 className="text-xl sm:text-2xl font-bold font-headline">Vidéo Promotionnelle (Accueil)</h2>
+            
+            <div>
+                <label className="text-sm font-medium">URL de la vidéo</label>
+                <Input 
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://... .mp4"
+                    className="mt-1"
+                />
+            </div>
+
+            <div>
+                <label className="text-sm font-medium">Miniature de la vidéo</label>
+                 <ImageUpload 
+                    value={thumbnailUrl} 
+                    onChange={setThumbnailUrl} 
+                    disabled={isSubmitting}
+                />
+            </div>
+
+            <Button onClick={handleSave} disabled={isSubmitting}>
+                {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder la Vidéo Promo'}
+            </Button>
         </NeumorphicCard>
     );
 }
@@ -1156,6 +1234,7 @@ function AdminPageContent() {
                             <TabsTrigger value="avisClients">Avis Clients</TabsTrigger>
                             <TabsTrigger value="internet">Internet</TabsTrigger>
                             <TabsTrigger value="tv">TV</TabsTrigger>
+                            <TabsTrigger value="promoVideo">Vidéo Promo</TabsTrigger>
                             <TabsTrigger value="games">Gamme</TabsTrigger>
                             <TabsTrigger value="news">Actualités</TabsTrigger>
                             <TabsTrigger value="submissions">Demandes</TabsTrigger>
@@ -1184,6 +1263,10 @@ function AdminPageContent() {
 
                     <TabsContent value="tv">
                         <VideosManager />
+                    </TabsContent>
+
+                    <TabsContent value="promoVideo">
+                        <PromoVideoManager />
                     </TabsContent>
 
                     <TabsContent value="games">
