@@ -102,7 +102,7 @@ export default function Home() {
                      <TabsContent value="sites">
                         <div className="flex justify-between items-center mb-8 px-4 sm:px-0">
                            <div className="w-44 text-left">
-                                <div className="relative">
+                                <div className="relative inline-block">
                                     <Button asChild variant="outline" size="icon" className="w-14 h-14 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
                                         <Link href="/internet">
                                             <Plus className="h-6 w-6" />
