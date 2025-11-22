@@ -19,6 +19,7 @@ import { ToastAction } from '@/components/ui/toast';
 import AvisClientsMarquee from '@/components/sections/avis-clients-marquee';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
+import { PromoVideoSection } from '@/components/sections/promo-video-section';
 
 type Project = {
     id: string;
@@ -102,9 +103,9 @@ export default function Home() {
                      <TabsContent value="sites">
                         <div className="flex justify-between items-center mb-8 px-4 sm:px-0">
                            <div className="w-44 text-left">
-                               <Button asChild variant="ghost" className="rounded-full p-2 h-auto w-auto">
-                                   <Link href="/internet" className="flex items-center">
-                                       <Plus className="h-5 w-5 stroke-[3]"/>
+                               <Button asChild variant="ghost" className="rounded-full p-2 h-auto w-auto flex items-center">
+                                   <Link href="/internet">
+                                       <Plus className="h-5 w-5 stroke-[3] font-bold"/>
                                        <span className="font-bold text-lg">{allProjects?.length || 0}</span>
                                    </Link>
                                </Button>
@@ -144,6 +145,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+      <PromoVideoSection />
       <AvisClientsMarquee />
     </div>
   );
