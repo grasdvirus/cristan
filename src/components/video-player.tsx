@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -54,13 +53,19 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
     video.addEventListener('volumechange', handleVolumeChange);
     video.addEventListener('ended', handleEnded);
 
-    // Muted autoplay
-    video.muted = true;
-    setIsMuted(true);
-    video.play().catch(e => {
-        console.error("Autoplay was prevented.", e);
-        setIsPlaying(false); // Ensure state is correct if autoplay fails
-    });
+    // Muted autoplay on canplay
+    const attemptAutoplay = () => {
+      video.muted = true;
+      setIsMuted(true);
+      video.play().catch(e => {
+          console.error("Autoplay was prevented.", e);
+          setIsPlaying(false); // Ensure state is correct if autoplay fails
+      });
+    }
+
+    // Wait until the video can be played before attempting to play it.
+    video.addEventListener('canplay', attemptAutoplay);
+
 
     return () => {
       video.removeEventListener('play', handlePlay);
@@ -69,8 +74,9 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
       video.removeEventListener('durationchange', handleDurationChange);
       video.removeEventListener('volumechange', handleVolumeChange);
       video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('canplay', attemptAutoplay);
     };
-  }, []);
+  }, [src]);
   
    useEffect(() => {
     const handleFullScreenChange = () => {
