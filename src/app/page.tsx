@@ -102,16 +102,12 @@ export default function Home() {
                      <TabsContent value="sites">
                         <div className="flex justify-between items-center mb-8 px-4 sm:px-0">
                            <div className="w-44 text-left">
-                                <div className="relative inline-block">
-                                    <Button asChild variant="ghost" className="w-7 h-7 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-                                        <Link href="/internet">
-                                            <Plus className="h-4 w-4 stroke-[3]"/>
-                                        </Link>
-                                    </Button>
-                                     <div className="project-count-badge">
-                                        {allProjects?.length || 0}
-                                    </div>
-                                </div>
+                               <Button asChild className="btn-neumorphic-light dark:btn-neumorphic-dark rounded-full p-2 h-auto w-auto">
+                                   <Link href="/internet" className="flex items-center gap-1">
+                                       <Plus className="h-5 w-5 stroke-[3]"/>
+                                       <span className="font-bold text-lg">{allProjects?.length || 0}</span>
+                                   </Link>
+                               </Button>
                            </div>
                             <div className="flex-1 text-center">
                                 <CustomProjectButton />
