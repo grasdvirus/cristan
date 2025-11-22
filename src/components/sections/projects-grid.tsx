@@ -21,6 +21,11 @@ type Project = {
     imageHint: string;
 };
 
+interface ProjectsGridProps {
+    projects?: Project[];
+    isLoading?: boolean;
+}
+
 function ProjectGridSkeleton() {
     return (
         <div className="columns-2 lg:columns-4 gap-8 space-y-8">
@@ -40,12 +45,8 @@ function ProjectGridSkeleton() {
     );
 }
 
-export default function ProjectsGrid() {
-    const { firestore } = useFirebase();
-    const projectsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'projects')) : null, [firestore]);
-    const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
-
-    if (isLoading) {
+function ProjectsGridInternal({ projects, isLoading }: ProjectsGridProps) {
+     if (isLoading) {
         return <ProjectGridSkeleton />;
     }
 
@@ -94,4 +95,19 @@ export default function ProjectsGrid() {
         </div>
         </section>
     );
+}
+
+export default function ProjectsGrid(props: ProjectsGridProps) {
+    const { firestore } = useFirebase();
+    const projectsQuery = useMemoFirebase(() => {
+        if (props.projects || !firestore) return null;
+        return query(collection(firestore, 'projects'));
+    }, [firestore, props.projects]);
+    
+    const { data: fetchedProjects, isLoading: isFetching } = useCollection<Project>(projectsQuery);
+
+    const projects = props.projects ?? fetchedProjects;
+    const isLoading = props.isLoading ?? isFetching;
+
+    return <ProjectsGridInternal projects={projects} isLoading={isLoading} />
 }

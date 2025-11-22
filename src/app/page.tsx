@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -10,17 +11,33 @@ import GamesGrid from '@/components/sections/games-grid';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Handshake } from 'lucide-react';
+import { ArrowRight, Handshake, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { CustomProjectButton } from '@/components/custom-project-button';
 import { useToast } from '@/components/ui/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import AvisClientsMarquee from '@/components/sections/avis-clients-marquee';
+import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
+import { collection, query, limit } from 'firebase/firestore';
+
+type Project = {
+    id: string;
+    title: string;
+    description: string;
+    price: string;
+    imageUrl: string;
+    imageHint: string;
+};
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('sites');
   const { toast } = useToast();
   const router = useRouter();
+  const { firestore } = useFirebase();
+
+  const projectsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'projects')) : null, [firestore]);
+  const { data: allProjects } = useCollection<Project>(projectsQuery);
+  const homeProjects = allProjects?.slice(0, 4);
 
   useEffect(() => {
     const hasVisited = sessionStorage.getItem('hasVisitedCristan');
@@ -83,10 +100,16 @@ export default function Home() {
 
                   <div className="mt-12">
                      <TabsContent value="sites">
-                        <div className="flex justify-center mb-8">
+                        <div className="flex justify-between items-center mb-8">
+                            <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                                <Link href="/internet">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Voir plus ({allProjects?.length || 0})
+                                </Link>
+                            </Button>
                             <CustomProjectButton />
                         </div>
-                        <ProjectsGrid />
+                        <ProjectsGrid projects={homeProjects} isLoading={!homeProjects}/>
                      </TabsContent>
                      <TabsContent value="videos">
                         <HomeTVSection />
