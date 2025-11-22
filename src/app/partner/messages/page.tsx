@@ -1,6 +1,7 @@
+
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
@@ -28,6 +29,14 @@ function AllMessagesContent() {
         return query(collection(firestore, 'partnerMessages'), orderBy('createdAt', 'desc'));
     }, [firestore]);
     const { data: messages, isLoading } = useCollection<PartnerMessage>(messagesQuery);
+    
+    // Marquer les messages comme lus en mettant à jour le localStorage
+    useEffect(() => {
+        if (messages && messages.length > 0) {
+            const latestMessageTimestamp = messages[0].createdAt.seconds.toString();
+            localStorage.setItem('lastSeenPartnerMessageTimestamp', latestMessageTimestamp);
+        }
+    }, [messages]);
 
     const formatRelativeTime = (timestamp: Timestamp | null) => {
         if (!timestamp) return 'à l\'instant';
