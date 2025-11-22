@@ -143,10 +143,10 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
 
 
   return (
-    <NeumorphicCard ref={containerRef} className={cn("group w-full relative overflow-hidden", isFullScreen && "fixed inset-0 z-[100] !rounded-none")}>
+    <NeumorphicCard ref={containerRef} className={cn("group w-full relative overflow-hidden p-0", isFullScreen && "fixed inset-0 z-[100] !rounded-none")}>
       <video
         ref={videoRef}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover rounded-3xl"
         poster={poster}
         onClick={togglePlay}
         onDoubleClick={toggleFullScreen}
@@ -156,12 +156,12 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
         Votre navigateur ne supporte pas la balise vidéo.
       </video>
 
-       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
+       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none rounded-3xl">
           {!isPlaying && (
               <Button
                   size="icon"
                   variant="ghost"
-                  className="w-20 h-20 bg-white/20 hover:bg-white/30 text-white pointer-events-auto"
+                  className="w-20 h-20 bg-white/20 hover:bg-white/30 text-white pointer-events-auto rounded-full"
                   onClick={togglePlay}
               >
                   <Play className="w-12 h-12 fill-white" />
@@ -169,7 +169,7 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
           )}
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-b-3xl">
         <div className="flex flex-col gap-2">
             {/* Progress Bar */}
             <div className="flex items-center gap-2">
@@ -184,18 +184,18 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
             
             {/* Controls */}
             <div className="flex items-center justify-between gap-4">
-                <Button onClick={togglePlay} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white">
+                <Button onClick={togglePlay} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white rounded-full">
                 {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
                 </Button>
 
                 <div className="flex items-center gap-2 w-32">
-                    <Button onClick={toggleMute} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white">
+                    <Button onClick={toggleMute} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white rounded-full">
                         <VolumeIcon className="w-6 h-6" />
                     </Button>
                     <Slider value={[isMuted ? 0 : volume]} max={1} step={0.05} onValueChange={handleVolumeChange}/>
                 </div>
                 
-                 <Button onClick={toggleFullScreen} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white">
+                 <Button onClick={toggleFullScreen} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white rounded-full">
                     {isFullScreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
                  </Button>
             </div>
