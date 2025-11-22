@@ -402,7 +402,7 @@
     position: absolute;
     top: -2px;
     right: -2px;
-    color: hsl(var(--foreground));
+    color: hsl(var(--chart-2));
     font-size: 14px;
     font-weight: 700;
     pointer-events: none;

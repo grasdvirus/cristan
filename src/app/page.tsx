@@ -103,7 +103,7 @@ export default function Home() {
                         <div className="flex justify-between items-center mb-8 px-4 sm:px-0">
                            <div className="w-44 text-left">
                                 <div className="relative inline-block">
-                                    <Button asChild variant="ghost" size="icon" className="w-14 h-14 rounded-full">
+                                    <Button asChild variant="ghost" size="icon" className="w-14 h-14 rounded-full text-chart-1">
                                         <Link href="/internet">
                                             <Plus className="h-6 w-6" strokeWidth={2.5}/>
                                         </Link>
