@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Use a timestamp to make the filename unique
-  const filename = `${Date.now()}-${file.name}`;
+  const filename = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
   const path = join(uploadDir, filename);
 
 

@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { Project } from '@/app/admin/page';
-import { ImageUpload } from './image-upload';
+import { MediaUpload } from './media-upload';
 import { generateProjectDescription } from '@/ai/flows/generate-project-description';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -124,7 +124,7 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
             <FormItem>
               <FormLabel>Image du Projet</FormLabel>
               <FormControl>
-                <ImageUpload 
+                <MediaUpload 
                   value={field.value} 
                   onChange={field.onChange} 
                   disabled={isSubmitting}

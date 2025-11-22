@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { Slide } from '@/app/admin/page';
-import { ImageUpload } from './image-upload';
+import { MediaUpload } from './media-upload';
 
 const formSchema = z.object({
   description: z.string().min(1, 'La description est requise.'),
@@ -47,7 +47,7 @@ export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProp
             <FormItem>
               <FormLabel>Image</FormLabel>
               <FormControl>
-                <ImageUpload 
+                <MediaUpload 
                   value={field.value} 
                   onChange={field.onChange} 
                   disabled={isSubmitting}

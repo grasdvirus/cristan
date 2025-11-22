@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { NewsItem } from '@/app/admin/page';
-import { ImageUpload } from './image-upload';
+import { MediaUpload } from './media-upload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { getYoutubeThumbnailUrl } from '@/lib/utils';
 import { useEffect } from 'react';
@@ -141,7 +141,7 @@ export function NewsForm({ initialData, onSubmit, isSubmitting }: NewsFormProps)
               <FormLabel>{mediaType === 'image' ? 'Image' : 'URL de la Vidéo (YouTube)'}</FormLabel>
               <FormControl>
                 {mediaType === 'image' ? (
-                  <ImageUpload 
+                  <MediaUpload 
                     value={field.value} 
                     onChange={field.onChange} 
                     disabled={isSubmitting}

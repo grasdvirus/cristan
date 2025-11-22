@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { Game } from '@/app/admin/page';
-import { ImageUpload } from './image-upload';
+import { MediaUpload } from './media-upload';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Le titre est requis.'),
@@ -57,7 +57,7 @@ export function GameForm({ initialData, onSubmit, isSubmitting }: GameFormProps)
             <FormItem>
               <FormLabel>Image du Jeu</FormLabel>
               <FormControl>
-                <ImageUpload 
+                <MediaUpload 
                   value={field.value} 
                   onChange={field.onChange} 
                   disabled={isSubmitting}

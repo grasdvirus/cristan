@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { AvisClient } from '@/app/admin/page';
-import { ImageUpload } from './image-upload';
+import { MediaUpload } from './media-upload';
 import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -59,7 +59,7 @@ export function AvisClientForm({ initialData, onSubmit, isSubmitting }: AvisClie
             <FormItem>
               <FormLabel>Avatar (Optionnel)</FormLabel>
               <FormControl>
-                <ImageUpload 
+                <MediaUpload 
                   value={field.value || ''} 
                   onChange={field.onChange} 
                   disabled={isSubmitting}

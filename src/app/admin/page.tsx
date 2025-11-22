@@ -32,7 +32,7 @@ import { AuthGuard } from '@/components/auth-guard';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { ImageUpload } from '@/components/admin/image-upload';
+import { MediaUpload } from '@/components/admin/media-upload';
 
 // Define types based on backend.json
 export type Slide = {
@@ -568,17 +568,18 @@ function PromoVideoManager() {
             
             <div>
                 <label className="text-sm font-medium">URL de la vidéo</label>
-                <Input 
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="https://... .mp4"
-                    className="mt-1"
+                <MediaUpload 
+                    value={videoUrl} 
+                    onChange={setVideoUrl} 
+                    disabled={isSubmitting}
+                    accept={{ 'video/*': [] }}
+                    mediaType='video'
                 />
             </div>
 
             <div>
-                <label className="text-sm font-medium">Miniature de la vidéo</label>
-                 <ImageUpload 
+                <label className="text-sm font-medium">Miniature de la vidéo (Optionnel)</label>
+                 <MediaUpload 
                     value={thumbnailUrl} 
                     onChange={setThumbnailUrl} 
                     disabled={isSubmitting}
