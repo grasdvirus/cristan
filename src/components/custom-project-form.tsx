@@ -39,6 +39,7 @@ const formSchema = z.object({
   companyDescription: z.string().optional(),
   contact: z.string().min(5, { message: "Un contact est requis." }),
   howYouFoundUs: z.string().min(1, { message: "Veuillez sélectionner une option." }),
+  promoCode: z.string().optional(),
   projectBrief: z.string().min(20, { message: "Veuillez détailler votre projet (20 caractères min)." }),
 });
 
@@ -46,7 +47,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const steps = [
   { id: 'step1', title: 'Informations sur le projet', fields: ['projectName', 'companyName', 'companyDescription'] },
-  { id: 'step2', title: 'Contact & Découverte', fields: ['contact', 'howYouFoundUs'] },
+  { id: 'step2', title: 'Contact & Découverte', fields: ['contact', 'howYouFoundUs', 'promoCode'] },
   { id: 'step3', title: 'Cahier des charges', fields: ['projectBrief'] },
 ];
 
@@ -65,6 +66,7 @@ export function CustomProjectForm() {
             companyDescription: '',
             contact: '',
             howYouFoundUs: '',
+            promoCode: '',
             projectBrief: '',
         },
     });
@@ -166,6 +168,9 @@ export function CustomProjectForm() {
                                     <FormMessage />
                                 </FormItem>
                             )}/>
+                            <FormField control={form.control} name="promoCode" render={({ field }) => (
+                                <FormItem><FormLabel>Code Promo (Optionnel)</FormLabel><FormControl><Input placeholder="Entrez un code promo si vous en avez un" {...field} className="neumorphic-card-inset-light dark:neumorphic-card-inset-dark"/></FormControl><FormMessage /></FormItem>
+                            )}/>
                         </div>
                     )}
                      {currentStep === 2 && (
@@ -200,3 +205,5 @@ export function CustomProjectForm() {
     </div>
   )
 }
+
+    
