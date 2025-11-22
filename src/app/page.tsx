@@ -100,14 +100,19 @@ export default function Home() {
 
                   <div className="mt-12">
                      <TabsContent value="sites">
-                        <div className="flex justify-between items-center mb-8">
-                            <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
-                                <Link href="/internet">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Voir plus ({allProjects?.length || 0})
-                                </Link>
-                            </Button>
-                            <CustomProjectButton />
+                        <div className="flex justify-between items-center mb-8 px-4 sm:px-0">
+                           <div className="w-44 text-left">
+                                <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark px-4 py-2 h-auto">
+                                    <Link href="/internet" className="flex items-center gap-2">
+                                        <Plus className="h-5 w-5" />
+                                        <span className="text-lg font-bold">{allProjects?.length || 0}</span>
+                                    </Link>
+                                </Button>
+                           </div>
+                            <div className="flex-1 text-center">
+                                <CustomProjectButton />
+                            </div>
+                           <div className="w-44"></div> {/* Spacer */}
                         </div>
                         <ProjectsGrid projects={homeProjects} isLoading={!homeProjects}/>
                      </TabsContent>
