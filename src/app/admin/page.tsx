@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { collection, query, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, doc, addDoc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase, useDoc } from '@/firebase';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
@@ -548,7 +548,7 @@ function PromoVideoManager() {
                 videoUrl,
                 thumbnailUrl,
             };
-            await updateDoc(doc(firestore, 'videos', PROMO_VIDEO_ID), dataToSave, { merge: true });
+            await setDoc(doc(firestore, 'videos', PROMO_VIDEO_ID), dataToSave, { merge: true });
             toast({ variant: 'success', title: 'Vidéo promotionnelle mise à jour.' });
         } catch (error) {
             console.error('Error saving promo video:', error);
@@ -1317,3 +1317,5 @@ export default function AdminPage() {
         </AuthGuard>
     )
 }
+
+    
