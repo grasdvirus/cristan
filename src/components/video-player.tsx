@@ -14,67 +14,84 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ src, poster }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(true);
   const [duration, setDuration] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [aspectRatio, setAspectRatio] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handlePlay = () => {
-        // Autoplay is muted, so when user clicks play, unmute it.
-        if (video.muted) {
-            video.muted = false;
-            setIsMuted(false);
-        }
-        setIsPlaying(true);
-    };
+    const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleTimeUpdate = () => {
       setProgress((video.currentTime / video.duration) * 100);
     };
     const handleDurationChange = () => setDuration(video.duration);
     const handleVolumeChange = () => {
-        setVolume(video.volume);
-        setIsMuted(video.muted);
+      setVolume(video.volume);
+      setIsMuted(video.muted);
     };
-    const handleEnded = () => setIsPlaying(false);
 
-    const attemptAutoplay = () => {
-      video.muted = true;
-      setIsMuted(true);
-      video.play().catch(e => {
-          console.error("Autoplay was prevented.", e);
-          setIsPlaying(false);
-      });
-    }
+    const handleLoadedMetadata = () => {
+        setDuration(video.duration);
+        // Set aspect ratio for adaptive frame
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+            setAspectRatio(`${video.videoWidth} / ${video.videoHeight}`);
+        }
+    };
     
-    // Attempt to play only when the video data is ready
-    video.addEventListener('canplay', attemptAutoplay);
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('durationchange', handleDurationChange);
     video.addEventListener('volumechange', handleVolumeChange);
-    video.addEventListener('ended', handleEnded);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
 
     return () => {
-      video.removeEventListener('canplay', attemptAutoplay);
       video.removeEventListener('play', handlePlay);
       video.removeEventListener('pause', handlePause);
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('durationchange', handleDurationChange);
       video.removeEventListener('volumechange', handleVolumeChange);
-      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, []);
+  
+  useEffect(() => {
+    const video = videoRef.current;
+    const observer = new IntersectionObserver(
+        (entries) => {
+            const entry = entries[0];
+            if (entry.isIntersecting) {
+                video?.play().catch(e => console.error("Autoplay was prevented.", e));
+            } else {
+                video?.pause();
+            }
+        },
+        { threshold: 0.8 } // 80% visibility
+    );
+
+    if (video) {
+        // Start muted for autoplay compatibility
+        video.muted = true;
+        setIsMuted(true);
+        observer.observe(video);
+    }
+
+    return () => {
+        if (video) {
+            observer.unobserve(video);
+        }
     };
   }, [src]);
-  
-   useEffect(() => {
+
+  useEffect(() => {
     const handleFullScreenChange = () => {
       const isFs = document.fullscreenElement === containerRef.current;
       setIsFullScreen(isFs);
@@ -84,11 +101,14 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
     return () => document.removeEventListener('fullscreenchange', handleFullScreenChange);
   }, []);
 
-
   const togglePlay = () => {
     const video = videoRef.current;
     if (video) {
       if (video.paused) {
+        if(video.muted) { // Unmute on first manual play
+            video.muted = false;
+            setIsMuted(false);
+        }
         video.play();
       } else {
         video.pause();
@@ -98,27 +118,26 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
   
   const handleProgressChange = (value: number[]) => {
     const video = videoRef.current;
-    // Add a check for video.duration to be a finite number
     if (video && isFinite(video.duration)) {
       video.currentTime = (value[0] / 100) * video.duration;
     }
   };
 
   const handleVolumeChange = (value: number[]) => {
-      const video = videoRef.current;
-      if (video) {
-          const newVolume = value[0];
-          video.volume = newVolume;
-          video.muted = newVolume === 0;
-      }
-  }
+    const video = videoRef.current;
+    if (video) {
+        const newVolume = value[0];
+        video.volume = newVolume;
+        video.muted = newVolume === 0;
+    }
+  };
   
   const toggleMute = () => {
-      const video = videoRef.current;
-      if (video) {
-          video.muted = !video.muted;
-      }
-  }
+    const video = videoRef.current;
+    if (video) {
+        video.muted = !video.muted;
+    }
+  };
 
   const toggleFullScreen = () => {
     const container = containerRef.current;
@@ -144,64 +163,69 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
   
   const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
-
   return (
-    <NeumorphicCard ref={containerRef} className={cn("group w-full relative overflow-hidden p-0", isFullScreen && "fixed inset-0 z-[100] !rounded-none")}>
+    <NeumorphicCard
+      ref={containerRef}
+      className={cn(
+        "group w-full relative overflow-hidden p-0",
+        isFullScreen && "fixed inset-0 z-[100] !rounded-none"
+      )}
+      style={{ aspectRatio }}
+    >
       <video
         ref={videoRef}
-        className="w-full h-full object-cover rounded-3xl"
+        className="w-full h-full object-contain rounded-3xl"
         poster={poster}
         onClick={togglePlay}
         onDoubleClick={toggleFullScreen}
         playsInline
+        loop
       >
         <source src={src} type="video/mp4" />
         Votre navigateur ne supporte pas la balise vidéo.
       </video>
 
-       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none rounded-3xl">
-          {!isPlaying && (
-              <Button
-                  size="icon"
-                  variant="ghost"
-                  className="w-20 h-20 bg-white/20 hover:bg-white/30 text-white pointer-events-auto rounded-full"
-                  onClick={togglePlay}
-              >
-                  <Play className="w-12 h-12 fill-white" />
-              </Button>
-          )}
+      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none rounded-3xl">
+        {!isPlaying && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="w-20 h-20 bg-white/20 hover:bg-white/30 text-white pointer-events-auto rounded-full"
+            onClick={togglePlay}
+          >
+            <Play className="w-12 h-12 fill-white" />
+          </Button>
+        )}
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-b-3xl">
         <div className="flex flex-col gap-2">
-            {/* Progress Bar */}
-            <div className="flex items-center gap-2">
-                <span className="text-white text-xs font-mono">{formatTime(videoRef.current?.currentTime || 0)}</span>
-                 <Slider
-                    value={[progress]}
-                    onValueChange={handleProgressChange}
-                    className="w-full"
-                />
-                <span className="text-white text-xs font-mono">{formatTime(duration)}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-white text-xs font-mono">{formatTime(videoRef.current?.currentTime || 0)}</span>
+            <Slider
+              value={[progress]}
+              onValueChange={handleProgressChange}
+              className="w-full"
+            />
+            <span className="text-white text-xs font-mono">{formatTime(duration)}</span>
+          </div>
+          
+          <div className="flex items-center justify-between gap-4">
+            <Button onClick={togglePlay} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white rounded-full">
+              {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+            </Button>
+
+            <div className="flex items-center gap-2 w-32">
+              <Button onClick={toggleMute} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white rounded-full">
+                <VolumeIcon className="w-6 h-6" />
+              </Button>
+              <Slider value={[isMuted ? 0 : volume]} max={1} step={0.05} onValueChange={handleVolumeChange}/>
             </div>
             
-            {/* Controls */}
-            <div className="flex items-center justify-between gap-4">
-                <Button onClick={togglePlay} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white rounded-full">
-                {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-                </Button>
-
-                <div className="flex items-center gap-2 w-32">
-                    <Button onClick={toggleMute} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white rounded-full">
-                        <VolumeIcon className="w-6 h-6" />
-                    </Button>
-                    <Slider value={[isMuted ? 0 : volume]} max={1} step={0.05} onValueChange={handleVolumeChange}/>
-                </div>
-                
-                 <Button onClick={toggleFullScreen} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white rounded-full">
-                    {isFullScreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
-                 </Button>
-            </div>
+            <Button onClick={toggleFullScreen} size="icon" variant="ghost" className="text-white hover:bg-white/10 hover:text-white rounded-full">
+              {isFullScreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
+            </Button>
+          </div>
         </div>
       </div>
     </NeumorphicCard>
