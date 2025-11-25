@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 const formSchema = z.object({
   description: z.string().min(1, 'La description est requise.'),
-  mediaUrl: z.string().min(1, "L'URL du média est requise."),
+  mediaUrl: z.string().min(1, "L'URL de la miniature est requise."),
   imageHint: z.string().optional(),
   mediaType: z.enum(['image', 'video']).default('image'),
   videoUrl: z.string().optional(),
@@ -75,7 +75,7 @@ export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProp
               <FormLabel>{mediaType === 'video' ? 'Miniature (Image)' : 'Image'}</FormLabel>
               <FormControl>
                 <MediaUpload 
-                  value={field.value} 
+                  value={field.value || ''}
                   onChange={field.onChange} 
                   disabled={isSubmitting}
                   accept={{ 'image/*': [] }}
