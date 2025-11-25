@@ -61,7 +61,7 @@ function ContractPageContent() {
 
         {project && (
             <NeumorphicCard inset className="mt-8 mx-4 sm:mx-0 p-4 text-center">
-                <h2 className='text-xl font-semibold'>Projet sélectionné : <span className='text-primary'>{project.title}</span></h2>
+                <h2 className='text-xl font-semibold'>Site web sélectionné : <span className='text-primary'>{project.title}</span></h2>
                 <p className='text-muted-foreground mt-1'>Prix : {project.price}</p>
             </NeumorphicCard>
         )}
