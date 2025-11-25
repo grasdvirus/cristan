@@ -41,7 +41,14 @@ export function MediaUpload({ value, onChange, disabled, accept, mediaType = 'im
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        let errorMsg = `Upload failed with status: ${response.status}`;
+        try {
+            const result = await response.json();
+            errorMsg = result.error || errorMsg;
+        } catch (e) {
+            // response is not json
+        }
+        throw new Error(errorMsg);
       }
 
       const result = await response.json();
@@ -77,7 +84,7 @@ export function MediaUpload({ value, onChange, disabled, accept, mediaType = 'im
   
   const currentUrl = value || '';
   const displayUrl = getYoutubeThumbnailUrl(currentUrl) || currentUrl;
-  const isYoutube = currentUrl.includes('youtube.com') || currentUrl.includes('youtu.be');
+  const isYoutube = (currentUrl || '').includes('youtube.com') || (currentUrl || '').includes('youtu.be');
 
   const renderPreview = () => {
     if (currentUrl && !isUploading) {
