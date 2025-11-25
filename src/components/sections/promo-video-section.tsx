@@ -31,9 +31,11 @@ export function PromoVideoSection() {
     const { data: promoVideos, isLoading } = useCollection<PromoVideo>(promoVideosQuery);
     
     const autoplayPlugin = React.useRef(
-        Autoplay({ delay: 5000, stopOnInteraction: false })
+        Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: false })
     );
-    const fadePlugin = React.useRef(Fade());
+    const fadePlugin = React.useRef(Fade({
+        transitionDuration: 1000
+    }));
 
     if (isLoading) {
         return (
