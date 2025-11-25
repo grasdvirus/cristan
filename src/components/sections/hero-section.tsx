@@ -33,23 +33,38 @@ export default function HeroSection() {
     const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
     const autoplayPlugin = React.useRef(
-        Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })
+        Autoplay({ delay: 3000, stopOnInteraction: true, stopOnMouseEnter: true })
     );
-    
+
+    const handleVideoEnd = useCallback(() => {
+        if (api) {
+            api.scrollNext();
+            autoplayPlugin.current.play();
+        }
+    }, [api]);
+
     const handleSelect = useCallback(() => {
-        if (!api) return;
+        if (!api || !heroItems) return;
 
         const selectedIndex = api.selectedScrollSnap();
-        const slide = heroItems?.[selectedIndex];
+        const currentSlide = heroItems[selectedIndex];
 
-        // Arrêter toutes les vidéos sauf celle qui est active
-        videoRefs.current.forEach((videoEl, index) => {
-            if (videoEl && index !== selectedIndex) {
+        // Pause all videos
+        videoRefs.current.forEach((videoEl) => {
+            if (videoEl && !videoEl.paused) {
                 videoEl.pause();
             }
         });
-        
-        if (slide?.mediaType === 'video') {
+
+        // Add ended listener to all videos and remove previous ones
+        videoRefs.current.forEach(videoEl => {
+            if (videoEl) {
+                videoEl.removeEventListener('ended', handleVideoEnd);
+                videoEl.addEventListener('ended', handleVideoEnd);
+            }
+        });
+
+        if (currentSlide?.mediaType === 'video') {
             autoplayPlugin.current.stop();
             const videoElement = videoRefs.current[selectedIndex];
             if (videoElement) {
@@ -57,53 +72,22 @@ export default function HeroSection() {
                 videoElement.play().catch(e => console.error("Video play failed", e));
             }
         } else {
-             autoplayPlugin.current.play();
+            autoplayPlugin.current.play();
         }
-
-    }, [api, heroItems]);
-
-    const handleVideoEnd = useCallback(() => {
-        if(api) {
-            // Passer au slide suivant lorsque la vidéo est terminée
-            if(api.canScrollNext()) {
-                api.scrollNext();
-            } else {
-                api.scrollTo(0); // Revenir au début si c'est la fin
-            }
-             autoplayPlugin.current.play();
-        }
-    }, [api]);
+    }, [api, heroItems, handleVideoEnd]);
 
 
     useEffect(() => {
-        if (!api) return;
-
-        handleSelect(); // Gérer le slide initial
-
+        if (!api || !heroItems) return;
+        
+        handleSelect();
         api.on('select', handleSelect);
         
         return () => {
             api.off('select', handleSelect);
         };
-    }, [api, handleSelect]);
+    }, [api, heroItems, handleSelect]);
     
-     useEffect(() => {
-        videoRefs.current.forEach(videoEl => {
-            if (videoEl) {
-                videoEl.removeEventListener('ended', handleVideoEnd);
-                videoEl.addEventListener('ended', handleVideoEnd);
-            }
-        });
-        return () => {
-            videoRefs.current.forEach(videoEl => {
-                if (videoEl) {
-                    videoEl.removeEventListener('ended', handleVideoEnd);
-                }
-            });
-        };
-    }, [handleVideoEnd, heroItems]);
-
-
     if (isLoading) {
         return (
             <section className="relative w-full h-[60vh] md:h-[80vh]">
@@ -142,6 +126,7 @@ export default function HeroSection() {
                             className="w-full h-full object-cover"
                             muted
                             playsInline
+                            loop={false} // Loop is handled by autoplay logic
                         />
                     ) : item.mediaUrl ? (
                         <Image
