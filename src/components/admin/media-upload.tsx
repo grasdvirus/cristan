@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -113,7 +114,7 @@ export function MediaUpload({ value, onChange, disabled, accept, mediaType = 'im
             {mediaType === 'video' ? <Video className="w-10 h-10" /> : <ImageIcon className="w-10 h-10" />}
             <UploadCloud className="w-10 h-10" />
             <p className="text-sm">Glissez-déposez ou cliquez pour téléverser</p>
-            <p className="text-xs">Taille max : 4MB</p>
+            <p className="text-xs">Taille max : 5Mo</p>
         </div>
     )
   }

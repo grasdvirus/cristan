@@ -64,12 +64,12 @@ export default function HeroSection() {
                     {item.mediaType === 'video' && item.videoUrl ? (
                          <video
                             src={item.videoUrl}
+                            poster={item.mediaUrl}
                             className="w-full h-full object-cover"
                             autoPlay
                             loop
                             muted
                             playsInline
-                            poster={item.mediaUrl}
                         />
                     ) : item.mediaUrl ? (
                         <Image
