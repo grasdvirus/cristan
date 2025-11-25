@@ -34,40 +34,60 @@ export function MediaUpload({ value, onChange, disabled, accept, mediaType = 'im
     const formData = new FormData();
     formData.append('file', file);
 
-    try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+    const xhr = new XMLHttpRequest();
 
-      if (!response.ok) {
-        let errorMsg = `Upload failed with status: ${response.status}`;
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = (event.loaded / event.total) * 100;
+        setUploadProgress(percentComplete);
+      }
+    };
+
+    xhr.onload = () => {
+      setIsUploading(false);
+      if (xhr.status >= 200 && xhr.status < 300) {
         try {
-            const result = await response.json();
+          const result = JSON.parse(xhr.responseText);
+          if (result.success) {
+            onChange(result.url);
+            toast({ variant: "success", title: 'Téléversement réussi!' });
+          } else {
+            throw new Error(result.error || 'Unknown upload error');
+          }
+        } catch (e) {
+            toast({
+                title: 'Erreur de réponse du serveur',
+                description: 'La réponse n\'a pas pu être analysée.',
+                variant: 'destructive',
+            });
+        }
+      } else {
+        let errorMsg = `Upload failed with status: ${xhr.status}`;
+        try {
+            const result = JSON.parse(xhr.responseText);
             errorMsg = result.error || errorMsg;
         } catch (e) {
             // response is not json
         }
-        throw new Error(errorMsg);
+        toast({
+          title: 'Erreur de téléversement',
+          description: errorMsg,
+          variant: 'destructive',
+        });
       }
+    };
 
-      const result = await response.json();
-      if (result.success) {
-        onChange(result.url);
-        toast({ variant: "success", title: 'Téléversement réussi!' });
-      } else {
-        throw new Error(result.error || 'Unknown upload error');
-      }
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      toast({
-        title: 'Erreur de téléversement',
-        description: error.message || `Impossible de téléverser le fichier.`,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-    }
+    xhr.onerror = () => {
+        setIsUploading(false);
+        toast({
+          title: 'Erreur réseau',
+          description: "Impossible de se connecter au serveur de téléversement.",
+          variant: 'destructive',
+        });
+    };
+
+    xhr.open('POST', '/api/upload', true);
+    xhr.send(formData);
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
