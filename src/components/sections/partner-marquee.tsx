@@ -31,7 +31,7 @@ export default function PartnerMarquee() {
                     {duplicatedItems.map((item, index) => (
                         <div key={`${item.id}-${index}`} className="flex items-center mx-8">
                             <span className="text-4xl filter grayscale">{item.emoji}</span>
-                            <span className="ml-4 text-lg font-semibold text-muted-foreground">{item.name}</span>
+                            <span className="ml-4 text-2xl font-bagel text-muted-foreground">{item.name}</span>
                         </div>
                     ))}
                 </div>
@@ -39,7 +39,7 @@ export default function PartnerMarquee() {
                     {duplicatedItems.map((item, index) => (
                         <div key={`${item.id}-2-${index}`} className="flex items-center mx-8">
                             <span className="text-4xl filter grayscale">{item.emoji}</span>
-                            <span className="ml-4 text-lg font-semibold text-muted-foreground">{item.name}</span>
+                            <span className="ml-4 text-2xl font-bagel text-muted-foreground">{item.name}</span>
                         </div>
                     ))}
                  </div>
