@@ -47,8 +47,8 @@ export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProp
     let finalValues = { ...values };
 
     if (values.mediaType === 'video') {
-      // For video slides, mediaUrl is the video file, which will also serve as its own poster.
-      // We explicitly set videoUrl to ensure it's saved.
+      // For video slides, mediaUrl from the uploader IS the videoUrl.
+      // We set mediaUrl to be the same, so it can be used as a poster if needed.
       finalValues.videoUrl = values.mediaUrl;
     } else {
       // For image slides, mediaUrl is the image file, and videoUrl should be empty.

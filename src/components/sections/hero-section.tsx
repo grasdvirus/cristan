@@ -42,18 +42,16 @@ export default function HeroSection() {
         const selectedIndex = api.selectedScrollSnap();
         const currentSlide = heroItems[selectedIndex];
     
-        // Pause all videos to ensure only the active one plays
         videoRefs.current.forEach((videoEl, index) => {
             if (videoEl && !videoEl.paused) {
                 videoEl.pause();
             }
-            // Clean up old event listeners
             if (videoEl) {
                 videoEl.removeEventListener('ended', api.scrollNext);
             }
         });
     
-        if (currentSlide?.mediaType === 'video') {
+        if (currentSlide?.mediaType === 'video' && currentSlide.videoUrl) {
             autoplayPlugin.current.stop();
             const videoElement = videoRefs.current[selectedIndex];
             if (videoElement) {
@@ -64,15 +62,15 @@ export default function HeroSection() {
                 }
                 
                 const onVideoEnd = () => {
-                    api.scrollNext();
-                    // No need to restart autoplay here, the next 'select' event will handle it
+                    if (api) {
+                        api.scrollNext();
+                    }
                 };
     
                 videoElement.addEventListener('ended', onVideoEnd, { once: true });
             }
         } else {
-            // For image slides, ensure autoplay is playing
-             if (!autoplayPlugin.current.isPlaying()) {
+            if (!autoplayPlugin.current.isPlaying()) {
                 autoplayPlugin.current.play();
             }
         }
@@ -86,7 +84,6 @@ export default function HeroSection() {
         
         return () => {
             api.off('select', handleSelect);
-             // Clean up event listeners on unmount
             videoRefs.current.forEach(videoEl => {
                 if (videoEl) {
                     videoEl.removeEventListener('ended', api.scrollNext);
