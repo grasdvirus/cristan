@@ -9,7 +9,6 @@ import {
   type CarouselApi,
 } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
-import Fade from 'embla-carousel-fade';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { collection, query } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
@@ -19,7 +18,7 @@ type Slide = {
     id: string;
     description: string;
     mediaUrl: string;
-    imageHint: string;
+    imageHint?: string;
     mediaType?: 'image' | 'video';
     videoUrl?: string;
 };
@@ -40,36 +39,38 @@ export default function HeroSection() {
         if (!api || !heroItems) return;
     
         const selectedIndex = api.selectedScrollSnap();
-        const currentSlide = heroItems[selectedIndex];
     
-        videoRefs.current.forEach((videoEl, index) => {
+        // Pause all videos
+        videoRefs.current.forEach((videoEl) => {
             if (videoEl && !videoEl.paused) {
                 videoEl.pause();
             }
-            if (videoEl) {
-                videoEl.removeEventListener('ended', api.scrollNext);
-            }
         });
     
-        if (currentSlide?.mediaType === 'video' && currentSlide.videoUrl) {
-            autoplayPlugin.current.stop();
-            const videoElement = videoRefs.current[selectedIndex];
-            if (videoElement) {
-                videoElement.currentTime = 0;
-                const playPromise = videoElement.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => console.error("Video play failed:", error));
-                }
-                
-                const onVideoEnd = () => {
-                    if (api) {
-                        api.scrollNext();
-                    }
-                };
-    
-                videoElement.addEventListener('ended', onVideoEnd, { once: true });
+        const currentSlide = heroItems[selectedIndex];
+        const currentVideo = videoRefs.current[selectedIndex];
+        
+        if (currentSlide?.mediaType === 'video' && currentVideo) {
+            autoplayPlugin.current.stop(); // Stop autoplay for video
+            currentVideo.currentTime = 0;
+            const playPromise = currentVideo.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    // Autoplay was prevented, which is common. User interaction is needed.
+                    console.error("Video play failed:", error);
+                });
             }
+    
+            const onVideoEnd = () => {
+                if (api) {
+                   api.scrollNext(); // Go to next slide
+                   autoplayPlugin.current.play(); // Resume autoplay for subsequent slides
+                }
+            };
+    
+            currentVideo.addEventListener('ended', onVideoEnd, { once: true });
         } else {
+            // For image slides, ensure autoplay is running
             if (!autoplayPlugin.current.isPlaying()) {
                 autoplayPlugin.current.play();
             }
@@ -77,20 +78,15 @@ export default function HeroSection() {
     }, [api, heroItems]);
 
     useEffect(() => {
-        if (!api || !heroItems) return;
+        if (!api) return;
         
         handleSelect(); // Handle the initial slide
         api.on('select', handleSelect);
         
         return () => {
             api.off('select', handleSelect);
-            videoRefs.current.forEach(videoEl => {
-                if (videoEl) {
-                    videoEl.removeEventListener('ended', api.scrollNext);
-                }
-            });
         };
-    }, [api, heroItems, handleSelect]);
+    }, [api, handleSelect]);
     
     if (isLoading) {
         return (
@@ -113,7 +109,7 @@ export default function HeroSection() {
         <Carousel
             setApi={setApi}
             className="w-full h-full"
-            plugins={[autoplayPlugin.current, Fade()]}
+            plugins={[autoplayPlugin.current]}
             opts={{
                 loop: true,
             }}
@@ -137,7 +133,7 @@ export default function HeroSection() {
                             alt={item.description}
                             fill
                             className="object-cover"
-                            data-ai-hint={item.imageHint}
+                            data-ai-hint={item.imageHint || ''}
                             priority={index === 0}
                         />
                     ) : null}

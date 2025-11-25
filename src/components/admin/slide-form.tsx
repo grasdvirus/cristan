@@ -1,4 +1,3 @@
-
 'use client';
 
 import { z } from 'zod';
@@ -48,7 +47,7 @@ export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProp
 
     if (values.mediaType === 'video') {
       // For video slides, mediaUrl from the uploader IS the videoUrl.
-      // We set mediaUrl to be the same, so it can be used as a poster if needed.
+      // We set videoUrl to be this value, and mediaUrl can also hold it to serve as a poster.
       finalValues.videoUrl = values.mediaUrl;
     } else {
       // For image slides, mediaUrl is the image file, and videoUrl should be empty.
