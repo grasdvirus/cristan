@@ -47,10 +47,11 @@ export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProp
     let finalValues = { ...values };
 
     if (values.mediaType === 'video') {
-      // For video slides, mediaUrl is the video file, and we use it as the poster (videoUrl).
+      // For video slides, mediaUrl is the video file, which will also serve as its own poster.
+      // We explicitly set videoUrl to ensure it's saved.
       finalValues.videoUrl = values.mediaUrl;
     } else {
-      // For image slides, mediaUrl is the image file, and videoUrl is empty.
+      // For image slides, mediaUrl is the image file, and videoUrl should be empty.
       finalValues.videoUrl = '';
     }
     onSubmit(finalValues);
@@ -113,19 +114,21 @@ export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProp
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="imageHint"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Indice pour l'image (IA)</FormLabel>
-              <FormControl>
-                <Input placeholder="ex: abstract architecture" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {mediaType === 'image' && (
+          <FormField
+            control={form.control}
+            name="imageHint"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Indice pour l'image (IA)</FormLabel>
+                <FormControl>
+                  <Input placeholder="ex: abstract architecture" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder'}
         </Button>
