@@ -241,7 +241,7 @@ function SlidesManager() {
                     {slides?.map((slide) => (
                         <TableRow key={slide.id}>
                             <TableCell>
-                                {(slide.mediaUrl.startsWith('http') || slide.mediaUrl.startsWith('/')) ? (
+                                {slide.mediaUrl && (slide.mediaUrl.startsWith('http') || slide.mediaUrl.startsWith('/')) ? (
                                     <Image src={slide.mediaUrl} alt={slide.description} width={80} height={45} className="rounded-md object-cover" />
                                 ): <div className="w-20 h-12 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">URL Invalide</div>}
                             </TableCell>
@@ -1324,5 +1324,7 @@ export default function AdminPage() {
         </AuthGuard>
     )
 }
+
+    
 
     
