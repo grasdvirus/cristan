@@ -6,10 +6,11 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  type CarouselApi,
 } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
 import Fade from 'embla-carousel-fade';
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { collection, query } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '../ui/skeleton';
@@ -28,9 +29,80 @@ export default function HeroSection() {
     const slidesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'slides')) : null, [firestore]);
     const { data: heroItems, isLoading } = useCollection<Slide>(slidesQuery);
 
-    const autoplay = React.useRef(
-        Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: false })
+    const [api, setApi] = useState<CarouselApi>();
+    const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+
+    const autoplayPlugin = React.useRef(
+        Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })
     );
+    
+    const handleSelect = useCallback(() => {
+        if (!api) return;
+
+        const selectedIndex = api.selectedScrollSnap();
+        const slide = heroItems?.[selectedIndex];
+
+        // Arrêter toutes les vidéos sauf celle qui est active
+        videoRefs.current.forEach((videoEl, index) => {
+            if (videoEl && index !== selectedIndex) {
+                videoEl.pause();
+            }
+        });
+        
+        if (slide?.mediaType === 'video') {
+            autoplayPlugin.current.stop();
+            const videoElement = videoRefs.current[selectedIndex];
+            if (videoElement) {
+                videoElement.currentTime = 0;
+                videoElement.play().catch(e => console.error("Video play failed", e));
+            }
+        } else {
+             autoplayPlugin.current.play();
+        }
+
+    }, [api, heroItems]);
+
+    const handleVideoEnd = useCallback(() => {
+        if(api) {
+            // Passer au slide suivant lorsque la vidéo est terminée
+            if(api.canScrollNext()) {
+                api.scrollNext();
+            } else {
+                api.scrollTo(0); // Revenir au début si c'est la fin
+            }
+             autoplayPlugin.current.play();
+        }
+    }, [api]);
+
+
+    useEffect(() => {
+        if (!api) return;
+
+        handleSelect(); // Gérer le slide initial
+
+        api.on('select', handleSelect);
+        
+        return () => {
+            api.off('select', handleSelect);
+        };
+    }, [api, handleSelect]);
+    
+     useEffect(() => {
+        videoRefs.current.forEach(videoEl => {
+            if (videoEl) {
+                videoEl.removeEventListener('ended', handleVideoEnd);
+                videoEl.addEventListener('ended', handleVideoEnd);
+            }
+        });
+        return () => {
+            videoRefs.current.forEach(videoEl => {
+                if (videoEl) {
+                    videoEl.removeEventListener('ended', handleVideoEnd);
+                }
+            });
+        };
+    }, [handleVideoEnd, heroItems]);
+
 
     if (isLoading) {
         return (
@@ -51,10 +123,11 @@ export default function HeroSection() {
     return (
         <section className="relative w-full h-[60vh] md:h-[80vh] bg-background overflow-hidden">
         <Carousel
+            setApi={setApi}
             className="w-full h-full"
-            plugins={[autoplay.current, Fade()]}
+            plugins={[autoplayPlugin.current, Fade()]}
             opts={{
-            loop: true,
+                loop: true,
             }}
         >
             <CarouselContent className="h-full">
@@ -63,11 +136,10 @@ export default function HeroSection() {
                 <div className="w-full h-full relative">
                     {item.mediaType === 'video' && item.videoUrl ? (
                          <video
+                            ref={el => videoRefs.current[index] = el}
                             src={item.videoUrl}
                             poster={item.mediaUrl}
                             className="w-full h-full object-cover"
-                            autoPlay
-                            loop
                             muted
                             playsInline
                         />
