@@ -39,10 +39,8 @@ import { MediaUpload } from '@/components/admin/media-upload';
 export type Slide = {
     id: string;
     description: string;
-    mediaUrl: string;
+    imageUrl: string;
     imageHint?: string;
-    mediaType?: 'image' | 'video';
-    videoUrl?: string;
 };
 
 export type Project = {
@@ -163,7 +161,7 @@ function SlidesManager() {
 
     const { data: slides, isLoading } = useCollection<Slide>(slidesQuery);
 
-    const handleFormSubmit = async (values: { description: string, mediaUrl: string, imageHint?: string, mediaType?: 'image' | 'video', videoUrl?: string }) => {
+    const handleFormSubmit = async (values: { description: string, imageUrl: string, imageHint?: string }) => {
         if (!firestore) return;
         setIsSubmitting(true);
 
@@ -231,8 +229,7 @@ function SlidesManager() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="w-[100px]">Média</TableHead>
-                        <TableHead>Type</TableHead>
+                        <TableHead className="w-[100px]">Image</TableHead>
                         <TableHead>Description</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -241,12 +238,9 @@ function SlidesManager() {
                     {slides?.map((slide) => (
                         <TableRow key={slide.id}>
                             <TableCell>
-                                {slide.mediaUrl && (slide.mediaUrl.startsWith('http') || slide.mediaUrl.startsWith('/')) ? (
-                                    <Image src={slide.mediaUrl} alt={slide.description} width={80} height={45} className="rounded-md object-cover" />
+                                {slide.imageUrl && (slide.imageUrl.startsWith('http') || slide.imageUrl.startsWith('/')) ? (
+                                    <Image src={slide.imageUrl} alt={slide.description} width={80} height={45} className="rounded-md object-cover" />
                                 ): <div className="w-20 h-12 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">URL Invalide</div>}
-                            </TableCell>
-                            <TableCell>
-                                {slide.mediaType === 'video' ? <VideoIcon className="h-5 w-5" /> : <ImageIcon className="h-5 w-5" />}
                             </TableCell>
                             <TableCell className="font-medium">{slide.description}</TableCell>
                             <TableCell className="text-right">
