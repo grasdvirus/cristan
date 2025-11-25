@@ -9,19 +9,6 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { LoadingSpinner } from '@/components/loading-spinner';
 
 export function AppContent({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 3000); // Affiche le spinner pendant 3 secondes
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) {
-    return <LoadingSpinner />;
-  }
 
   return (
     <FirebaseClientProvider>
