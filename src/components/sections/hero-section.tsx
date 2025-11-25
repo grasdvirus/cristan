@@ -27,7 +27,7 @@ export default function HeroSection() {
     const { data: heroItems, isLoading } = useCollection<Slide>(slidesQuery);
 
     const autoplayPlugin = React.useRef(
-        Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })
+        Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: false })
     );
 
     if (isLoading) {
