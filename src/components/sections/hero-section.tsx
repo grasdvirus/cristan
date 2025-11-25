@@ -71,7 +71,7 @@ export default function HeroSection() {
                             playsInline
                             poster={item.mediaUrl}
                         />
-                    ) : (
+                    ) : item.mediaUrl ? (
                         <Image
                             src={item.mediaUrl}
                             alt={item.description}
@@ -80,7 +80,7 @@ export default function HeroSection() {
                             data-ai-hint={item.imageHint}
                             priority={index === 0}
                         />
-                    )}
+                    ) : null}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     <div className="absolute inset-0 flex items-end justify-start text-white">
                     <div className="container p-8 md:p-12">
