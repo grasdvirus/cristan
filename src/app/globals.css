@@ -63,8 +63,10 @@
   * {
     @apply border-border;
   }
-  html {
+  html,
+  body {
     @apply scroll-smooth;
+    overflow-y: hidden;
   }
   body {
     @apply bg-background text-foreground;
