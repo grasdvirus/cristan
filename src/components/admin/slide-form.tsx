@@ -1,3 +1,4 @@
+
 'use client';
 
 import { z } from 'zod';
@@ -16,14 +17,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { Slide } from '@/app/admin/page';
 import { MediaUpload } from './media-upload';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const formSchema = z.object({
   description: z.string().min(1, 'La description est requise.'),
-  imageUrl: z.string().min(1, "L'URL de l'image est requise."),
+  mediaUrl: z.string().min(1, "L'URL du média est requise."),
   imageHint: z.string().optional(),
+  mediaType: z.enum(['image', 'video']).default('image'),
+  videoUrl: z.string().optional(),
 });
 
-type SlideFormValues = z.infer<typeof formSchema>;
+export type SlideFormValues = z.infer<typeof formSchema>;
 
 interface SlideFormProps {
   initialData?: Slide | null;
@@ -34,29 +38,74 @@ interface SlideFormProps {
 export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProps) {
   const form = useForm<SlideFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || { description: '', imageUrl: '', imageHint: '' },
+    defaultValues: initialData || { description: '', mediaUrl: '', imageHint: '', mediaType: 'image', videoUrl: '' },
   });
+
+  const mediaType = form.watch('mediaType');
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
+         <FormField
           control={form.control}
-          name="imageUrl"
+          name="mediaType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Image</FormLabel>
+                <FormLabel>Type de Média</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Choisir un type" />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="image">Image</SelectItem>
+                        <SelectItem value="video">Vidéo</SelectItem>
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="mediaUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{mediaType === 'video' ? 'Miniature (Image)' : 'Image'}</FormLabel>
               <FormControl>
                 <MediaUpload 
                   value={field.value} 
                   onChange={field.onChange} 
                   disabled={isSubmitting}
+                  accept={{ 'image/*': [] }}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        {mediaType === 'video' && (
+             <FormField
+                control={form.control}
+                name="videoUrl"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Média Vidéo</FormLabel>
+                    <FormControl>
+                        <MediaUpload 
+                        value={field.value || ''} 
+                        onChange={field.onChange} 
+                        disabled={isSubmitting}
+                        mediaType="video"
+                        accept={{ 'video/*': [] }}
+                        />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+        )}
         <FormField
           control={form.control}
           name="description"

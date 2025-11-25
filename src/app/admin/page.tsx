@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -10,7 +11,7 @@ import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit, Plus, Shield, Trash2, Search } from 'lucide-react';
+import { Edit, Plus, Shield, Trash2, Search, Video as VideoIcon, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -38,8 +39,10 @@ import { MediaUpload } from '@/components/admin/media-upload';
 export type Slide = {
     id: string;
     description: string;
-    imageUrl: string;
+    mediaUrl: string;
     imageHint?: string;
+    mediaType?: 'image' | 'video';
+    videoUrl?: string;
 };
 
 export type Project = {
@@ -160,7 +163,7 @@ function SlidesManager() {
 
     const { data: slides, isLoading } = useCollection<Slide>(slidesQuery);
 
-    const handleFormSubmit = async (values: { description: string, imageUrl: string, imageHint?: string }) => {
+    const handleFormSubmit = async (values: { description: string, mediaUrl: string, imageHint?: string, mediaType?: 'image' | 'video', videoUrl?: string }) => {
         if (!firestore) return;
         setIsSubmitting(true);
 
@@ -228,7 +231,8 @@ function SlidesManager() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="w-[100px]">Image</TableHead>
+                        <TableHead className="w-[100px]">Média</TableHead>
+                        <TableHead>Type</TableHead>
                         <TableHead>Description</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -237,9 +241,12 @@ function SlidesManager() {
                     {slides?.map((slide) => (
                         <TableRow key={slide.id}>
                             <TableCell>
-                                {(slide.imageUrl.startsWith('http') || slide.imageUrl.startsWith('/')) ? (
-                                    <Image src={slide.imageUrl} alt={slide.description} width={80} height={45} className="rounded-md object-cover" />
+                                {(slide.mediaUrl.startsWith('http') || slide.mediaUrl.startsWith('/')) ? (
+                                    <Image src={slide.mediaUrl} alt={slide.description} width={80} height={45} className="rounded-md object-cover" />
                                 ): <div className="w-20 h-12 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">URL Invalide</div>}
+                            </TableCell>
+                            <TableCell>
+                                {slide.mediaType === 'video' ? <VideoIcon className="h-5 w-5" /> : <ImageIcon className="h-5 w-5" />}
                             </TableCell>
                             <TableCell className="font-medium">{slide.description}</TableCell>
                             <TableCell className="text-right">
