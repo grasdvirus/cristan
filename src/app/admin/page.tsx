@@ -23,6 +23,7 @@ import { VideoForm, type VideoFormValues } from '@/components/admin/video-form';
 import { GameForm, type GameFormValues } from '@/components/admin/game-form';
 import { NewsForm, type NewsFormValues } from '@/components/admin/news-form';
 import { MarqueeForm, type MarqueeFormValues } from '@/components/admin/marquee-form';
+import { PartnerMarqueeForm, type PartnerMarqueeFormValues } from '@/components/admin/partner-marquee-form';
 import { AvisClientForm, type AvisClientFormValues } from '@/components/admin/avis-client-form';
 import { PartnerMessageForm, type PartnerMessageFormValues } from '@/components/admin/partner-message-form';
 import { SubmissionsManager } from '@/components/admin/submissions-manager';
@@ -91,6 +92,12 @@ export type NewsItem = {
 export type MarqueeItem = {
   id: string;
   text: string;
+};
+
+export type PartnerMarqueeItem = {
+  id: string;
+  name: string;
+  emoji: string;
 };
 
 export type AvisClient = {
@@ -991,6 +998,122 @@ function MarqueeManager() {
     );
 }
 
+function PartnerMarqueeManager() {
+    const { firestore } = useFirebase();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<PartnerMarqueeItem | null>(null);
+
+    const marqueeQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'partnerMarqueeItems'));
+    }, [firestore]);
+
+    const { data: marqueeItems, isLoading } = useCollection<PartnerMarqueeItem>(marqueeQuery);
+
+    const handleFormSubmit = async (values: PartnerMarqueeFormValues) => {
+        if (!firestore) return;
+        setIsSubmitting(true);
+        try {
+            if (editingItem) {
+                await updateDoc(doc(firestore, 'partnerMarqueeItems', editingItem.id), values);
+            } else {
+                await addDoc(collection(firestore, 'partnerMarqueeItems'), values);
+            }
+            toast({ variant: 'success', title: `Partenaire ${editingItem ? 'modifié' : 'ajouté'}.` });
+            setDialogOpen(false);
+            setEditingItem(null);
+        } catch (error) {
+            console.error("Error saving partner marquee item: ", error);
+            toast({ title: 'Erreur', description: `Impossible de sauvegarder l'item.`, variant: 'destructive' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!firestore) return;
+        try {
+            await deleteDoc(doc(firestore, 'partnerMarqueeItems', id));
+            toast({ variant: 'success', title: 'Partenaire supprimé.' });
+        } catch (error) {
+            console.error("Error deleting partner marquee item: ", error);
+            toast({ title: 'Erreur', description: 'Impossible de supprimer le partenaire.', variant: 'destructive' });
+        }
+    };
+
+    const openEditDialog = (item: PartnerMarqueeItem) => {
+        setEditingItem(item);
+        setDialogOpen(true);
+    };
+
+    const openAddDialog = () => {
+        setEditingItem(null);
+        setDialogOpen(true);
+    };
+
+    return (
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Marquee Partenaires</h2>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
+                            <Plus className="mr-2 h-4 w-4" /> Ajouter un partenaire
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{editingItem ? 'Modifier' : 'Ajouter'} un partenaire</DialogTitle>
+                        </DialogHeader>
+                        <PartnerMarqueeForm
+                            initialData={editingItem}
+                            onSubmit={handleFormSubmit}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </div>
+            {isLoading ? <Skeleton className="h-40 w-full" /> : (
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Émoji</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {marqueeItems?.map((item) => (
+                        <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.name}</TableCell>
+                            <TableCell>{item.emoji}</TableCell>
+                            <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}><Edit className="h-4 w-4" /></Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
+                                        <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDelete(item.id)}>Supprimer</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+            )}
+        </NeumorphicCard>
+    );
+}
+
 function AvisClientsManager() {
     const { firestore } = useFirebase();
     const { toast } = useToast();
@@ -1279,6 +1402,7 @@ function AdminPageContent() {
                             <TabsTrigger value="slides">Slides</TabsTrigger>
                             <TabsTrigger value="promoVideos">Vidéos Promo</TabsTrigger>
                             <TabsTrigger value="marquee">Marquee</TabsTrigger>
+                            <TabsTrigger value="partnerMarquee">Marquee Partenaires</TabsTrigger>
                             <TabsTrigger value="avisClients">Avis Clients</TabsTrigger>
                             <TabsTrigger value="internet">Internet</TabsTrigger>
                             <TabsTrigger value="tv">TV</TabsTrigger>
@@ -1302,6 +1426,10 @@ function AdminPageContent() {
                     
                     <TabsContent value="marquee">
                         <MarqueeManager />
+                    </TabsContent>
+
+                    <TabsContent value="partnerMarquee">
+                        <PartnerMarqueeManager />
                     </TabsContent>
 
                     <TabsContent value="avisClients">
@@ -1363,7 +1491,3 @@ export default function AdminPage() {
         </AuthGuard>
     )
 }
-
-    
-
-    

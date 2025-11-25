@@ -347,6 +347,27 @@
         }
       },
       "required": ["id", "description", "imageUrl"]
+    },
+    "PartnerMarqueeItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PartnerMarqueeItem",
+      "type": "object",
+      "description": "Represents a partner's name and emoji for the scrolling marquee.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the partner marquee item."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the partner."
+        },
+        "emoji": {
+          "type": "string",
+          "description": "The emoji representing the partner."
+        }
+      },
+      "required": ["id", "name", "emoji"]
     }
   },
   "auth": {
@@ -541,10 +562,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/partnerMarqueeItems/{partnerMarqueeItemId}",
+        "definition": {
+          "entityName": "PartnerMarqueeItem",
+          "schema": {
+            "$ref": "#/backend/entities/PartnerMarqueeItem"
+          },
+          "description": "Stores partner items for the marquee. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "partnerMarqueeItemId",
+              "description": "The unique identifier for the partner marquee item."
+            }
+          ]
+        }
       }
     ],
     "reasoning": "The Firestore structure is designed to support a portfolio website with user profiles, videos, comments, likes, and frameworks. It emphasizes authorization independence and clear security rules. User profiles are stored in `/users/{userId}`, enabling path-based ownership for private user data. Videos and frameworks are stored in root-level collections (`/videos` and `/frameworks`) as they are not directly owned by individual users and are intended to be more globally accessible. Comments and Likes are stored as subcollections under `/videos/{videoId}` to represent the 1:N relationships. This structure avoids hierarchical authorization dependencies, ensuring that rules can be written without requiring `get()` calls to parent documents. For example, comment documents include `userProfileId` to check write access control. Security rules are simplified due to the structural segregation of user-specific data and global data. A `NewsItem` entity and collection have been added to support a news/updates feature, with public read access and admin-only write access. List operations are secured by ensuring that only authenticated users can access certain collections (e.g., `/users`). A new `ContractSubmission` entity has been added to handle both project contracts and partner requests, differentiated by a `type` field and managed by a `status` field for partner approvals."
   }
 }
-
-    
