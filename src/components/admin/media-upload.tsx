@@ -74,17 +74,18 @@ export function MediaUpload({ value, onChange, disabled, accept, mediaType = 'im
     onChange('');
   };
   
-  const displayUrl = getYoutubeThumbnailUrl(value) || value;
-  const isYoutube = value.includes('youtube.com') || value.includes('youtu.be');
+  const currentUrl = value || '';
+  const displayUrl = getYoutubeThumbnailUrl(currentUrl) || currentUrl;
+  const isYoutube = currentUrl.includes('youtube.com') || currentUrl.includes('youtu.be');
 
   const renderPreview = () => {
-    if (value && !isUploading) {
-        const isVideo = mediaType === 'video' || /\.(mp4|webm|mov)$/i.test(value);
+    if (currentUrl && !isUploading) {
+        const isVideo = mediaType === 'video' || /\.(mp4|webm|mov)$/i.test(currentUrl);
         return (
             <div className="relative w-full h-full">
                 {isVideo && !isYoutube ? (
-                    <video key={value} controls className="w-full h-full object-contain rounded-md">
-                        <source src={value} type={value.endsWith('mp4') ? 'video/mp4' : value.endsWith('webm') ? 'video/webm' : undefined} />
+                    <video key={currentUrl} controls className="w-full h-full object-contain rounded-md">
+                        <source src={currentUrl} type={currentUrl.endsWith('mp4') ? 'video/mp4' : currentUrl.endsWith('webm') ? 'video/webm' : undefined} />
                     </video>
                 ) : (
                     <Image src={displayUrl} alt="Aperçu" layout="fill" className="object-contain rounded-md" />
