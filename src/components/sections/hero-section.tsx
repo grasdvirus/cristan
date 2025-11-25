@@ -9,6 +9,7 @@ import {
   type CarouselApi,
 } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
+import Fade from 'embla-carousel-fade';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { collection, query } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
@@ -29,6 +30,7 @@ export default function HeroSection() {
     const autoplayPlugin = React.useRef(
         Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: false })
     );
+    const fadePlugin = React.useRef(Fade());
 
     if (isLoading) {
         return (
@@ -50,7 +52,7 @@ export default function HeroSection() {
         <section className="relative w-full h-[60vh] md:h-[80vh] bg-background overflow-hidden">
         <Carousel
             className="w-full h-full"
-            plugins={[autoplayPlugin.current]}
+            plugins={[autoplayPlugin.current, fadePlugin.current]}
             opts={{
                 loop: true,
             }}
