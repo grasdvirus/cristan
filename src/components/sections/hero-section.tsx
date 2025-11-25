@@ -33,58 +33,65 @@ export default function HeroSection() {
     const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
     const autoplayPlugin = React.useRef(
-        Autoplay({ delay: 3000, stopOnInteraction: true, stopOnMouseEnter: true })
+        Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })
     );
-
-    const handleVideoEnd = useCallback(() => {
-        if (api) {
-            api.scrollNext();
-            autoplayPlugin.current.play();
-        }
-    }, [api]);
 
     const handleSelect = useCallback(() => {
         if (!api || !heroItems) return;
-
+    
         const selectedIndex = api.selectedScrollSnap();
         const currentSlide = heroItems[selectedIndex];
-
-        // Pause all videos
-        videoRefs.current.forEach((videoEl) => {
+    
+        // Pause all videos to ensure only the active one plays
+        videoRefs.current.forEach((videoEl, index) => {
             if (videoEl && !videoEl.paused) {
                 videoEl.pause();
             }
-        });
-
-        // Add ended listener to all videos and remove previous ones
-        videoRefs.current.forEach(videoEl => {
+            // Clean up old event listeners
             if (videoEl) {
-                videoEl.removeEventListener('ended', handleVideoEnd);
-                videoEl.addEventListener('ended', handleVideoEnd);
+                videoEl.removeEventListener('ended', api.scrollNext);
             }
         });
-
+    
         if (currentSlide?.mediaType === 'video') {
             autoplayPlugin.current.stop();
             const videoElement = videoRefs.current[selectedIndex];
             if (videoElement) {
                 videoElement.currentTime = 0;
-                videoElement.play().catch(e => console.error("Video play failed", e));
+                const playPromise = videoElement.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => console.error("Video play failed:", error));
+                }
+                
+                const onVideoEnd = () => {
+                    api.scrollNext();
+                    // No need to restart autoplay here, the next 'select' event will handle it
+                };
+    
+                videoElement.addEventListener('ended', onVideoEnd, { once: true });
             }
         } else {
-            autoplayPlugin.current.play();
+            // For image slides, ensure autoplay is playing
+             if (!autoplayPlugin.current.isPlaying()) {
+                autoplayPlugin.current.play();
+            }
         }
-    }, [api, heroItems, handleVideoEnd]);
-
+    }, [api, heroItems]);
 
     useEffect(() => {
         if (!api || !heroItems) return;
         
-        handleSelect();
+        handleSelect(); // Handle the initial slide
         api.on('select', handleSelect);
         
         return () => {
             api.off('select', handleSelect);
+             // Clean up event listeners on unmount
+            videoRefs.current.forEach(videoEl => {
+                if (videoEl) {
+                    videoEl.removeEventListener('ended', api.scrollNext);
+                }
+            });
         };
     }, [api, heroItems, handleSelect]);
     
@@ -126,7 +133,6 @@ export default function HeroSection() {
                             className="w-full h-full object-cover"
                             muted
                             playsInline
-                            loop={false} // Loop is handled by autoplay logic
                         />
                     ) : item.mediaUrl ? (
                         <Image
