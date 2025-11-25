@@ -44,6 +44,11 @@ service cloud.firestore {
                                                 allow get, list: if true;
                                                       allow create, update, delete: if isAdmin();
                                         }
+
+                                        match /promoVideos/{promoVideoId} {
+                                            allow get, list: if true;
+                                            allow create, update, delete: if isAdmin();
+                                        }
                                             
                                                 match /submissions/{submissionId} {
                                                         allow get: if isAdmin() || (request.auth != null && request.auth.uid == submissionId);

@@ -1,27 +1,39 @@
 
 'use client';
 
-import { useDoc, useFirebase, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { VideoPlayer } from '../video-player';
+import React from 'react';
+import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from '@/components/ui/carousel';
+import Autoplay from 'embla-carousel-autoplay';
+import Fade from 'embla-carousel-fade';
+import { VideoPlayer } from '../video-player';
 
-type Video = {
+type PromoVideo = {
     id: string;
+    title: string;
     videoUrl: string;
-    thumbnailUrl: string;
 };
 
 export function PromoVideoSection() {
     const { firestore } = useFirebase();
-    const PROMO_VIDEO_ID = 'promo-video';
-
-    const promoVideoRef = useMemoFirebase(() => {
+    const promoVideosQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return doc(firestore, 'videos', PROMO_VIDEO_ID);
+        return query(collection(firestore, 'promoVideos'));
     }, [firestore]);
 
-    const { data: promoVideo, isLoading } = useDoc<Video>(promoVideoRef);
+    const { data: promoVideos, isLoading } = useCollection<PromoVideo>(promoVideosQuery);
+    
+    const autoplayPlugin = React.useRef(
+        Autoplay({ delay: 5000, stopOnInteraction: true })
+    );
+    const fadePlugin = React.useRef(Fade());
 
     if (isLoading) {
         return (
@@ -33,14 +45,28 @@ export function PromoVideoSection() {
         );
     }
     
-    if (!promoVideo || !promoVideo.videoUrl) {
-        return null; // Ne rien rendre si la vidéo n'est pas configurée
+    if (!promoVideos || promoVideos.length === 0) {
+        return null; // Ne rien rendre si aucune vidéo n'est configurée
     }
 
     return (
         <section className="py-12 sm:py-16 bg-background">
             <div className="container px-4">
-                <VideoPlayer src={promoVideo.videoUrl} poster={promoVideo.thumbnailUrl} />
+                 <Carousel
+                    className="w-full"
+                    plugins={[autoplayPlugin.current, fadePlugin.current]}
+                    opts={{
+                        loop: true,
+                    }}
+                >
+                    <CarouselContent>
+                        {promoVideos.map((video) => (
+                            <CarouselItem key={video.id}>
+                                <VideoPlayer src={video.videoUrl} />
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                </Carousel>
             </div>
         </section>
     );

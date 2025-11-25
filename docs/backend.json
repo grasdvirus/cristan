@@ -309,6 +309,44 @@
         "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the message was published." }
       },
       "required": ["id", "title", "content", "createdAt"]
+    },
+    "PromoVideo": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PromoVideo",
+      "type": "object",
+      "description": "Represents a promotional video for the homepage carousel.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the promo video." },
+        "title": { "type": "string", "description": "The title of the video." },
+        "videoUrl": { "type": "string", "format": "uri", "description": "URL of the video file." }
+      },
+      "required": ["id", "title", "videoUrl"]
+    },
+    "Slide": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Slide",
+      "type": "object",
+      "description": "Represents a single slide in the hero carousel.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the slide."
+        },
+        "description": {
+          "type": "string",
+          "description": "The text overlayed on the slide image."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the slide image.",
+          "format": "uri"
+        },
+        "imageHint": {
+          "type": "string",
+          "description": "A hint for AI to find a similar image."
+        }
+      },
+      "required": ["id", "description", "imageUrl"]
     }
   },
   "auth": {
@@ -468,6 +506,38 @@
             {
               "name": "messageId",
               "description": "The unique identifier for the partner message."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/slides/{slideId}",
+        "definition": {
+          "entityName": "Slide",
+          "schema": {
+            "$ref": "#/backend/entities/Slide"
+          },
+          "description": "Stores hero carousel slides. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "slideId",
+              "description": "The unique identifier for the slide."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/promoVideos/{promoVideoId}",
+        "definition": {
+          "entityName": "PromoVideo",
+          "schema": {
+            "$ref": "#/backend/entities/PromoVideo"
+          },
+          "description": "Stores promotional videos for the homepage. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "promoVideoId",
+              "description": "The unique identifier for the promo video."
             }
           ]
         }

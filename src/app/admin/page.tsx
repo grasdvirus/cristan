@@ -34,6 +34,7 @@ import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { MediaUpload } from '@/components/admin/media-upload';
+import { PromoVideoForm, type PromoVideoFormValues } from '@/components/admin/promo-video-form';
 
 // Define types based on backend.json
 export type Slide = {
@@ -105,6 +106,12 @@ export type PartnerMessage = {
     title: string;
     content: string;
     createdAt: { seconds: number, nanoseconds: number };
+};
+
+export type PromoVideo = {
+    id: string;
+    title: string;
+    videoUrl: string;
 };
 
 
@@ -516,80 +523,118 @@ function VideosManager() {
     );
 }
 
-function PromoVideoManager() {
+function PromoVideosManager() {
     const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const PROMO_VIDEO_ID = 'promo-video';
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingVideo, setEditingVideo] = useState<PromoVideo | null>(null);
 
-    const promoVideoRef = useMemoFirebase(() => {
+    const promoVideosQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return doc(firestore, 'videos', PROMO_VIDEO_ID);
+        return query(collection(firestore, 'promoVideos'));
     }, [firestore]);
 
-    const { data: promoVideo, isLoading } = useDoc<Video>(promoVideoRef);
-    
-    const [videoUrl, setVideoUrl] = useState('');
-    const [thumbnailUrl, setThumbnailUrl] = useState('');
+    const { data: promoVideos, isLoading } = useCollection<PromoVideo>(promoVideosQuery);
 
-    useState(() => {
-        if (promoVideo) {
-            setVideoUrl(promoVideo.videoUrl);
-            setThumbnailUrl(promoVideo.thumbnailUrl);
-        }
-    });
-
-    const handleSave = async () => {
+    const handleFormSubmit = async (values: PromoVideoFormValues) => {
         if (!firestore) return;
         setIsSubmitting(true);
         try {
-            const dataToSave = {
-                id: PROMO_VIDEO_ID,
-                title: 'Vidéo Promotionnelle',
-                videoUrl,
-                thumbnailUrl,
-            };
-            await setDoc(doc(firestore, 'videos', PROMO_VIDEO_ID), dataToSave, { merge: true });
-            toast({ variant: 'success', title: 'Vidéo promotionnelle mise à jour.' });
+            if (editingVideo) {
+                await updateDoc(doc(firestore, 'promoVideos', editingVideo.id), values);
+            } else {
+                await addDoc(collection(firestore, 'promoVideos'), values);
+            }
+            toast({ variant: 'success', title: `Vidéo promo ${editingVideo ? 'modifiée' : 'ajoutée'} avec succès.` });
+            setDialogOpen(false);
+            setEditingVideo(null);
         } catch (error) {
-            console.error('Error saving promo video:', error);
-            toast({ title: 'Erreur', description: 'Impossible de sauvegarder la vidéo.', variant: 'destructive' });
+            console.error("Error saving promo video: ", error);
+            toast({ title: 'Erreur', description: `Impossible de sauvegarder la vidéo.`, variant: 'destructive' });
         } finally {
             setIsSubmitting(false);
         }
     };
-    
-    if (isLoading) {
-        return <Skeleton className="h-64 w-full" />;
-    }
+
+    const handleDelete = async (id: string) => {
+        if (!firestore) return;
+        try {
+            await deleteDoc(doc(firestore, 'promoVideos', id));
+            toast({ variant: 'success', title: 'Vidéo promo supprimée.' });
+        } catch (error) {
+            console.error("Error deleting promo video: ", error);
+            toast({ title: 'Erreur', description: 'Impossible de supprimer la vidéo.', variant: 'destructive' });
+        }
+    };
+
+    const openEditDialog = (video: PromoVideo) => {
+        setEditingVideo(video);
+        setDialogOpen(true);
+    };
+
+    const openAddDialog = () => {
+        setEditingVideo(null);
+        setDialogOpen(true);
+    };
 
     return (
-        <NeumorphicCard inset className="p-4 sm:p-6 space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold font-headline">Vidéo Promotionnelle (Accueil)</h2>
-            
-            <div>
-                <label className="text-sm font-medium">URL de la vidéo</label>
-                <MediaUpload 
-                    value={videoUrl} 
-                    onChange={setVideoUrl} 
-                    disabled={isSubmitting}
-                    accept={{ 'video/*': [] }}
-                    mediaType='video'
-                />
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Vidéos Promotionnelles (Accueil)</h2>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
+                            <Plus className="mr-2 h-4 w-4" /> Ajouter une vidéo promo
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{editingVideo ? 'Modifier' : 'Ajouter'} une vidéo promo</DialogTitle>
+                        </DialogHeader>
+                        <PromoVideoForm
+                            initialData={editingVideo}
+                            onSubmit={handleFormSubmit}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
             </div>
-
-            <div>
-                <label className="text-sm font-medium">Miniature de la vidéo (Optionnel)</label>
-                 <MediaUpload 
-                    value={thumbnailUrl} 
-                    onChange={setThumbnailUrl} 
-                    disabled={isSubmitting}
-                />
-            </div>
-
-            <Button onClick={handleSave} disabled={isSubmitting}>
-                {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder la Vidéo Promo'}
-            </Button>
+            {isLoading ? <Skeleton className="h-40 w-full" /> : (
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Titre</TableHead>
+                        <TableHead>URL</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {promoVideos?.map((video) => (
+                        <TableRow key={video.id}>
+                            <TableCell className="font-medium">{video.title}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground truncate max-w-xs">{video.videoUrl}</TableCell>
+                            <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" onClick={() => openEditDialog(video)}><Edit className="h-4 w-4" /></Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
+                                        <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDelete(video.id)}>Supprimer</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+            )}
         </NeumorphicCard>
     );
 }
@@ -1232,11 +1277,11 @@ function AdminPageContent() {
                     <ScrollArea className="w-full whitespace-nowrap">
                         <TabsList className="inline-flex h-auto p-1 mb-8">
                             <TabsTrigger value="slides">Slides</TabsTrigger>
+                            <TabsTrigger value="promoVideos">Vidéos Promo</TabsTrigger>
                             <TabsTrigger value="marquee">Marquee</TabsTrigger>
                             <TabsTrigger value="avisClients">Avis Clients</TabsTrigger>
                             <TabsTrigger value="internet">Internet</TabsTrigger>
                             <TabsTrigger value="tv">TV</TabsTrigger>
-                            <TabsTrigger value="promoVideo">Vidéo Promo</TabsTrigger>
                             <TabsTrigger value="games">Gamme</TabsTrigger>
                             <TabsTrigger value="news">Actualités</TabsTrigger>
                             <TabsTrigger value="submissions">Demandes</TabsTrigger>
@@ -1249,6 +1294,10 @@ function AdminPageContent() {
                     
                     <TabsContent value="slides">
                         <SlidesManager />
+                    </TabsContent>
+
+                    <TabsContent value="promoVideos">
+                        <PromoVideosManager />
                     </TabsContent>
                     
                     <TabsContent value="marquee">
@@ -1265,10 +1314,6 @@ function AdminPageContent() {
 
                     <TabsContent value="tv">
                         <VideosManager />
-                    </TabsContent>
-
-                    <TabsContent value="promoVideo">
-                        <PromoVideoManager />
                     </TabsContent>
 
                     <TabsContent value="games">
