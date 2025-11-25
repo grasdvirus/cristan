@@ -10,37 +10,37 @@ export async function POST(request: NextRequest) {
   const file: File | null = data.get('file') as unknown as File;
 
   if (!file) {
-    return NextResponse.json({ success: false, error: 'No file found' });
+    return NextResponse.json({ success: false, error: 'Aucun fichier trouvé.' }, { status: 400 });
+  }
+
+  // Vérifier la taille du fichier (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    return NextResponse.json({ success: false, error: 'Le fichier dépasse la limite de 5 Mo.' }, { status: 413 });
   }
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
-  // Define the upload directory and ensure it exists
   const uploadDir = join(process.cwd(), 'public/uploads');
-  if (!existsSync(uploadDir)) {
-    try {
+  
+  try {
+    if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });
-    } catch (error) {
-       console.error('Error creating directory:', error);
-       return NextResponse.json({ success: false, error: 'Error creating directory' }, { status: 500 });
     }
+  } catch (error) {
+     console.error('Erreur lors de la création du dossier:', error);
+     return NextResponse.json({ success: false, error: 'Erreur lors de la création du dossier sur le serveur.' }, { status: 500 });
   }
 
-  // Use a timestamp to make the filename unique
   const filename = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
   const path = join(uploadDir, filename);
 
-
   try {
     await writeFile(path, buffer);
-    console.log(`File saved to ${path}`);
-
-    // Return the public URL
     const publicUrl = `/uploads/${filename}`;
     return NextResponse.json({ success: true, url: publicUrl });
   } catch (error) {
-    console.error('Error saving file:', error);
-    return NextResponse.json({ success: false, error: 'Error saving file' }, { status: 500 });
+    console.error('Erreur lors de la sauvegarde du fichier:', error);
+    return NextResponse.json({ success: false, error: 'Erreur lors de la sauvegarde du fichier sur le serveur.' }, { status: 500 });
   }
 }

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -48,26 +47,28 @@ export function MediaUpload({ value, onChange, disabled, accept, mediaType = 'im
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           const result = JSON.parse(xhr.responseText);
-          if (result.success) {
+          if (result.success && result.url) {
             onChange(result.url);
             toast({ variant: "success", title: 'Téléversement réussi!' });
           } else {
-            throw new Error(result.error || 'Unknown upload error');
+            throw new Error(result.error || 'Réponse invalide du serveur');
           }
-        } catch (e) {
+        } catch (e: any) {
             toast({
                 title: 'Erreur de réponse du serveur',
-                description: 'La réponse n\'a pas pu être analysée.',
+                description: e.message || 'La réponse n\'a pas pu être analysée.',
                 variant: 'destructive',
             });
         }
       } else {
-        let errorMsg = `Upload failed with status: ${xhr.status}`;
+        let errorMsg = `Le téléversement a échoué avec le statut : ${xhr.status}`;
         try {
             const result = JSON.parse(xhr.responseText);
-            errorMsg = result.error || errorMsg;
+            if (result.error) {
+                errorMsg = result.error;
+            }
         } catch (e) {
-            // response is not json
+            // La réponse n'est pas en JSON, on garde le message de base
         }
         toast({
           title: 'Erreur de téléversement',
@@ -104,7 +105,7 @@ export function MediaUpload({ value, onChange, disabled, accept, mediaType = 'im
   
   const currentUrl = value || '';
   const displayUrl = getYoutubeThumbnailUrl(currentUrl) || currentUrl;
-  const isYoutube = (currentUrl || '').includes('youtube.com') || (currentUrl || '').includes('youtu.be');
+  const isYoutube = (currentUrl).includes('youtube.com') || (currentUrl).includes('youtu.be');
 
   const renderPreview = () => {
     if (currentUrl && !isUploading) {
