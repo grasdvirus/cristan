@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 const formSchema = z.object({
   description: z.string().min(1, 'La description est requise.'),
-  mediaUrl: z.string().min(1, "Le média est requis."),
+  mediaUrl: z.string().min(1, "L'image ou la miniature est requise."),
   imageHint: z.string().optional(),
   mediaType: z.enum(['image', 'video']).default('image'),
   videoUrl: z.string().optional(),
@@ -42,24 +42,9 @@ export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProp
 
   const mediaType = form.watch('mediaType');
 
-  const handleFormSubmit = (values: SlideFormValues) => {
-    let finalValues = { ...values };
-
-    if (values.mediaType === 'video') {
-      // For video slides, mediaUrl from the uploader IS the videoUrl.
-      // We set videoUrl to be this value, and mediaUrl can also hold it to serve as a poster.
-      finalValues.videoUrl = values.mediaUrl;
-    } else {
-      // For image slides, mediaUrl is the image file, and videoUrl should be empty.
-      finalValues.videoUrl = '';
-    }
-    onSubmit(finalValues);
-  };
-
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
          <FormField
           control={form.control}
           name="mediaType"
@@ -81,25 +66,49 @@ export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProp
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="mediaUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{mediaType === 'video' ? 'Fichier Vidéo' : 'Fichier Image'}</FormLabel>
+              <FormLabel>{mediaType === 'video' ? 'Miniature de la vidéo' : 'Fichier Image'}</FormLabel>
               <FormControl>
                 <MediaUpload 
                   value={field.value || ''}
                   onChange={field.onChange} 
                   disabled={isSubmitting}
-                  mediaType={mediaType}
-                  accept={mediaType === 'video' ? { 'video/*': [] } : { 'image/*': [] }}
+                  mediaType={'image'} // This uploader always handles images
+                  accept={{ 'image/*': [] }}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        
+        {mediaType === 'video' && (
+             <FormField
+              control={form.control}
+              name="videoUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fichier Vidéo</FormLabel>
+                  <FormControl>
+                    <MediaUpload 
+                      value={field.value || ''}
+                      onChange={field.onChange} 
+                      disabled={isSubmitting}
+                      mediaType={'video'}
+                      accept={{ 'video/*': [] }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+        )}
+
         <FormField
           control={form.control}
           name="description"
@@ -121,7 +130,7 @@ export function SlideForm({ initialData, onSubmit, isSubmitting }: SlideFormProp
               <FormItem>
                 <FormLabel>Indice pour l'image (IA)</FormLabel>
                 <FormControl>
-                  <Input placeholder="ex: abstract architecture" {...field} />
+                  <Input placeholder="ex: abstract architecture" {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
