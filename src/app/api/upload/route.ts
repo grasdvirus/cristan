@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Aucun fichier trouvé.' }, { status: 400 });
   }
 
-  // Vérifier la taille du fichier (5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    return NextResponse.json({ success: false, error: 'Le fichier dépasse la limite de 5 Mo.' }, { status: 413 });
+  // Vérifier la taille du fichier (12MB)
+  if (file.size > 12 * 1024 * 1024) {
+    return NextResponse.json({ success: false, error: 'Le fichier dépasse la limite de 12 Mo.' }, { status: 413 });
   }
 
   const bytes = await file.arrayBuffer();
