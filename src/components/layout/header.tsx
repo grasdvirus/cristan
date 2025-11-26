@@ -74,7 +74,7 @@ export default function Header() {
         </div>
         <div className="flex-1 text-center">
           <Link href="/" className="flex items-center justify-center gap-2">
-            <span className="text-xl font-bold font-headline text-foreground animate-rainbow-text">
+            <span className="text-xl font-bold font-bagel text-foreground animate-rainbow-text">
               cristan
             </span>
           </Link>
