@@ -38,7 +38,7 @@ export function AudioPlayer() {
   useEffect(() => {
     // We create the audio element and set its source.
     // This will be done only once.
-    audioRef.current = new Audio('/presentation.wav');
+    audioRef.current = new Audio('/uploads/presentations.wav');
     const audio = audioRef.current;
 
     const handleCanPlay = () => setCanPlay(true);
@@ -49,7 +49,7 @@ export function AudioPlayer() {
 
     // This is a safety check in case the file doesn't load.
     audio.addEventListener('error', () => {
-        console.error("Erreur: Le fichier audio '/presentation.wav' n'a pas pu être chargé.");
+        console.error("Erreur: Le fichier audio '/uploads/presentations.wav' n'a pas pu être chargé.");
         setCanPlay(false);
     });
 
