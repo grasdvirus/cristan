@@ -43,12 +43,7 @@ export function AudioPlayer() {
           throw new Error('Aucun média audio retourné.');
         }
       } catch (error) {
-        console.error('Erreur lors de la génération de l\'audio:', error);
-        toast({
-            variant: 'destructive',
-            title: 'Erreur Audio',
-            description: 'La piste audio de présentation n\'a pas pu être chargée.'
-        });
+        console.error('Erreur lors de la génération de l\'audio, le lecteur ne sera pas affiché:', error);
       } finally {
         setIsLoading(false);
       }
@@ -81,7 +76,7 @@ export function AudioPlayer() {
     }
   }, [audioUrl]);
 
-  if (!audioData?.text) {
+  if (!audioData?.text || !audioUrl) {
     return null;
   }
   
