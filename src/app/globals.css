@@ -419,6 +419,15 @@
         radial-gradient(2.5px 2.5px at 25px 160px, hsl(var(--primary)), transparent);
       animation: sparkle-animation 5s linear infinite;
   }
+
+  .animate-rainbow-text {
+    background: linear-gradient(to right, #ef5350, #f48fb1, #ce93d8, #9fa8da, #90caf9, #81d4fa, #80deea, #a5d6a7, #c5e1a5, #e6ee9c, #fff59d, #ffcc80, #ffab91);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: rainbow-text 3s linear infinite;
+  }
 }
 
 @keyframes voice-wave {
@@ -426,3 +435,8 @@
   50% { height: 1rem; }
 }
 
+@keyframes rainbow-text {
+  to {
+    background-position: 200% center;
+  }
+}
