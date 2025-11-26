@@ -2,9 +2,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { generateAudioAction } from '@/app/actions/generate-audio';
-import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
 import { Button } from './ui/button';
 import { Loader2, Play, Pause } from 'lucide-react';
 import {
@@ -15,10 +12,6 @@ import {
 } from "@/components/ui/tooltip"
 import { useIsMobile } from '@/hooks/use-mobile';
 
-
-type PresentationAudio = {
-  text: string;
-};
 
 const TalkingHeadIcon = () => (
     <div className="flex items-end gap-1 h-8">
@@ -36,76 +29,66 @@ const TalkingHeadIcon = () => (
 
 
 export function AudioPlayer() {
-  const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [canPlay, setCanPlay] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const { firestore } = useFirebase();
   const isMobile = useIsMobile();
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
 
-  const audioDocRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return doc(firestore, 'presentationAudio', 'main');
-  }, [firestore]);
-
-  const { data: audioData, isLoading: isAudioDataLoading } = useDoc<PresentationAudio>(audioDocRef);
-  
   useEffect(() => {
-    if (isMobile && !userInteracted && !isAudioDataLoading && audioData?.text) {
-        setTooltipOpen(true);
+    // We create the audio element and set its source.
+    // This will be done only once.
+    audioRef.current = new Audio('/presentation.mp3');
+    const audio = audioRef.current;
+
+    const handleCanPlay = () => setCanPlay(true);
+    const handleEnded = () => setIsPlaying(false);
+
+    audio.addEventListener('canplaythrough', handleCanPlay);
+    audio.addEventListener('ended', handleEnded);
+
+    // This is a safety check in case the file doesn't load.
+    audio.addEventListener('error', () => {
+        console.error("Erreur: Le fichier audio '/presentation.mp3' n'a pas pu être chargé.");
+        setCanPlay(false);
+    });
+
+    return () => {
+        audio.removeEventListener('canplaythrough', handleCanPlay);
+        audio.removeEventListener('ended', handleEnded);
+        audio.pause();
+        audio.src = '';
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isMobile && !userInteracted && canPlay) {
+      setTooltipOpen(true);
     } else {
-        setTooltipOpen(false);
+      setTooltipOpen(false);
     }
-  }, [isMobile, userInteracted, isAudioDataLoading, audioData]);
+  }, [isMobile, userInteracted, canPlay]);
   
-  const togglePlay = async () => {
+  const togglePlay = () => {
     if (!userInteracted) {
       setUserInteracted(true);
       setTooltipOpen(false);
     }
 
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !canPlay) return;
     
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
     } else {
-      if (audio.src) {
-        audio.play().catch(e => console.error("Erreur de lecture audio:", e));
-        setIsPlaying(true);
-      } else if (audioData?.text) {
-        setIsLoading(true);
-        try {
-          const result = await generateAudioAction(audioData.text);
-          if ('audioBase64' in result) {
-            audio.src = `data:audio/wav;base64,${result.audioBase64}`;
-            audio.play().catch(e => console.error("Erreur de lecture audio:", e));
-            setIsPlaying(true);
-          } else {
-            console.error("Erreur lors de la génération de l'audio :", result.error);
-          }
-        } catch (error) {
-          console.error("Erreur lors de la génération ou de la lecture de l'audio :", error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
+      audio.play().catch(e => console.error("Erreur de lecture audio:", e));
+      setIsPlaying(true);
     }
   };
-  
-  useEffect(() => {
-    const audio = audioRef.current;
-    if(audio) {
-        const handleEnded = () => setIsPlaying(false);
-        audio.addEventListener('ended', handleEnded);
-        return () => audio.removeEventListener('ended', handleEnded);
-    }
-  }, []);
 
-
-  if (isAudioDataLoading) {
+  if (!canPlay) {
       return (
         <Button
             variant="ghost"
@@ -117,14 +100,9 @@ export function AudioPlayer() {
         </Button>
       )
   }
-
-  if (!audioData?.text) {
-      return null;
-  }
   
   return (
     <div className="flex items-center gap-2">
-      <audio ref={audioRef} hidden playsInline />
       <TooltipProvider>
         <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
           <TooltipTrigger asChild>
@@ -132,12 +110,10 @@ export function AudioPlayer() {
               variant="ghost"
               size="icon"
               onClick={togglePlay}
-              disabled={isLoading}
+              disabled={!canPlay}
               className="btn-neumorphic-light dark:btn-neumorphic-dark rounded-full w-12 h-12"
             >
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : isPlaying ? (
+              {isPlaying ? (
                 <Pause className="h-5 w-5" />
               ) : (
                 <Play className="h-5 w-5" />
@@ -152,4 +128,3 @@ export function AudioPlayer() {
     </div>
   );
 }
-
