@@ -1,3 +1,4 @@
+
 'use server';
 
 import { generatePresentationAudio } from '@/ai/flows/generate-presentation-audio';
@@ -19,3 +20,4 @@ export async function generateAudioAction(text: string): Promise<{ audioBase64: 
     return { error: error.message || "Une erreur est survenue lors de la génération de l'audio." };
   }
 }
+

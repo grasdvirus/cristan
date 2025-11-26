@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -79,8 +80,7 @@ export function AudioPlayer() {
         try {
           const result = await generateAudioAction(audioData.text);
           if ('audioBase64' in result) {
-            const audioBlob = new Blob([Buffer.from(result.audioBase64, 'base64')], { type: 'audio/wav' });
-            audio.src = URL.createObjectURL(audioBlob);
+            audio.src = `data:audio/wav;base64,${result.audioBase64}`;
             audio.play().catch(e => console.error("Erreur de lecture audio:", e));
             setIsPlaying(true);
           } else {
@@ -152,3 +152,4 @@ export function AudioPlayer() {
     </div>
   );
 }
+
