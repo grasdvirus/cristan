@@ -19,6 +19,21 @@ type PresentationAudio = {
   text: string;
 };
 
+const TalkingHeadIcon = () => (
+    <div className="flex items-end gap-1 h-8">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user-round h-7 w-7 text-primary">
+            <circle cx="12" cy="8" r="5" />
+            <path d="M20 21a8 8 0 0 0-16 0" />
+        </svg>
+        <div className="flex items-end gap-0.5 h-4">
+            <span className="voice-wave-bar" style={{ animationDelay: '0s' }}></span>
+            <span className="voice-wave-bar" style={{ animationDelay: '0.2s' }}></span>
+            <span className="voice-wave-bar" style={{ animationDelay: '0.4s' }}></span>
+        </div>
+    </div>
+);
+
+
 export function AudioPlayer() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +80,10 @@ export function AudioPlayer() {
       audio.pause();
     } else {
       audio.currentTime = 0; // Restart from the beginning
+      // Unmute on first manual play for mobile
+      if(audio.muted) {
+        audio.muted = false;
+      }
       audio.play().catch(e => console.error("Erreur de lecture audio:", e));
     }
   };
@@ -80,18 +99,13 @@ export function AudioPlayer() {
         audio.addEventListener('play', handlePlay);
         audio.addEventListener('pause', handlePause);
         
-        // Unmute on first interaction
-        if(isPlaying && audio.muted){
-          audio.muted = false;
-        }
-
         return () => {
             audio.removeEventListener('ended', handleEnded);
             audio.removeEventListener('play', handlePlay);
             audio.removeEventListener('pause', handlePause);
         };
     }
-  }, [isPlaying]);
+  }, [audioRef.current]);
 
 
   if (!audioData?.text) {
@@ -122,8 +136,8 @@ export function AudioPlayer() {
           ref={audioRef}
           src={audioUrl}
           hidden
-          // Muted by default for autoplay policy compliance
-          muted
+          muted // Muted by default to allow background loading
+          playsInline
         />
       )}
       <TooltipProvider>
@@ -144,7 +158,7 @@ export function AudioPlayer() {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>En savoir plus sur le but de la plateforme.</p>
+            <TalkingHeadIcon />
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
