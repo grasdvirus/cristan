@@ -6,7 +6,7 @@ import { generatePresentationAudio } from '@/ai/flows/generate-presentation-audi
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Button } from './ui/button';
-import { Loader2, Volume2, VolumeX } from 'lucide-react';
+import { Loader2, Play, Pause } from 'lucide-react';
 import { useToast } from './ui/use-toast';
 
 type PresentationAudio = {
@@ -17,7 +17,6 @@ export function AudioPlayer() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
   const { firestore } = useFirebase();
@@ -62,20 +61,12 @@ export function AudioPlayer() {
     const audio = audioRef.current;
     if (!audio) return;
     
-    if (audio.paused) {
-      audio.play().catch(e => console.error("Erreur de lecture audio:", e));
-      setIsPlaying(true);
-    } else {
+    if (isPlaying) {
       audio.pause();
-      setIsPlaying(false);
+      audio.currentTime = 0;
+    } else {
+      audio.play().catch(e => console.error("Erreur de lecture audio:", e));
     }
-  };
-
-  const toggleMute = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.muted = !audio.muted;
-    setIsMuted(audio.muted);
   };
   
   useEffect(() => {
@@ -102,7 +93,6 @@ export function AudioPlayer() {
           src={audioUrl}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
-          onVolumeChange={(e) => setIsMuted(e.currentTarget.muted)}
           hidden
         />
       )}
@@ -110,16 +100,16 @@ export function AudioPlayer() {
       <Button
         variant="ghost"
         size="icon"
-        onClick={toggleMute}
+        onClick={togglePlay}
         disabled={isLoading || !audioUrl}
         className="btn-neumorphic-light dark:btn-neumorphic-dark rounded-full w-12 h-12"
       >
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
-        ) : isMuted ? (
-          <VolumeX className="h-5 w-5" />
+        ) : isPlaying ? (
+          <Pause className="h-5 w-5" />
         ) : (
-          <Volume2 className="h-5 w-5" />
+          <Play className="h-5 w-5" />
         )}
       </Button>
     </div>
