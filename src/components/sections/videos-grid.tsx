@@ -114,11 +114,13 @@ export function HomeTVSection() {
       Autoplay({ delay: 2000, stopOnInteraction: false, stopOnMouseEnter: true })
   );
 
+  const validVideos = videos?.filter(video => video.thumbnailUrl);
+
   if (isLoading) {
       return <Skeleton className="h-64 w-full" />;
   }
 
-  if (!videos || videos.length === 0) {
+  if (!validVideos || validVideos.length === 0) {
       return null;
   }
 
@@ -146,7 +148,7 @@ export function HomeTVSection() {
                     }}
                 >
                     <CarouselContent className="-ml-4">
-                        {videos.map((video) => (
+                        {validVideos.map((video) => (
                             <CarouselItem key={video.id} className="pl-4 basis-1/2 md:basis-1/3">
                                 <NeumorphicCard inset className="overflow-hidden">
                                      <Image
