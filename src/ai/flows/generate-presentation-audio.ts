@@ -56,7 +56,7 @@ const generatePresentationAudioFlow = ai.defineFlow(
         responseModalities: ['AUDIO'],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Alloy' }, // Changed to a premium voice
+            prebuiltVoiceConfig: { voiceName: 'algenib' },
           },
         },
       },
