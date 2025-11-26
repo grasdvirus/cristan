@@ -8,12 +8,22 @@ import { useMemo } from 'react';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { CardDescription, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
-import { Plus, Star } from 'lucide-react';
+import { Plus, Star, Hourglass } from 'lucide-react';
 import { collection, query } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+    AlertDialogCancel
+} from "@/components/ui/alert-dialog";
+
 
 type Project = {
     id: string;
@@ -114,12 +124,37 @@ function ProjectsGridInternal({ projects, isLoading }: ProjectsGridProps) {
                                         <p className='text-lg font-bold font-headline text-primary'>{project.price}</p>
                                         <StarRating rating={project.rating || 0} className="mt-1" />
                                     </div>
-                                    <Button asChild size="icon" className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark" disabled={isComingSoon}>
-                                        <Link href={isComingSoon ? '#' : `/projects/${project.id}`} aria-disabled={isComingSoon}>
-                                            <Plus className="h-4 w-4" />
-                                            <span className="sr-only">Détails</span>
-                                        </Link>
-                                    </Button>
+                                    {isComingSoon ? (
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                 <Button size="icon" className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
+                                                    <Plus className="h-4 w-4" />
+                                                    <span className="sr-only">Information</span>
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <div className="flex justify-center mb-4">
+                                                        <Hourglass className="h-12 w-12 text-primary" />
+                                                    </div>
+                                                    <AlertDialogTitle className="text-center">Bientôt Disponible !</AlertDialogTitle>
+                                                    <AlertDialogDescription className="text-center">
+                                                        Ce projet est en cours de finalisation et sera disponible très prochainement.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogCancel asChild>
+                                                    <Button className='w-full'>Fermer</Button>
+                                                </AlertDialogCancel>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    ) : (
+                                        <Button asChild size="icon" className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark">
+                                            <Link href={`/projects/${project.id}`}>
+                                                <Plus className="h-4 w-4" />
+                                                <span className="sr-only">Détails</span>
+                                            </Link>
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </NeumorphicCard>
