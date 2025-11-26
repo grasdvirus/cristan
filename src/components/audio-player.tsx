@@ -7,7 +7,13 @@ import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Button } from './ui/button';
 import { Loader2, Play, Pause } from 'lucide-react';
-import { useToast } from './ui/use-toast';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
 
 type PresentationAudio = {
   text: string;
@@ -58,6 +64,7 @@ export function AudioPlayer() {
     if (isPlaying) {
       audio.pause();
     } else {
+      audio.currentTime = 0; // Restart from the beginning
       audio.play().catch(e => console.error("Erreur de lecture audio:", e));
     }
   };
@@ -72,6 +79,11 @@ export function AudioPlayer() {
         audio.addEventListener('ended', handleEnded);
         audio.addEventListener('play', handlePlay);
         audio.addEventListener('pause', handlePause);
+        
+        // Unmute on first interaction
+        if(isPlaying && audio.muted){
+          audio.muted = false;
+        }
 
         return () => {
             audio.removeEventListener('ended', handleEnded);
@@ -79,7 +91,7 @@ export function AudioPlayer() {
             audio.removeEventListener('pause', handlePause);
         };
     }
-  }, [audioUrl]);
+  }, [isPlaying]);
 
 
   if (!audioData?.text) {
@@ -110,22 +122,32 @@ export function AudioPlayer() {
           ref={audioRef}
           src={audioUrl}
           hidden
+          // Muted by default for autoplay policy compliance
+          muted
         />
       )}
-      
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={togglePlay}
-        disabled={isLoading || !audioUrl}
-        className="btn-neumorphic-light dark:btn-neumorphic-dark rounded-full w-12 h-12"
-      >
-        {isPlaying ? (
-          <Pause className="h-5 w-5" />
-        ) : (
-          <Play className="h-5 w-5" />
-        )}
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={togglePlay}
+              disabled={isLoading || !audioUrl}
+              className="btn-neumorphic-light dark:btn-neumorphic-dark rounded-full w-12 h-12"
+            >
+              {isPlaying ? (
+                <Pause className="h-5 w-5" />
+              ) : (
+                <Play className="h-5 w-5" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>En savoir plus sur le but de la plateforme.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }
