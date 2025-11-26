@@ -96,19 +96,19 @@ function ProjectsGridInternal({ projects, isLoading }: ProjectsGridProps) {
                                 )}
                             </div>
                             <div className='flex flex-col flex-grow p-4'>
-                                <div className="flex justify-between items-start mb-2">
-                                     <Badge variant="secondary" className={cn(
-                                        'text-xs', 
-                                        isComingSoon ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                                    )}>
-                                        {project.status}
-                                    </Badge>
-                                    <StarRating rating={project.rating || 0} />
-                                </div>
+                                <Badge variant="secondary" className={cn(
+                                    'text-xs w-fit mb-2', 
+                                    isComingSoon ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                )}>
+                                    {project.status}
+                                </Badge>
                                 <CardTitle className="font-headline text-lg">{project.title}</CardTitle>
                                 <CardDescription className="mt-2 text-sm text-muted-foreground flex-grow">{project.description}</CardDescription>
                                 <div className="flex justify-between items-center mt-4">
-                                    <p className='text-lg font-bold font-headline text-primary'>{project.price}</p>
+                                    <div>
+                                        <p className='text-lg font-bold font-headline text-primary'>{project.price}</p>
+                                        <StarRating rating={project.rating || 0} className="mt-1" />
+                                    </div>
                                     <Button asChild size="icon" className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark" disabled={isComingSoon}>
                                         <Link href={isComingSoon ? '#' : `/projects/${project.id}`} aria-disabled={isComingSoon}>
                                             <Plus className="h-4 w-4" />
@@ -140,5 +140,3 @@ export default function ProjectsGrid(props: ProjectsGridProps) {
 
     return <ProjectsGridInternal projects={projects} isLoading={isLoading} />
 }
-
-    
