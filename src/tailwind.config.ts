@@ -115,7 +115,7 @@ export default {
         },
          'sparkle-animation': {
           '0%': { transform: 'translateY(0)' },
-          '100%': { transform: 'translateY(-100px)' },
+          '100%': { transform: 'translateY(-200px)' },
         },
       },
       animation: {
@@ -131,3 +131,5 @@ export default {
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
+
+    

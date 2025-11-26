@@ -404,12 +404,16 @@
   .sparkle-mask {
     -webkit-mask-image: radial-gradient(circle at 50% 50%, black 20%, transparent 80%);
     mask-image: radial-gradient(circle at 50% 50%, black 20%, transparent 80%);
-    background-image:
-      radial-gradient(1.5px 1.5px at 25px 5px, white, transparent),
-      radial-gradient(1.5px 1.5px at 125px 35px, white, transparent),
-      radial-gradient(2.5px 2.5px at 75px 80px, white, transparent),
-      radial-gradient(1.5px 1.5px at 175px 120px, white, transparent),
-      radial-gradient(2.5px 2.5px at 25px 160px, white, transparent);
-    animation: sparkle-animation 5s linear infinite;
+  }
+  .sparkle-animation-content {
+      background-image:
+        radial-gradient(1.5px 1.5px at 25px 5px, hsl(var(--primary)), transparent),
+        radial-gradient(1.5px 1.5px at 125px 35px, hsl(var(--primary)), transparent),
+        radial-gradient(2.5px 2.5px at 75px 80px, hsl(var(--primary)), transparent),
+        radial-gradient(1.5px 1.5px at 175px 120px, hsl(var(--primary)), transparent),
+        radial-gradient(2.5px 2.5px at 25px 160px, hsl(var(--primary)), transparent);
+      animation: sparkle-animation 5s linear infinite;
   }
 }
+
+    
