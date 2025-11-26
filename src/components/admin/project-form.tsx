@@ -18,8 +18,10 @@ import { Textarea } from '@/components/ui/textarea';
 import type { Project } from '@/app/admin/page';
 import { MediaUpload } from './media-upload';
 import { generateProjectDescription } from '@/ai/flows/generate-project-description';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, Star } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Le titre est requis.'),
@@ -30,6 +32,8 @@ const formSchema = z.object({
   liveUrl: z.string().url('URL invalide').optional().or(z.literal('')),
   imageUrl: z.string().min(1, "L'URL de l'image est requise."),
   imageHint: z.string().optional(),
+  rating: z.number().min(1).max(5),
+  status: z.enum(['Disponible', 'Bientôt disponible']),
 });
 
 export type ProjectFormValues = z.infer<typeof formSchema>;
@@ -102,6 +106,8 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
         technologies: initialData.technologies?.join(', ') || '',
         liveUrl: initialData.liveUrl || '',
         price: initialData.price.replace(' FCFA', ''),
+        rating: initialData.rating || 5,
+        status: initialData.status || 'Disponible',
     } : {
       title: '',
       description: '',
@@ -111,8 +117,13 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
       liveUrl: '',
       imageUrl: '',
       imageHint: '',
+      rating: 5,
+      status: 'Disponible',
     },
   });
+
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const currentRating = form.watch('rating');
 
   return (
     <Form {...form}>
@@ -186,6 +197,54 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
             </FormItem>
           )}
         />
+         <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Statut</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir un statut" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Disponible">Disponible</SelectItem>
+                  <SelectItem value="Bientôt disponible">Bientôt disponible</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="rating"
+          render={() => (
+            <FormItem>
+              <FormLabel>Note</FormLabel>
+              <FormControl>
+                <div className="flex items-center gap-1" onMouseLeave={() => setHoveredRating(0)}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={cn(
+                        "h-6 w-6 cursor-pointer transition-colors",
+                        (hoveredRating >= star || (!hoveredRating && currentRating >= star)) 
+                          ? "text-yellow-400 fill-yellow-400" 
+                          : "text-muted-foreground/50"
+                      )}
+                      onMouseEnter={() => setHoveredRating(star)}
+                      onClick={() => form.setValue('rating', star)}
+                    />
+                  ))}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="technologies"
@@ -233,3 +292,5 @@ export function ProjectForm({ initialData, onSubmit, isSubmitting }: ProjectForm
     </Form>
   );
 }
+
+    

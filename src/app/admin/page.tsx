@@ -56,6 +56,8 @@ export type Project = {
     liveUrl?: string;
     imageUrl: string;
     imageHint?: string;
+    rating: number;
+    status: 'Disponible' | 'Bientôt disponible';
 };
 
 export type Video = {
@@ -1556,3 +1558,5 @@ export default function AdminPage() {
         </AuthGuard>
     )
 }
+
+    
