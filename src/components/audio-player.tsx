@@ -67,11 +67,11 @@ export function AudioPlayer() {
     if (isMobile && !userInteracted && canPlay) {
       const showTooltip = () => {
         setTooltipOpen(true);
-        setTimeout(() => setTooltipOpen(false), 6000); // Hide after 6 seconds
+        setTimeout(() => setTooltipOpen(false), 3000); // Hide after 3 seconds
       };
 
       showTooltip(); // Show on initial load
-      const intervalId = setInterval(showTooltip, 5 * 60 * 1000); // Show every 5 minutes
+      const intervalId = setInterval(showTooltip, 6000); // Show every 6 seconds
 
       return () => clearInterval(intervalId);
     }
