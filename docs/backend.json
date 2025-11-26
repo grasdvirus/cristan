@@ -368,6 +368,28 @@
         }
       },
       "required": ["id", "name", "emoji"]
+    },
+    "PresentationAudio": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PresentationAudio",
+      "type": "object",
+      "description": "Stores the text script for the site's audio presentation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the audio script document."
+        },
+        "text": {
+          "type": "string",
+          "description": "The full text script to be converted to speech."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the last update."
+        }
+      },
+      "required": ["id", "text", "updatedAt"]
     }
   },
   "auth": {
@@ -575,6 +597,22 @@
             {
               "name": "partnerMarqueeItemId",
               "description": "The unique identifier for the partner marquee item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/presentationAudio/{audioId}",
+        "definition": {
+          "entityName": "PresentationAudio",
+          "schema": {
+            "$ref": "#/backend/entities/PresentationAudio"
+          },
+          "description": "Stores the text for the site's audio presentation. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "audioId",
+              "description": "The unique identifier for the audio script."
             }
           ]
         }

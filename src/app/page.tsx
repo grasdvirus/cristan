@@ -21,6 +21,7 @@ import AvisClientsMarquee from '@/components/sections/avis-clients-marquee';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
 import { PromoVideoSection } from '@/components/sections/promo-video-section';
+import { AudioPlayer } from '@/components/audio-player';
 
 type Project = {
     id: string;
@@ -114,7 +115,9 @@ export default function Home() {
                             <div className="flex-1 text-center">
                                 <CustomProjectButton />
                             </div>
-                           <div className="w-44"></div> {/* Spacer */}
+                           <div className="w-44 flex justify-end">
+                              <AudioPlayer />
+                           </div>
                         </div>
                         <ProjectsGrid projects={homeProjects} isLoading={!homeProjects}/>
                      </TabsContent>

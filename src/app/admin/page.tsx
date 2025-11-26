@@ -36,6 +36,7 @@ import { LoadingSpinner } from '@/components/loading-spinner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { MediaUpload } from '@/components/admin/media-upload';
 import { PromoVideoForm, type PromoVideoFormValues } from '@/components/admin/promo-video-form';
+import { PresentationAudioForm, type PresentationAudioFormValues } from '@/components/admin/presentation-audio-form';
 
 // Define types based on backend.json
 export type Slide = {
@@ -120,6 +121,12 @@ export type PromoVideo = {
     title: string;
     videoUrl: string;
 };
+
+export type PresentationAudio = {
+  id: string;
+  text: string;
+  updatedAt?: any;
+}
 
 
 export type ContractSubmission = {
@@ -1351,6 +1358,59 @@ function PartnerMessagesManager() {
     );
 }
 
+function PresentationAudioManager() {
+    const { firestore } = useFirebase();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const audioDocRef = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return doc(firestore, 'presentationAudio', 'main');
+    }, [firestore]);
+
+    const { data: audioData, isLoading } = useDoc<PresentationAudio>(audioDocRef);
+    
+    const handleFormSubmit = async (values: PresentationAudioFormValues) => {
+        if (!firestore) return;
+        setIsSubmitting(true);
+        const dataToSave = {
+            text: values.text,
+            updatedAt: new Date(),
+        };
+
+        try {
+            await setDoc(doc(firestore, 'presentationAudio', 'main'), dataToSave);
+            toast({ variant: 'success', title: `Présentation audio mise à jour.` });
+        } catch (error) {
+            console.error("Error saving audio script: ", error);
+            toast({ title: 'Erreur', description: `Impossible de sauvegarder le script.`, variant: 'destructive' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+    
+    if (isLoading) {
+        return (
+            <NeumorphicCard inset className="p-6">
+                <Skeleton className="h-6 w-1/2 mb-4" />
+                <Skeleton className="h-48 w-full" />
+            </NeumorphicCard>
+        );
+    }
+    
+    return (
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-bold font-headline mb-4">Présentation Audio (Accueil)</h2>
+             <PresentationAudioForm
+                initialData={audioData}
+                onSubmit={handleFormSubmit}
+                isSubmitting={isSubmitting}
+            />
+        </NeumorphicCard>
+    );
+}
+
+
 function AdminPageContent() {
     const { firestore, user, isUserLoading } = useFirebase();
     const [searchTerm, setSearchTerm] = useState('');
@@ -1404,6 +1464,7 @@ function AdminPageContent() {
                             <TabsTrigger value="marquee">Marquee</TabsTrigger>
                             <TabsTrigger value="partnerMarquee">Marquee Partenaires</TabsTrigger>
                             <TabsTrigger value="avisClients">Avis Clients</TabsTrigger>
+                            <TabsTrigger value="presentationAudio">Audio Présentation</TabsTrigger>
                             <TabsTrigger value="internet">Internet</TabsTrigger>
                             <TabsTrigger value="tv">TV</TabsTrigger>
                             <TabsTrigger value="games">Gamme</TabsTrigger>
@@ -1434,6 +1495,10 @@ function AdminPageContent() {
 
                     <TabsContent value="avisClients">
                         <AvisClientsManager />
+                    </TabsContent>
+
+                    <TabsContent value="presentationAudio">
+                        <PresentationAudioManager />
                     </TabsContent>
 
                     <TabsContent value="internet">
