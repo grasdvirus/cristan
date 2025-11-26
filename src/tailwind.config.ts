@@ -108,6 +108,10 @@ export default {
         'text-scroll': {
           '0%': { transform: 'translateY(0%)' },
           '100%': { transform: 'translateY(-100%)' },
+        },
+        'blink-green': {
+          '0%, 100%': { 'box-shadow': '0 0 8px 2px rgba(74, 222, 128, 0.4)' },
+          '50%': { 'box-shadow': '0 0 16px 8px rgba(74, 222, 128, 0.6)' },
         }
       },
       animation: {
@@ -116,6 +120,7 @@ export default {
         marquee: 'marquee 60s linear infinite',
         marquee2: 'marquee2 60s linear infinite',
         'text-scroll': 'text-scroll 24s linear infinite',
+        'blink-green': 'blink-green 2s ease-in-out infinite',
       },
     },
   },
