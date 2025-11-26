@@ -13,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 type PresentationAudio = {
@@ -40,6 +41,9 @@ export function AudioPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { firestore } = useFirebase();
+  const isMobile = useIsMobile();
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const [userInteracted, setUserInteracted] = useState(false);
 
   const audioDocRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -71,16 +75,31 @@ export function AudioPlayer() {
 
     generateAudio();
   }, [audioData]);
+  
+  useEffect(() => {
+    if (isMobile && !userInteracted && !isLoading && audioUrl) {
+      const intervalId = setInterval(() => {
+        setTooltipOpen(true);
+        setTimeout(() => setTooltipOpen(false), 1500); // Keep tooltip open for 1.5s
+      }, 3000); // Show tooltip every 3s
+
+      return () => clearInterval(intervalId);
+    }
+  }, [isMobile, userInteracted, isLoading, audioUrl]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
     
+    if (!userInteracted) {
+        setUserInteracted(true);
+        setTooltipOpen(false);
+    }
+    
     if (isPlaying) {
       audio.pause();
     } else {
-      audio.currentTime = 0; // Restart from the beginning
-      // Unmute on first manual play for mobile
+      // Unmute on first manual play for mobile compatibility
       if(audio.muted) {
         audio.muted = false;
       }
@@ -105,7 +124,7 @@ export function AudioPlayer() {
             audio.removeEventListener('pause', handlePause);
         };
     }
-  }, [audioRef.current]);
+  }, [audioUrl]);
 
 
   if (!audioData?.text) {
@@ -136,12 +155,12 @@ export function AudioPlayer() {
           ref={audioRef}
           src={audioUrl}
           hidden
-          muted // Muted by default to allow background loading
+          muted // Start muted for autoplay compatibility
           playsInline
         />
       )}
       <TooltipProvider>
-        <Tooltip>
+        <Tooltip open={tooltipOpen} onOpenChange={isMobile ? setTooltipOpen : undefined}>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
