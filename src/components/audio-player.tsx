@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { generateAndPlayAudio } from '@/app/actions/generate-audio';
+import { generateAudioAction } from '@/app/actions/generate-audio';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Button } from './ui/button';
@@ -21,7 +21,7 @@ type PresentationAudio = {
 
 const TalkingHeadIcon = () => (
     <div className="flex items-end gap-1 h-8">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user-round h-7 w-7 text-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user-round h-7 w-7 text-primary">
             <circle cx="12" cy="8" r="5" />
             <path d="M20 21a8 8 0 0 0-16 0" />
         </svg>
@@ -64,27 +64,33 @@ export function AudioPlayer() {
       setTooltipOpen(false);
     }
 
-    if (isPlaying && audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setIsPlaying(false);
-      return;
-    }
+    const audio = audioRef.current;
+    if (!audio) return;
     
-    if (audioData?.text) {
-      setIsLoading(true);
-      try {
-        const audioBlob = await generateAndPlayAudio(audioData.text);
-        
-        if (audioRef.current) {
-          audioRef.current.src = URL.createObjectURL(audioBlob);
-          audioRef.current.play().catch(e => console.error("Erreur de lecture audio:", e));
-          setIsPlaying(true);
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      if (audio.src) {
+        audio.play().catch(e => console.error("Erreur de lecture audio:", e));
+        setIsPlaying(true);
+      } else if (audioData?.text) {
+        setIsLoading(true);
+        try {
+          const result = await generateAudioAction(audioData.text);
+          if ('audioBase64' in result) {
+            const audioBlob = new Blob([Buffer.from(result.audioBase64, 'base64')], { type: 'audio/wav' });
+            audio.src = URL.createObjectURL(audioBlob);
+            audio.play().catch(e => console.error("Erreur de lecture audio:", e));
+            setIsPlaying(true);
+          } else {
+            console.error("Erreur lors de la génération de l'audio :", result.error);
+          }
+        } catch (error) {
+          console.error("Erreur lors de la génération ou de la lecture de l'audio :", error);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error("Erreur lors de la génération ou de la lecture de l'audio :", error);
-      } finally {
-        setIsLoading(false);
       }
     }
   };
@@ -96,7 +102,7 @@ export function AudioPlayer() {
         audio.addEventListener('ended', handleEnded);
         return () => audio.removeEventListener('ended', handleEnded);
     }
-  }, [audioRef.current]);
+  }, []);
 
 
   if (isAudioDataLoading) {
