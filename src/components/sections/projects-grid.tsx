@@ -113,7 +113,7 @@ function ProjectsGridInternal({ projects, isLoading }: ProjectsGridProps) {
                             <div className='flex flex-col flex-grow p-4'>
                                 <Badge variant="secondary" className={cn(
                                     'text-xs w-fit mb-2', 
-                                    isComingSoon ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                    isComingSoon ? 'bg-orange-400 dark:bg-orange-700 text-white dark:text-orange-100' : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
                                 )}>
                                     {project.status}
                                 </Badge>
