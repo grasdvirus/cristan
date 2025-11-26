@@ -63,9 +63,15 @@ export function AudioPlayer() {
 
   useEffect(() => {
     if (isMobile && !userInteracted && canPlay) {
-      setTooltipOpen(true);
-    } else {
-      setTooltipOpen(false);
+      const showTooltip = () => {
+        setTooltipOpen(true);
+        setTimeout(() => setTooltipOpen(false), 4000); // Hide after 4 seconds
+      };
+
+      showTooltip(); // Show on initial load
+      const intervalId = setInterval(showTooltip, 5 * 60 * 1000); // Show every 5 minutes
+
+      return () => clearInterval(intervalId);
     }
   }, [isMobile, userInteracted, canPlay]);
   
