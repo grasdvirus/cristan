@@ -75,17 +75,16 @@ export function AudioPlayer() {
 
     generateAudio();
   }, [audioData]);
-  
-  useEffect(() => {
-    if (isMobile && !userInteracted && !isLoading && audioUrl) {
-      const intervalId = setInterval(() => {
-        setTooltipOpen(true);
-        setTimeout(() => setTooltipOpen(false), 1500); // Keep tooltip open for 1.5s
-      }, 3000); // Show tooltip every 3s
 
-      return () => clearInterval(intervalId);
+  useEffect(() => {
+    // Show tooltip on mobile if not interacted with yet
+    if (isMobile && !userInteracted && !isLoading && audioUrl) {
+      setTooltipOpen(true);
+    } else {
+      setTooltipOpen(false);
     }
   }, [isMobile, userInteracted, isLoading, audioUrl]);
+
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -99,7 +98,6 @@ export function AudioPlayer() {
     if (isPlaying) {
       audio.pause();
     } else {
-      // Unmute on first manual play for mobile compatibility
       if(audio.muted) {
         audio.muted = false;
       }
@@ -160,7 +158,7 @@ export function AudioPlayer() {
         />
       )}
       <TooltipProvider>
-        <Tooltip open={tooltipOpen} onOpenChange={isMobile ? setTooltipOpen : undefined}>
+        <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
