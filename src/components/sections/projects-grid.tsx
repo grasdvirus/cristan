@@ -132,7 +132,7 @@ function ProjectsGridInternal({ projects, isLoading }: ProjectsGridProps) {
                                                     <span className="sr-only">Information</span>
                                                 </Button>
                                             </AlertDialogTrigger>
-                                            <AlertDialogContent>
+                                            <AlertDialogContent className="rounded-2xl">
                                                 <AlertDialogHeader>
                                                     <div className="flex justify-center mb-4">
                                                         <Hourglass className="h-12 w-12 text-primary" />
@@ -143,7 +143,7 @@ function ProjectsGridInternal({ projects, isLoading }: ProjectsGridProps) {
                                                     </AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogCancel asChild>
-                                                    <Button className='w-full'>Fermer</Button>
+                                                    <Button className='w-full btn-neumorphic-light dark:btn-neumorphic-dark rounded-full'>Fermer</Button>
                                                 </AlertDialogCancel>
                                             </AlertDialogContent>
                                         </AlertDialog>
