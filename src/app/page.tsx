@@ -78,9 +78,14 @@ export default function Home() {
       <div className="bg-background">
         <div className="container mx-auto px-4 py-8 sm:py-12">
           <div className="flex flex-col items-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold font-headline mb-8 text-center">
-                À découvrir
-              </h2>
+               <div className="relative inline-block mb-8">
+                <h2 className="text-3xl sm:text-4xl font-bold font-headline text-center">
+                    À découvrir
+                </h2>
+                <span className="absolute -top-4 -right-8 text-4xl animate-wave-hand" style={{ transformOrigin: '70% 70%' }}>
+                    👋
+                </span>
+              </div>
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-4xl">
                   <TabsList className="bg-transparent p-0 flex-wrap justify-center h-auto">
                     <TabsTrigger 
