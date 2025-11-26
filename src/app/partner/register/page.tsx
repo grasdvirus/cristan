@@ -124,7 +124,12 @@ function PartnerDashboardContent({ partnerData, userId }: { partnerData: Partner
         <div className="max-w-4xl mx-auto w-full">
             <div className="relative text-center mb-12">
                 <h1 className="text-2xl sm:text-3xl font-bold font-headline">Tableau de Bord Partenaire</h1>
-                <p className="text-muted-foreground mt-2">Bienvenue, {partnerData.fullName} !</p>
+                <div className="relative inline-block mt-2">
+                    <div className="absolute -inset-2 sparkle-mask -z-10" aria-hidden="true"></div>
+                     <p className="text-muted-foreground text-lg">
+                        Bienvenue, {partnerData.fullName} !
+                    </p>
+                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <NeumorphicCard inset className="p-6 flex flex-col items-center justify-center text-center transition-transform duration-300 hover:scale-105">
