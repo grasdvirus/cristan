@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { generatePresentationAudio } from '@/ai/flows/generate-presentation-audio';
+import { generateAndPlayAudio } from '@/app/actions/generate-audio';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Button } from './ui/button';
@@ -36,10 +35,9 @@ const TalkingHeadIcon = () => (
 
 
 export function AudioPlayer() {
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { firestore } = useFirebase();
   const isMobile = useIsMobile();
   const [tooltipOpen, setTooltipOpen] = useState(false);
@@ -50,58 +48,44 @@ export function AudioPlayer() {
     return doc(firestore, 'presentationAudio', 'main');
   }, [firestore]);
 
-  const { data: audioData } = useDoc<PresentationAudio>(audioDocRef);
-
+  const { data: audioData, isLoading: isAudioDataLoading } = useDoc<PresentationAudio>(audioDocRef);
+  
   useEffect(() => {
-    if (!audioData?.text) {
-      setIsLoading(false);
-      return;
+    if (isMobile && !userInteracted && !isAudioDataLoading && audioData?.text) {
+        setTooltipOpen(true);
+    } else {
+        setTooltipOpen(false);
+    }
+  }, [isMobile, userInteracted, isAudioDataLoading, audioData]);
+  
+  const togglePlay = async () => {
+    if (!userInteracted) {
+      setUserInteracted(true);
+      setTooltipOpen(false);
     }
 
-    const generateAudio = async () => {
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsPlaying(false);
+      return;
+    }
+    
+    if (audioData?.text) {
+      setIsLoading(true);
       try {
-        const result = await generatePresentationAudio(audioData.text);
-        if (result.media) {
-          setAudioUrl(result.media);
-        } else {
-          throw new Error('Aucun média audio retourné.');
+        const audioBlob = await generateAndPlayAudio(audioData.text);
+        
+        if (audioRef.current) {
+          audioRef.current.src = URL.createObjectURL(audioBlob);
+          audioRef.current.play().catch(e => console.error("Erreur de lecture audio:", e));
+          setIsPlaying(true);
         }
       } catch (error) {
-        console.error('Erreur lors de la génération de l\'audio, le lecteur ne sera pas affiché:', error);
+        console.error("Erreur lors de la génération ou de la lecture de l'audio :", error);
       } finally {
         setIsLoading(false);
       }
-    };
-
-    generateAudio();
-  }, [audioData]);
-
-  useEffect(() => {
-    // Show tooltip on mobile if not interacted with yet
-    if (isMobile && !userInteracted && !isLoading && audioUrl) {
-      setTooltipOpen(true);
-    } else {
-      setTooltipOpen(false);
-    }
-  }, [isMobile, userInteracted, isLoading, audioUrl]);
-
-
-  const togglePlay = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    
-    if (!userInteracted) {
-        setUserInteracted(true);
-        setTooltipOpen(false);
-    }
-    
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      if(audio.muted) {
-        audio.muted = false;
-      }
-      audio.play().catch(e => console.error("Erreur de lecture audio:", e));
     }
   };
   
@@ -109,27 +93,13 @@ export function AudioPlayer() {
     const audio = audioRef.current;
     if(audio) {
         const handleEnded = () => setIsPlaying(false);
-        const handlePlay = () => setIsPlaying(true);
-        const handlePause = () => setIsPlaying(false);
-
         audio.addEventListener('ended', handleEnded);
-        audio.addEventListener('play', handlePlay);
-        audio.addEventListener('pause', handlePause);
-        
-        return () => {
-            audio.removeEventListener('ended', handleEnded);
-            audio.removeEventListener('play', handlePlay);
-            audio.removeEventListener('pause', handlePause);
-        };
+        return () => audio.removeEventListener('ended', handleEnded);
     }
-  }, [audioUrl]);
+  }, [audioRef.current]);
 
 
-  if (!audioData?.text) {
-    return null;
-  }
-  
-  if (isLoading) {
+  if (isAudioDataLoading) {
       return (
         <Button
             variant="ghost"
@@ -142,21 +112,13 @@ export function AudioPlayer() {
       )
   }
 
-  if (!audioUrl) {
+  if (!audioData?.text) {
       return null;
   }
   
   return (
     <div className="flex items-center gap-2">
-      {audioUrl && (
-        <audio
-          ref={audioRef}
-          src={audioUrl}
-          hidden
-          muted // Start muted for autoplay compatibility
-          playsInline
-        />
-      )}
+      <audio ref={audioRef} hidden playsInline />
       <TooltipProvider>
         <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
           <TooltipTrigger asChild>
@@ -164,10 +126,12 @@ export function AudioPlayer() {
               variant="ghost"
               size="icon"
               onClick={togglePlay}
-              disabled={isLoading || !audioUrl}
+              disabled={isLoading}
               className="btn-neumorphic-light dark:btn-neumorphic-dark rounded-full w-12 h-12"
             >
-              {isPlaying ? (
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : isPlaying ? (
                 <Pause className="h-5 w-5" />
               ) : (
                 <Play className="h-5 w-5" />
