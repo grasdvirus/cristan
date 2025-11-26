@@ -78,11 +78,11 @@ export default function Home() {
       <div className="bg-background">
         <div className="container mx-auto px-4 py-8 sm:py-12">
           <div className="flex flex-col items-center mb-12">
-               <div className="relative inline-block mb-8">
-                <h2 className="text-3xl sm:text-4xl font-bold font-headline text-center">
+               <div className="relative mb-8">
+                <h2 className="relative z-10 text-3xl sm:text-4xl font-bold font-headline text-center">
                     À découvrir
                 </h2>
-                <span className="absolute -top-4 -right-8 text-4xl animate-wave-hand" style={{ transformOrigin: '70% 70%' }}>
+                <span className="absolute -top-2 -right-6 text-4xl animate-wave-hand z-0" style={{ transformOrigin: '70% 70%' }}>
                     👋
                 </span>
               </div>
