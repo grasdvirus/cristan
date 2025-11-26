@@ -103,7 +103,7 @@ service cloud.firestore {
                                                                 }
 
                                                                 match /presentationAudio/{audioId} {
-                                                                    allow get, list: if true;
+                                                                    allow get, list: if request.auth != null || request.auth == null;
                                                                     allow create, update, delete: if isAdmin();
                                                                 }
       }
