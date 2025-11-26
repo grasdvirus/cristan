@@ -351,6 +351,12 @@ function ProfilePageContent() {
                     <li>
                         <span className="font-semibold text-foreground">Thème Sombre Intelligent :</span> L'application choisit désormais automatiquement entre le thème clair et le thème sombre en fonction de l'heure de la journée pour un confort visuel optimal.
                     </li>
+                     <li>
+                        <span className="font-semibold text-foreground">Section Actualités :</span> Une page dédiée "Actualités" affiche les dernières nouvelles et annonces. Un point rouge sur la cloche vous notifie des nouveautés.
+                    </li>
+                    <li>
+                        <span className="font-semibold text-foreground">Sections TV & Gamme :</span> Des espaces dédiés pour découvrir les vidéos et les produits proposés par Cristan.
+                    </li>
                 </ul>
             </div>
              <Separator className="my-4" />
