@@ -18,7 +18,6 @@ export function AudioPlayer() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const { toast } = useToast();
   const { firestore } = useFirebase();
 
   const audioDocRef = useMemoFirebase(() => {
@@ -50,7 +49,7 @@ export function AudioPlayer() {
     };
 
     generateAudio();
-  }, [audioData, toast]);
+  }, [audioData]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -58,7 +57,6 @@ export function AudioPlayer() {
     
     if (isPlaying) {
       audio.pause();
-      audio.currentTime = 0;
     } else {
       audio.play().catch(e => console.error("Erreur de lecture audio:", e));
     }
@@ -66,18 +64,43 @@ export function AudioPlayer() {
   
   useEffect(() => {
     const audio = audioRef.current;
-    if(audioUrl && audio) {
-        audio.play().catch(e => console.log('Autoplay a été bloqué par le navigateur.'));
-        setIsPlaying(!audio.paused);
-        
+    if(audio) {
         const handleEnded = () => setIsPlaying(false);
+        const handlePlay = () => setIsPlaying(true);
+        const handlePause = () => setIsPlaying(false);
+
         audio.addEventListener('ended', handleEnded);
-        return () => audio.removeEventListener('ended', handleEnded);
+        audio.addEventListener('play', handlePlay);
+        audio.addEventListener('pause', handlePause);
+
+        return () => {
+            audio.removeEventListener('ended', handleEnded);
+            audio.removeEventListener('play', handlePlay);
+            audio.removeEventListener('pause', handlePause);
+        };
     }
   }, [audioUrl]);
 
-  if (!audioData?.text || !audioUrl) {
+
+  if (!audioData?.text) {
     return null;
+  }
+  
+  if (isLoading) {
+      return (
+        <Button
+            variant="ghost"
+            size="icon"
+            disabled={true}
+            className="btn-neumorphic-light dark:btn-neumorphic-dark rounded-full w-12 h-12"
+        >
+            <Loader2 className="h-5 w-5 animate-spin" />
+        </Button>
+      )
+  }
+
+  if (!audioUrl) {
+      return null;
   }
   
   return (
@@ -86,8 +109,6 @@ export function AudioPlayer() {
         <audio
           ref={audioRef}
           src={audioUrl}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
           hidden
         />
       )}
@@ -99,9 +120,7 @@ export function AudioPlayer() {
         disabled={isLoading || !audioUrl}
         className="btn-neumorphic-light dark:btn-neumorphic-dark rounded-full w-12 h-12"
       >
-        {isLoading ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
-        ) : isPlaying ? (
+        {isPlaying ? (
           <Pause className="h-5 w-5" />
         ) : (
           <Play className="h-5 w-5" />
