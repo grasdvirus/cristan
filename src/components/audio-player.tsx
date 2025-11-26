@@ -54,15 +54,17 @@ export function AudioPlayer() {
     audio.addEventListener('error', handleError);
 
     return () => {
-      if (audio) {
-        // Remove event listeners first to prevent firing on cleanup
-        audio.removeEventListener('canplaythrough', handleCanPlay);
-        audio.removeEventListener('ended', handleEnded);
-        audio.removeEventListener('error', handleError);
+      // Store a reference to the audio element for cleanup
+      const audioForCleanup = audio;
+      if (audioForCleanup) {
+        // Remove event listeners immediately
+        audioForCleanup.removeEventListener('canplaythrough', handleCanPlay);
+        audioForCleanup.removeEventListener('ended', handleEnded);
+        audioForCleanup.removeEventListener('error', handleError);
         
-        // Then pause and reset
-        audio.pause();
-        audio.src = '';
+        // Then pause and reset the source
+        audioForCleanup.pause();
+        audioForCleanup.src = '';
       }
     };
   }, []);
