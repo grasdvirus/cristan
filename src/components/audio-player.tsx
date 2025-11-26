@@ -54,10 +54,12 @@ export function AudioPlayer() {
     });
 
     return () => {
+      if (audio) {
         audio.removeEventListener('canplaythrough', handleCanPlay);
         audio.removeEventListener('ended', handleEnded);
         audio.pause();
         audio.src = '';
+      }
     };
   }, []);
 
@@ -65,7 +67,7 @@ export function AudioPlayer() {
     if (isMobile && !userInteracted && canPlay) {
       const showTooltip = () => {
         setTooltipOpen(true);
-        setTimeout(() => setTooltipOpen(false), 4000); // Hide after 4 seconds
+        setTimeout(() => setTooltipOpen(false), 6000); // Hide after 6 seconds
       };
 
       showTooltip(); // Show on initial load
