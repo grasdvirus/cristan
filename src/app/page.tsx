@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import HeroSection from '@/components/sections/hero-section';
 import MarqueeSection from '@/components/sections/marquee-section';
@@ -30,6 +30,8 @@ type Project = {
     price: string;
     imageUrl: string;
     imageHint: string;
+    rating: number;
+    status: 'Disponible' | 'Bientôt disponible';
 };
 
 export default function Home() {
@@ -39,8 +41,14 @@ export default function Home() {
   const { firestore } = useFirebase();
 
   const projectsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'projects')) : null, [firestore]);
-  const { data: allProjects } = useCollection<Project>(projectsQuery);
-  const homeProjects = allProjects?.slice(0, 4);
+  const { data: allProjects, isLoading: areProjectsLoading } = useCollection<Project>(projectsQuery);
+
+  const homeProjects = useMemo(() => {
+    if (!allProjects) return [];
+    // Mélange et prend les 6 premiers
+    return [...allProjects].sort(() => 0.5 - Math.random()).slice(0, 6);
+  }, [allProjects]);
+
 
   useEffect(() => {
     const hasVisited = sessionStorage.getItem('hasVisitedCristan');
@@ -119,7 +127,7 @@ export default function Home() {
                               <AudioPlayer />
                            </div>
                         </div>
-                        <ProjectsGrid projects={homeProjects} isLoading={!homeProjects}/>
+                        <ProjectsGrid projects={homeProjects} isLoading={areProjectsLoading}/>
                      </TabsContent>
                      <TabsContent value="videos">
                         <HomeTVSection />

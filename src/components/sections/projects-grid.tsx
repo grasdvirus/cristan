@@ -1,7 +1,9 @@
+
 'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useMemo } from 'react';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { CardDescription, CardTitle } from '../ui/card';
@@ -70,11 +72,14 @@ function ProjectsGridInternal({ projects, isLoading }: ProjectsGridProps) {
     if (!projects || projects.length === 0) {
         return <p>Aucun projet trouvé.</p>
     }
+    
+    // Mélange les projets ici
+    const shuffledProjects = useMemo(() => [...projects].sort(() => Math.random() - 0.5), [projects]);
 
     return (
         <section id="projects" className="w-full">
         <div className="columns-2 lg:columns-4 gap-8 space-y-8">
-            {projects.map((project) => {
+            {shuffledProjects.map((project) => {
                 const isComingSoon = project.status === 'Bientôt disponible';
                 return (
                     <div key={project.id} className={cn("break-inside-avoid", isComingSoon && "grayscale opacity-70")}>
