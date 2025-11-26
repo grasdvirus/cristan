@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -43,20 +44,23 @@ export function AudioPlayer() {
 
     const handleCanPlay = () => setCanPlay(true);
     const handleEnded = () => setIsPlaying(false);
+    const handleError = () => {
+        console.error("Erreur: Le fichier audio '/uploads/presentations.wav' n'a pas pu être chargé.");
+        setCanPlay(false);
+    };
 
     audio.addEventListener('canplaythrough', handleCanPlay);
     audio.addEventListener('ended', handleEnded);
-
-    // This is a safety check in case the file doesn't load.
-    audio.addEventListener('error', () => {
-        console.error("Erreur: Le fichier audio '/uploads/presentations.wav' n'a pas pu être chargé.");
-        setCanPlay(false);
-    });
+    audio.addEventListener('error', handleError);
 
     return () => {
       if (audio) {
+        // Remove event listeners first to prevent firing on cleanup
         audio.removeEventListener('canplaythrough', handleCanPlay);
         audio.removeEventListener('ended', handleEnded);
+        audio.removeEventListener('error', handleError);
+        
+        // Then pause and reset
         audio.pause();
         audio.src = '';
       }
