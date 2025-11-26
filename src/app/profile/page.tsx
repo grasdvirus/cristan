@@ -1,8 +1,7 @@
-
 'use client';
 
 import Image from 'next/image';
-import { Mail, LogOut, KeyRound, Info, MessageSquare, Send, Shield, CornerDownRight, Zap } from 'lucide-react';
+import { Mail, LogOut, KeyRound, Info, MessageSquare, Send, Shield, CornerDownRight, Zap, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
@@ -313,14 +312,22 @@ function ProfilePageContent() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
                 <h2 className="text-lg sm:text-xl font-bold font-headline">Informations</h2>
-                <p className="text-muted-foreground text-sm mt-1">En savoir plus sur notre projet.</p>
+                <p className="text-muted-foreground text-sm mt-1">En savoir plus sur notre projet et nos conditions.</p>
             </div>
-            <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
-                <Link href="/about">
-                    <Info className="mr-2 h-4 w-4" />
-                    À propos de cristan
-                </Link>
-            </Button>
+            <div className="flex flex-col items-stretch gap-2 w-full sm:w-auto">
+                <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                    <Link href="/about">
+                        <Info className="mr-2 h-4 w-4" />
+                        À propos de Cristan
+                    </Link>
+                </Button>
+                 <Button asChild variant="outline" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                    <Link href="/legal">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Mentions Légales
+                    </Link>
+                </Button>
+            </div>
         </div>
       </NeumorphicCard>
 
