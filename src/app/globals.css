@@ -63,9 +63,8 @@
   * {
     @apply border-border;
   }
-  html,
-  body {
-    @apply scroll-smooth;
+  html {
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground;
