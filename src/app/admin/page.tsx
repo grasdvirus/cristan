@@ -11,10 +11,10 @@ import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit, Plus, Shield, Trash2, Search, Video as VideoIcon, Image as ImageIcon, Copy, Mic } from 'lucide-react';
+import { Edit, Plus, Shield, Trash2, Search, Video as VideoIcon, Image as ImageIcon, Copy, Mic, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 import { SlideForm } from '@/components/admin/slide-form';
@@ -1379,24 +1379,47 @@ function PresentationAudioScriptManager() {
             {scripts.length === 0 ? (
                  <p className="text-center text-muted-foreground py-8">Aucun script disponible.</p>
             ) : (
-                <div className="space-y-4">
-                    {scripts.map((script) => (
-                        <NeumorphicCard key={script.id} className="p-4">
-                             <div className="flex justify-between items-start">
-                                <h3 className="text-lg font-semibold font-headline mb-2">{script.title}</h3>
-                                <Button variant="ghost" size="icon" onClick={() => handleCopy(script.text)}>
-                                    <Copy className="h-4 w-4" />
-                                </Button>
-                            </div>
-                            <Textarea
-                                readOnly
-                                value={script.text}
-                                className="resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
-                                rows={5}
-                            />
-                        </NeumorphicCard>
-                    ))}
-                </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Titre</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {scripts.map((script) => (
+                            <TableRow key={script.id}>
+                                <TableCell className="font-medium">{script.title}</TableCell>
+                                <TableCell className="text-right">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm" className="btn-neumorphic-light dark:btn-neumorphic-dark">
+                                                <Eye className="mr-2 h-4 w-4" />
+                                                Voir le script
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-2xl">
+                                            <DialogHeader>
+                                                <DialogTitle>{script.title}</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="my-4 max-h-[50vh] overflow-y-auto pr-4">
+                                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                                    {script.text}
+                                                </p>
+                                            </div>
+                                            <DialogFooter>
+                                                <Button onClick={() => handleCopy(script.text)}>
+                                                    <Copy className="mr-2 h-4 w-4" />
+                                                    Copier le texte
+                                                </Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             )}
         </NeumorphicCard>
     );
@@ -1535,4 +1558,3 @@ export default function AdminPage() {
     )
 }
 
-    
