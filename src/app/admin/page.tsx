@@ -37,6 +37,8 @@ import { MediaUpload } from '@/components/admin/media-upload';
 import { PromoVideoForm, type PromoVideoFormValues } from '@/components/admin/promo-video-form';
 import { PresentationAudioForm, type PresentationAudioFormValues } from '@/components/admin/presentation-audio-form';
 import { Textarea } from '@/components/ui/textarea';
+import presentationScripts from '@/lib/presentation-audio-scripts.json';
+
 
 // Define types based on backend.json
 export type Slide = {
@@ -1361,89 +1363,20 @@ function PartnerMessagesManager() {
 }
 
 function PresentationAudioScriptManager() {
-    const { firestore } = useFirebase();
     const { toast } = useToast();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [editingScript, setEditingScript] = useState<PresentationAudio | null>(null);
+    const scripts = presentationScripts.scripts as PresentationAudio[];
 
-    const scriptsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        return query(collection(firestore, 'presentationAudioScripts'));
-    }, [firestore]);
-
-    const { data: scripts, isLoading } = useCollection<PresentationAudio>(scriptsQuery);
-
-    const handleFormSubmit = async (values: PresentationAudioFormValues) => {
-        if (!firestore) return;
-        setIsSubmitting(true);
-        try {
-            if (editingScript) {
-                await updateDoc(doc(firestore, 'presentationAudioScripts', editingScript.id), values);
-                toast({ variant: 'success', title: 'Script modifié avec succès.' });
-            } else {
-                await addDoc(collection(firestore, 'presentationAudioScripts'), values);
-                toast({ variant: 'success', title: 'Script ajouté avec succès.' });
-            }
-            setDialogOpen(false);
-            setEditingScript(null);
-        } catch (error) {
-            console.error("Error saving script: ", error);
-            toast({ title: 'Erreur', description: 'Impossible de sauvegarder le script.', variant: 'destructive' });
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleDelete = async (id: string) => {
-        if (!firestore) return;
-        try {
-            await deleteDoc(doc(firestore, 'presentationAudioScripts', id));
-            toast({ variant: 'success', title: 'Script supprimé.' });
-        } catch (error) {
-            console.error("Error deleting script: ", error);
-            toast({ title: 'Erreur', description: 'Impossible de supprimer le script.', variant: 'destructive' });
-        }
-    };
-    
     const handleCopyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
         toast({ variant: 'success', title: 'Texte copié !' });
-    };
-
-    const openEditDialog = (script: PresentationAudio) => {
-        setEditingScript(script);
-        setDialogOpen(true);
-    };
-
-    const openAddDialog = () => {
-        setEditingScript(null);
-        setDialogOpen(true);
     };
 
     return (
         <NeumorphicCard inset className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
                 <h2 className="text-xl sm:text-2xl font-bold font-headline">Gestion des Scripts Audio</h2>
-                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
-                            <Plus className="mr-2 h-4 w-4" /> Ajouter un script
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{editingScript ? 'Modifier le' : 'Ajouter un'} script</DialogTitle>
-                        </DialogHeader>
-                        <PresentationAudioForm
-                            initialData={editingScript}
-                            onSubmit={handleFormSubmit}
-                            isSubmitting={isSubmitting}
-                        />
-                    </DialogContent>
-                </Dialog>
+                <p className="text-sm text-muted-foreground">Modifiez les scripts dans le fichier <code>src/lib/presentation-audio-scripts.json</code>.</p>
             </div>
-            {isLoading ? <Skeleton className="h-40 w-full" /> : (
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -1475,26 +1408,11 @@ function PresentationAudioScriptManager() {
                                         </Button>
                                     </DialogContent>
                                 </Dialog>
-                                <Button variant="ghost" size="icon" onClick={() => openEditDialog(script)}><Edit className="h-4 w-4" /></Button>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
-                                        <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDelete(script.id)}>Supprimer</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
                             </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
-            )}
         </NeumorphicCard>
     );
 }
