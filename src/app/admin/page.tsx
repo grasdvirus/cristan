@@ -1340,7 +1340,7 @@ function PartnerMessagesManager() {
                             <TableCell className="text-right">
                                 <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}><Edit className="h-4 w-4" /></Button>
                                 <AlertDialog>
-                                    <AlertDialogTrigger asChild>
+                                    <AlertDialogTrigger as Child>
                                         <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
@@ -1534,3 +1534,5 @@ export default function AdminPage() {
         </AuthGuard>
     )
 }
+
+    
