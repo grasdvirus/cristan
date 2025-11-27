@@ -102,7 +102,7 @@ service cloud.firestore {
                                                                     allow create, update, delete: if isAdmin();
                                                                 }
 
-                                                                match /presentationAudio/{audioId} {
+                                                                match /presentationAudioScripts/{scriptId} {
                                                                     allow get, list: if request.auth != null || request.auth == null;
                                                                     allow create, update, delete: if isAdmin();
                                                                 }
