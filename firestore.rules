@@ -101,5 +101,11 @@ service cloud.firestore {
                                                                     allow list, get: if request.auth != null;
                                                                     allow create, update, delete: if isAdmin();
                                                                 }
+                                                                
+                                                                match /presentationAudioScripts/{scriptId} {
+                                                                    allow read, write: if isAdmin();
+                                                                }
       }
 }
+
+    
