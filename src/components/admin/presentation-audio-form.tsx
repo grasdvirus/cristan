@@ -32,7 +32,7 @@ export function PresentationAudioForm({ initialData, onSubmit, isSubmitting }: P
   const form = useForm<PresentationAudioFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
-      text: 'Bienvenue sur Cristan. Découvrez nos solutions web uniques et innovantes.',
+      text: 'Bienvenue sur Cristan !\n\nVous cherchez un site web au design unique et mémorable ? Nous créons des sites vitrines, des boutiques en ligne et des portfolios qui se démarquent.\n\nLe processus est simple : choisissez un modèle qui vous inspire, remplissez le formulaire de commande, et notre équipe vous contacte en quelques minutes pour donner vie à votre projet.\n\nAlors, prêt à lancer votre présence en ligne ? Cristan, le design au service de votre vision.',
     },
   });
 
