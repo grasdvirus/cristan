@@ -1,0 +1,649 @@
+
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user profile on the portfolio website.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "bio": {
+          "type": "string",
+          "description": "A brief biography or introduction of the user."
+        },
+        "skills": {
+          "type": "array",
+          "description": "An array of skills possessed by the user.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contactInformation": {
+          "type": "string",
+          "description": "Contact information for the user, such as phone number or social media links."
+        },
+        "themePreference": {
+          "type": "string",
+          "description": "The user's preferred theme (e.g., light, dark).",
+          "format": "string"
+        },
+        "googleId": {
+          "type": "string",
+          "description": "Google ID from google OAuth"
+        },
+        "displayName": {
+            "type": "string",
+            "description": "The user's display name, often from a social provider."
+        },
+        "photoURL": {
+            "type": "string",
+            "description": "The URL of the user's profile picture, often from a social provider.",
+            "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email"
+      ]
+    },
+    "Video": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Video",
+      "type": "object",
+      "description": "Represents an embedded video on the website.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Video entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the video."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the video."
+        },
+        "embedUrl": {
+          "type": "string",
+          "description": "The URL for embedding the video.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "embedUrl"
+      ]
+    },
+    "Comment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Comment",
+      "type": "object",
+      "description": "Represents a comment on a video.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Comment entity."
+        },
+        "videoId": {
+          "type": "string",
+          "description": "Reference to Video. (Relationship: Video 1:N Comment)"
+        },
+        "userProfileId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Comment)"
+        },
+        "text": {
+          "type": "string",
+          "description": "The text content of the comment."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time when the comment was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "videoId",
+        "userProfileId",
+        "text",
+        "createdAt"
+      ]
+    },
+    "Like": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Like",
+      "type": "object",
+      "description": "Represents a like on a video.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Like entity."
+        },
+        "videoId": {
+          "type": "string",
+          "description": "Reference to Video. (Relationship: Video 1:N Like)"
+        },
+        "userProfileId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Like)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time when the like was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "videoId",
+        "userProfileId",
+        "createdAt"
+      ]
+    },
+    "Framework": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Framework",
+      "type": "object",
+      "description": "Represents a framework or project displayed in the grid layout.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Framework entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the framework or project."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the framework or project."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the image representing the framework.",
+          "format": "uri"
+        },
+        "link": {
+          "type": "string",
+          "description": "A link to the project"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "imageUrl"
+      ]
+    },
+    "Project": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Project",
+      "type": "object",
+      "description": "Represents a web project.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "longDescription": { "type": "string" },
+        "price": { "type": "string" },
+        "technologies": { "type": "array", "items": { "type": "string" } },
+        "liveUrl": { "type": "string", "format": "uri" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "imageHint": { "type": "string" },
+        "rating": { "type": "number", "description": "Star rating from 1 to 5." },
+        "status": { "type": "string", "enum": ["Disponible", "Bientôt disponible"], "description": "Availability status of the project." }
+      },
+      "required": ["id", "title", "description", "longDescription", "price", "technologies", "imageUrl", "rating", "status"]
+    },
+    "ContractSubmission": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ContractSubmission",
+        "type": "object",
+        "description": "Represents a submission from a contract or partner form.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the submission." },
+            "fullName": { "type": "string", "description": "Full name of the person submitting." },
+            "email": { "type": "string", "format": "email", "description": "Email address." },
+            "phone": { "type": "string", "description": "Phone number." },
+            "companyName": { "type": "string", "description": "Company name (optional)." },
+            "projectDetails": { "type": "string", "description": "Details about the project or partnership." },
+            "projectId": { "type": "string", "description": "ID of the related project, if applicable." },
+            "promoCode": { "type": "string", "description": "Promotional code used or suggested." },
+            "password": { "type": "string", "description": "Password set by the partner for their dashboard access." },
+            "promoCodeUses": { "type": "number", "description": "Resettable count of promo code uses for rewards." },
+            "promoCodeTotalUses": { "type": "number", "description": "Lifetime total uses of the promo code." },
+            "socialLinks": {
+              "type": "array",
+              "description": "Social media links for partners.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "platform": {"type": "string", "description": "The social media platform (e.g., 'instagram', 'facebook')."},
+                  "username": {"type": "string", "description": "The user's handle or username on the platform."}
+                },
+                "required": ["platform", "username"]
+              }
+            },
+            "type": { "type": "string", "description": "Type of submission, e.g., 'Projet' or 'Partenariat'." },
+            "status": { "type": "string", "enum": ["en attente", "confirmé", "refusé", "Nouveau", "Vu", "En cours", "Terminé"], "description": "Status of the partnership or project request." },
+            "userId": { "type": "string", "description": "The Firebase Auth UID of the user who submitted the request." },
+            "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of the submission." }
+        },
+        "required": ["id", "fullName", "email", "phone", "projectDetails", "type", "createdAt", "status", "userId"]
+    },
+    "CustomProjectSubmission": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CustomProjectSubmission",
+      "type": "object",
+      "description": "Represents a submission from the custom project form.",
+      "properties": {
+        "id": { "type": "string" },
+        "projectName": { "type": "string" },
+        "companyName": { "type": "string" },
+        "companyDescription": { "type": "string" },
+        "contact": { "type": "string" },
+        "howYouFoundUs": { "type": "string" },
+        "promoCode": { "type": "string" },
+        "projectBrief": { "type": "string" },
+        "type": { "type": "string", "enum": ["Projet Personnalisé"] },
+        "status": { "type": "string", "enum": ["Nouveau", "Vu", "En cours", "Terminé"] },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "projectName", "contact", "howYouFoundUs", "projectBrief", "type", "status", "userId", "createdAt"]
+    },
+    "NewsItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "NewsItem",
+      "type": "object",
+      "description": "Represents a news item, announcement, or advertisement.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the news item." },
+        "title": { "type": "string", "description": "The title of the news item." },
+        "description": { "type": "string", "description": "The main content/body of the news item." },
+        "mediaUrl": { "type": "string", "format": "uri", "description": "URL for the associated image or video thumbnail." },
+        "videoUrl": { "type": "string", "format": "uri", "description": "URL for the video if mediaType is video." },
+        "mediaType": { "type": "string", "enum": ["image", "video"], "description": "Type of the media." },
+        "externalLink": { "type": "string", "format": "uri", "description": "Optional external link for more information." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the news item was published." }
+      },
+      "required": ["id", "title", "description", "mediaUrl", "mediaType", "createdAt"]
+    },
+    "MarqueeItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MarqueeItem",
+      "type": "object",
+      "description": "Represents a single text item in the scrolling marquee.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the marquee item."
+        },
+        "text": {
+          "type": "string",
+          "description": "The text content to be displayed in the marquee."
+        }
+      },
+      "required": ["id", "text"]
+    },
+    "AvisClient": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AvisClient",
+      "type": "object",
+      "description": "Représente un témoignage de client.",
+      "properties": {
+        "id": { "type": "string", "description": "Identifiant unique pour l'avis." },
+        "name": { "type": "string", "description": "Nom du client." },
+        "message": { "type": "string", "description": "Message du témoignage." },
+        "rating": { "type": "number", "description": "Note de 1 à 5." },
+        "avatarUrl": { "type": "string", "format": "uri", "description": "URL de l'avatar du client (optionnel)." }
+      },
+      "required": ["id", "name", "message", "rating"]
+    },
+     "PartnerMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PartnerMessage",
+      "type": "object",
+      "description": "Represents a message or announcement for partners.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the message." },
+        "title": { "type": "string", "description": "The title of the message." },
+        "content": { "type": "string", "description": "The content of the message." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the message was published." }
+      },
+      "required": ["id", "title", "content", "createdAt"]
+    },
+    "PromoVideo": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PromoVideo",
+      "type": "object",
+      "description": "Represents a promotional video for the homepage carousel.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the promo video." },
+        "title": { "type": "string", "description": "The title of the video." },
+        "videoUrl": { "type": "string", "format": "uri", "description": "URL of the video file." }
+      },
+      "required": ["id", "title", "videoUrl"]
+    },
+    "Slide": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Slide",
+      "type": "object",
+      "description": "Represents a single slide in the hero carousel.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the slide."
+        },
+        "description": {
+          "type": "string",
+          "description": "The text overlayed on the slide image."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the slide image.",
+          "format": "uri"
+        },
+        "imageHint": {
+          "type": "string",
+          "description": "A hint for AI to find a similar image."
+        }
+      },
+      "required": ["id", "description", "imageUrl"]
+    },
+    "PartnerMarqueeItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PartnerMarqueeItem",
+      "type": "object",
+      "description": "Represents a partner's name and emoji for the scrolling marquee.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the partner marquee item."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the partner."
+        },
+        "emoji": {
+          "type": "string",
+          "description": "The emoji representing the partner."
+        }
+      },
+      "required": ["id", "name", "emoji"]
+    },
+    "PresentationAudio": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PresentationAudio",
+      "type": "object",
+      "description": "Represents a script for a presentation audio.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the script." },
+        "title": { "type": "string", "description": "The title of the script." },
+        "text": { "type": "string", "description": "The content of the script." }
+      },
+      "required": ["id", "title", "text"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous",
+      "google.com"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profiles. Path-based ownership ensures only the user can read/write their own profile.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/videos/{videoId}",
+        "definition": {
+          "entityName": "Video",
+          "schema": {
+            "$ref": "#/backend/entities/Video"
+          },
+          "description": "Stores video entities. Allows any authenticated user to read.  Write access is restricted.",
+          "params": [
+            {
+              "name": "videoId",
+              "description": "The unique identifier of the video."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/videos/{videoId}/comments/{commentId}",
+        "definition": {
+          "entityName": "Comment",
+          "schema": {
+            "$ref": "#/backend/entities/Comment"
+          },
+          "description": "Stores comments associated with a video. Includes denormalized 'userProfileId' for authorization independence. Allows any authenticated user to create comments.",
+          "params": [
+            {
+              "name": "videoId",
+              "description": "The unique identifier of the video."
+            },
+            {
+              "name": "commentId",
+              "description": "The unique identifier of the comment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/videos/{videoId}/likes/{likeId}",
+        "definition": {
+          "entityName": "Like",
+          "schema": {
+            "$ref": "#/backend/entities/Like"
+          },
+          "description": "Stores likes associated with a video. Includes denormalized 'userProfileId' for authorization independence.  Allows authenticated users to like/unlike a video (create/delete).",
+          "params": [
+            {
+              "name": "videoId",
+              "description": "The unique identifier of the video."
+            },
+            {
+              "name": "likeId",
+              "description": "The unique identifier of the like."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/frameworks/{frameworkId}",
+        "definition": {
+          "entityName": "Framework",
+          "schema": {
+            "$ref": "#/backend/entities/Framework"
+          },
+          "description": "Stores framework entities. Allows any authenticated user to read.  Write access is restricted.",
+          "params": [
+            {
+              "name": "frameworkId",
+              "description": "The unique identifier of the framework."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}",
+        "definition": {
+          "entityName": "Project",
+          "schema": {
+            "$ref": "#/backend/entities/Project"
+          },
+          "description": "Stores project entities. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the project."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/news/{newsItemId}",
+        "definition": {
+          "entityName": "NewsItem",
+          "schema": {
+            "$ref": "#/backend/entities/NewsItem"
+          },
+          "description": "Stores news items. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "newsItemId",
+              "description": "The unique identifier for the news item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/marqueeItems/{marqueeItemId}",
+        "definition": {
+          "entityName": "MarqueeItem",
+          "schema": {
+            "$ref": "#/backend/entities/MarqueeItem"
+          },
+          "description": "Stores scrolling marquee text items. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "marqueeItemId",
+              "description": "The unique identifier for the marquee item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/avisClients/{avisClientId}",
+        "definition": {
+          "entityName": "AvisClient",
+          "schema": {
+            "$ref": "#/backend/entities/AvisClient"
+          },
+          "description": "Stores customer testimonials. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "avisClientId",
+              "description": "The unique identifier for the client testimonial."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/partnerMessages/{messageId}",
+        "definition": {
+          "entityName": "PartnerMessage",
+          "schema": {
+            "$ref": "#/backend/entities/PartnerMessage"
+          },
+          "description": "Stores messages for partners. Readable by any authenticated user, writable only by admin.",
+          "params": [
+            {
+              "name": "messageId",
+              "description": "The unique identifier for the partner message."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/slides/{slideId}",
+        "definition": {
+          "entityName": "Slide",
+          "schema": {
+            "$ref": "#/backend/entities/Slide"
+          },
+          "description": "Stores hero carousel slides. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "slideId",
+              "description": "The unique identifier for the slide."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/promoVideos/{promoVideoId}",
+        "definition": {
+          "entityName": "PromoVideo",
+          "schema": {
+            "$ref": "#/backend/entities/PromoVideo"
+          },
+          "description": "Stores promotional videos for the homepage. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "promoVideoId",
+              "description": "The unique identifier for the promo video."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/partnerMarqueeItems/{partnerMarqueeItemId}",
+        "definition": {
+          "entityName": "PartnerMarqueeItem",
+          "schema": {
+            "$ref": "#/backend/entities/PartnerMarqueeItem"
+          },
+          "description": "Stores partner items for the marquee. Publicly readable, admin-only write access.",
+          "params": [
+            {
+              "name": "partnerMarqueeItemId",
+              "description": "The unique identifier for the partner marquee item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/presentationAudioScripts/{scriptId}",
+        "definition": {
+          "entityName": "PresentationAudio",
+          "schema": {
+            "$ref": "#/backend/entities/PresentationAudio"
+          },
+          "description": "Stores audio presentation scripts. Writable only by admin.",
+          "params": [
+            {
+              "name": "scriptId",
+              "description": "The unique identifier for the script."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support a portfolio website with user profiles, videos, comments, likes, and frameworks. It emphasizes authorization independence and clear security rules. User profiles are stored in `/users/{userId}`, enabling path-based ownership for private user data. Videos and frameworks are stored in root-level collections (`/videos` and `/frameworks`) as they are not directly owned by individual users and are intended to be more globally accessible. Comments and Likes are stored as subcollections under `/videos/{videoId}` to represent the 1:N relationships. This structure avoids hierarchical authorization dependencies, ensuring that rules can be written without requiring `get()` calls to parent documents. For example, comment documents include `userProfileId` to check write access control. Security rules are simplified due to the structural segregation of user-specific data and global data. A `NewsItem` entity and collection have been added to support a news/updates feature, with public read access and admin-only write access. List operations are secured by ensuring that only authenticated users can access certain collections (e.g., `/users`). A new `ContractSubmission` entity has been added to handle both project contracts and partner requests, differentiated by a `type` field and managed by a `status` field for partner approvals."
+  }
+}

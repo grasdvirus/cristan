@@ -36,8 +36,8 @@ import { LoadingSpinner } from '@/components/loading-spinner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { MediaUpload } from '@/components/admin/media-upload';
 import { PromoVideoForm, type PromoVideoFormValues } from '@/components/admin/promo-video-form';
-import { PresentationAudioForm, type PresentationAudioFormValues } from '@/components/admin/presentation-audio-form';
 import { Textarea } from '@/components/ui/textarea';
+import presentationScripts from '@/lib/presentation-audio-scripts.json';
 
 
 // Define types based on backend.json
@@ -1363,116 +1363,40 @@ function PartnerMessagesManager() {
 }
 
 function PresentationAudioScriptManager() {
-    const { firestore } = useFirebase();
     const { toast } = useToast();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [editingScript, setEditingScript] = useState<PresentationAudio | null>(null);
+    const { scripts } = presentationScripts;
 
-    const scriptsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        return query(collection(firestore, 'presentationAudioScripts'));
-    }, [firestore]);
-
-    const { data: scripts, isLoading } = useCollection<PresentationAudio>(scriptsQuery);
-
-    const handleFormSubmit = async (values: PresentationAudioFormValues) => {
-        if (!firestore) return;
-        setIsSubmitting(true);
-        try {
-            if (editingScript) {
-                await updateDoc(doc(firestore, 'presentationAudioScripts', editingScript.id), values);
-            } else {
-                await addDoc(collection(firestore, 'presentationAudioScripts'), values);
-            }
-            toast({ variant: 'success', title: `Script ${editingScript ? 'modifié' : 'ajouté'} avec succès.` });
-            setDialogOpen(false);
-            setEditingScript(null);
-        } catch (error) {
-            console.error("Error saving script: ", error);
-            toast({ title: 'Erreur', description: `Impossible de sauvegarder le script.`, variant: 'destructive' });
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-    
-    const handleDelete = async (id: string) => {
-        if (!firestore) return;
-        try {
-            await deleteDoc(doc(firestore, 'presentationAudioScripts', id));
-            toast({ variant: 'success', title: 'Script supprimé.' });
-        } catch (error) {
-            console.error("Error deleting script: ", error);
-            toast({ title: 'Erreur', description: 'Impossible de supprimer le script.', variant: 'destructive' });
-        }
-    };
-
-    const openEditDialog = (script: PresentationAudio) => {
-        setEditingScript(script);
-        setDialogOpen(true);
-    };
-
-    const openAddDialog = () => {
-        setEditingScript(null);
-        setDialogOpen(true);
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({ variant: 'success', title: 'Script copié dans le presse-papiers !' });
     };
 
     return (
         <NeumorphicCard inset className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
-                <h2 className="text-xl sm:text-2xl font-bold font-headline">Gestion des Scripts Audio</h2>
-                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
-                            <Plus className="mr-2 h-4 w-4" /> Ajouter un script
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{editingScript ? 'Modifier' : 'Ajouter'} un script</DialogTitle>
-                        </DialogHeader>
-                        <PresentationAudioForm
-                            initialData={editingScript}
-                            onSubmit={handleFormSubmit}
-                            isSubmitting={isSubmitting}
-                        />
-                    </DialogContent>
-                </Dialog>
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Scripts Audio Disponibles</h2>
             </div>
-            {isLoading ? <Skeleton className="h-40 w-full" /> : (
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Titre</TableHead>
-                        <TableHead>Extrait</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {scripts?.map((script) => (
-                        <TableRow key={script.id}>
-                            <TableCell className="font-medium">{script.title}</TableCell>
-                            <TableCell className="max-w-xs truncate">{script.text}</TableCell>
-                            <TableCell className="text-right">
-                                <Button variant="ghost" size="icon" onClick={() => openEditDialog(script)}><Edit className="h-4 w-4" /></Button>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
-                                        <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDelete(script.id)}>Supprimer</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </TableCell>
-                        </TableRow>
+            {scripts.length === 0 ? (
+                 <p className="text-center text-muted-foreground py-8">Aucun script disponible.</p>
+            ) : (
+                <div className="space-y-4">
+                    {scripts.map((script) => (
+                        <NeumorphicCard key={script.id} className="p-4">
+                             <div className="flex justify-between items-start">
+                                <h3 className="text-lg font-semibold font-headline mb-2">{script.title}</h3>
+                                <Button variant="ghost" size="icon" onClick={() => handleCopy(script.text)}>
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <Textarea
+                                readOnly
+                                value={script.text}
+                                className="resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+                                rows={5}
+                            />
+                        </NeumorphicCard>
                     ))}
-                </TableBody>
-            </Table>
+                </div>
             )}
         </NeumorphicCard>
     );
@@ -1610,5 +1534,3 @@ export default function AdminPage() {
         </AuthGuard>
     )
 }
-
-    
