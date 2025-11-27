@@ -10,7 +10,7 @@ import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit, Plus, Shield, Trash2, Search, Video as VideoIcon, Image as ImageIcon } from 'lucide-react';
+import { Edit, Plus, Shield, Trash2, Search, Video as VideoIcon, Image as ImageIcon, Copy, Mic } from 'lucide-react';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -35,6 +35,8 @@ import { LoadingSpinner } from '@/components/loading-spinner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { MediaUpload } from '@/components/admin/media-upload';
 import { PromoVideoForm, type PromoVideoFormValues } from '@/components/admin/promo-video-form';
+import { PresentationAudioForm, type PresentationAudioFormValues } from '@/components/admin/presentation-audio-form';
+import { Textarea } from '@/components/ui/textarea';
 
 // Define types based on backend.json
 export type Slide = {
@@ -126,7 +128,6 @@ export type PresentationAudio = {
   id: string;
   title: string;
   text: string;
-  updatedAt?: any;
 }
 
 
@@ -1359,6 +1360,146 @@ function PartnerMessagesManager() {
     );
 }
 
+function PresentationAudioScriptManager() {
+    const { firestore } = useFirebase();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingScript, setEditingScript] = useState<PresentationAudio | null>(null);
+
+    const scriptsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'presentationAudioScripts'));
+    }, [firestore]);
+
+    const { data: scripts, isLoading } = useCollection<PresentationAudio>(scriptsQuery);
+
+    const handleFormSubmit = async (values: PresentationAudioFormValues) => {
+        if (!firestore) return;
+        setIsSubmitting(true);
+        try {
+            if (editingScript) {
+                await updateDoc(doc(firestore, 'presentationAudioScripts', editingScript.id), values);
+                toast({ variant: 'success', title: 'Script modifié avec succès.' });
+            } else {
+                await addDoc(collection(firestore, 'presentationAudioScripts'), values);
+                toast({ variant: 'success', title: 'Script ajouté avec succès.' });
+            }
+            setDialogOpen(false);
+            setEditingScript(null);
+        } catch (error) {
+            console.error("Error saving script: ", error);
+            toast({ title: 'Erreur', description: 'Impossible de sauvegarder le script.', variant: 'destructive' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!firestore) return;
+        try {
+            await deleteDoc(doc(firestore, 'presentationAudioScripts', id));
+            toast({ variant: 'success', title: 'Script supprimé.' });
+        } catch (error) {
+            console.error("Error deleting script: ", error);
+            toast({ title: 'Erreur', description: 'Impossible de supprimer le script.', variant: 'destructive' });
+        }
+    };
+    
+    const handleCopyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({ variant: 'success', title: 'Texte copié !' });
+    };
+
+    const openEditDialog = (script: PresentationAudio) => {
+        setEditingScript(script);
+        setDialogOpen(true);
+    };
+
+    const openAddDialog = () => {
+        setEditingScript(null);
+        setDialogOpen(true);
+    };
+
+    return (
+        <NeumorphicCard inset className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-bold font-headline">Gestion des Scripts Audio</h2>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button onClick={openAddDialog} className="btn-neumorphic-light dark:btn-neumorphic-dark w-full sm:w-auto">
+                            <Plus className="mr-2 h-4 w-4" /> Ajouter un script
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{editingScript ? 'Modifier le' : 'Ajouter un'} script</DialogTitle>
+                        </DialogHeader>
+                        <PresentationAudioForm
+                            initialData={editingScript}
+                            onSubmit={handleFormSubmit}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+            </div>
+            {isLoading ? <Skeleton className="h-40 w-full" /> : (
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Titre</TableHead>
+                        <TableHead>Extrait</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {scripts?.map((script) => (
+                        <TableRow key={script.id}>
+                            <TableCell className="font-medium">{script.title}</TableCell>
+                            <TableCell className="max-w-xs truncate">{script.text}</TableCell>
+                            <TableCell className="text-right">
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="ghost" size="icon"><Mic className="h-4 w-4" /></Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>{script.title}</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="max-h-[60vh] overflow-y-auto my-4 p-1">
+                                           <Textarea readOnly value={script.text} rows={15} className="bg-muted/50"/>
+                                        </div>
+                                        <Button onClick={() => handleCopyToClipboard(script.text)}>
+                                            <Copy className="mr-2 h-4 w-4"/>
+                                            Copier le texte
+                                        </Button>
+                                    </DialogContent>
+                                </Dialog>
+                                <Button variant="ghost" size="icon" onClick={() => openEditDialog(script)}><Edit className="h-4 w-4" /></Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader><AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle></AlertDialogHeader>
+                                        <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDelete(script.id)}>Supprimer</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+            )}
+        </NeumorphicCard>
+    );
+}
+
+
 function AdminPageContent() {
     const { firestore } = useFirebase();
     const [searchTerm, setSearchTerm] = useState('');
@@ -1407,6 +1548,7 @@ function AdminPageContent() {
                             <TabsTrigger value="custom_projects">Sur Mesure</TabsTrigger>
                             <TabsTrigger value="partners">Partenaires</TabsTrigger>
                             <TabsTrigger value="partner_messages">Messages Partenaires</TabsTrigger>
+                             <TabsTrigger value="audio_scripts">Scripts Audio</TabsTrigger>
                         </TabsList>
                         <ScrollBar orientation="horizontal" />
                     </ScrollArea>
@@ -1472,6 +1614,9 @@ function AdminPageContent() {
                     </TabsContent>
                      <TabsContent value="partner_messages">
                         <PartnerMessagesManager />
+                    </TabsContent>
+                    <TabsContent value="audio_scripts">
+                        <PresentationAudioScriptManager />
                     </TabsContent>
                 </Tabs>
             </NeumorphicCard>
