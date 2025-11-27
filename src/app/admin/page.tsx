@@ -35,7 +35,6 @@ import { LoadingSpinner } from '@/components/loading-spinner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { MediaUpload } from '@/components/admin/media-upload';
 import { PromoVideoForm, type PromoVideoFormValues } from '@/components/admin/promo-video-form';
-import { PresentationAudioScriptManager } from '@/components/admin/presentation-audio-script-manager';
 
 // Define types based on backend.json
 export type Slide = {
@@ -1404,7 +1403,6 @@ function AdminPageContent() {
                             <TabsTrigger value="tv">TV</TabsTrigger>
                             <TabsTrigger value="games">Gamme</TabsTrigger>
                             <TabsTrigger value="news">Actualités</TabsTrigger>
-                            <TabsTrigger value="audioScripts">Scripts Audio</TabsTrigger>
                             <TabsTrigger value="submissions">Demandes</TabsTrigger>
                             <TabsTrigger value="custom_projects">Sur Mesure</TabsTrigger>
                             <TabsTrigger value="partners">Partenaires</TabsTrigger>
@@ -1447,9 +1445,6 @@ function AdminPageContent() {
 
                      <TabsContent value="news">
                         <NewsManager />
-                    </TabsContent>
-                     <TabsContent value="audioScripts">
-                        <PresentationAudioScriptManager />
                     </TabsContent>
 
                     <TabsContent value="submissions">
