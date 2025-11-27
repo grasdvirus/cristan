@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -1362,27 +1361,14 @@ function PartnerMessagesManager() {
 }
 
 function AdminPageContent() {
-    const { firestore, user, isUserLoading } = useFirebase();
+    const { firestore } = useFirebase();
     const [searchTerm, setSearchTerm] = useState('');
 
     const submissionsQuery = useMemoFirebase(() => {
-        if (!firestore || !user || user.email !== 'grasdvirus@gmail.com') return null;
+        if (!firestore) return null;
         return query(collection(firestore, 'submissions'));
-    }, [firestore, user]);
+    }, [firestore]);
     const { data: allSubmissions, isLoading: isSubmissionsLoading } = useCollection<ContractSubmission | CustomProjectSubmission>(submissionsQuery);
-    
-    if (isUserLoading) {
-        return <LoadingSpinner />;
-    }
-
-    if (user?.email !== 'grasdvirus@gmail.com') {
-        return (
-            <NeumorphicCard className="m-8 p-8 text-center">
-                <h1 className="text-2xl font-bold text-destructive">Accès refusé</h1>
-                <p className="text-muted-foreground mt-2">Vous n'avez pas l'autorisation d'accéder à cette page.</p>
-            </NeumorphicCard>
-        );
-    }
 
     return (
         <div className="container mx-auto px-0 sm:px-4 py-8 sm:py-16">
