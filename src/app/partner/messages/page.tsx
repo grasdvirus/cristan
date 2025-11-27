@@ -1,8 +1,8 @@
-
 'use client';
 
 import { Suspense, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { formatDistanceToNow } from 'date-fns';
@@ -23,6 +23,7 @@ type PartnerMessage = {
 };
 
 function AllMessagesContent() {
+    const router = useRouter();
     const { firestore } = useFirebase();
     const messagesQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -52,15 +53,13 @@ function AllMessagesContent() {
             <div className="max-w-3xl mx-auto">
                 <div className="relative mb-8">
                      <Button 
-                        asChild
+                        onClick={() => router.back()}
                         variant="ghost" 
                         size="icon"
                         className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                         aria-label="Retour"
                     >
-                        <Link href="/partner/register">
-                            <ArrowLeft className="h-5 w-5" />
-                        </Link>
+                        <ArrowLeft className="h-5 w-5" />
                     </Button>
                 </div>
                  <div className="text-center mb-12">

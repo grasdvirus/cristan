@@ -1,8 +1,8 @@
-
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -193,6 +193,7 @@ function RewardForm({ form }: { form: ReturnType<typeof useForm<RewardFormValues
 }
 
 function RewardPageContent() {
+    const router = useRouter();
     const defaultValues = {
         paymentMethod: '',
         paymentDetails: '',
@@ -212,15 +213,13 @@ function RewardPageContent() {
         <div className="container mx-auto px-4 py-16 sm:py-24">
             <div className="relative flex justify-between items-center mb-8">
                 <Button 
-                    asChild
+                    onClick={() => router.back()}
                     variant="ghost" 
                     size="icon"
                     className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                     aria-label="Retour au tableau de bord"
                 >
-                    <Link href="/partner/register">
-                        <ArrowLeft className="h-5 w-5" />
-                    </Link>
+                    <ArrowLeft className="h-5 w-5" />
                 </Button>
                  <Button 
                     variant="ghost" 

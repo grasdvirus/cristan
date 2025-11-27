@@ -30,7 +30,9 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleTimeUpdate = () => {
-      setProgress((video.currentTime / video.duration) * 100);
+      if (video.duration > 0) {
+        setProgress((video.currentTime / video.duration) * 100);
+      }
     };
     const handleDurationChange = () => setDuration(video.duration);
     const handleVolumeChange = () => {
@@ -40,7 +42,6 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
 
     const handleLoadedMetadata = () => {
         setDuration(video.duration);
-        // Set aspect ratio for adaptive frame
         if (video.videoWidth > 0 && video.videoHeight > 0) {
             setAspectRatio(`${video.videoWidth} / ${video.videoHeight}`);
         }
@@ -65,36 +66,33 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
   
   useEffect(() => {
     const video = videoRef.current;
+    if (!video) return;
+    
     const observer = new IntersectionObserver(
         (entries) => {
             const entry = entries[0];
             if (entry.isIntersecting) {
-                video?.play().catch(e => console.error("Autoplay was prevented.", e));
+                video.play().catch(e => console.error("Autoplay was prevented.", e));
             } else {
-                video?.pause();
+                video.pause();
             }
         },
         { threshold: 0.8 } // 80% visibility
     );
 
-    if (video) {
-        // Start muted for autoplay compatibility
-        video.muted = true;
-        setIsMuted(true);
-        observer.observe(video);
-    }
+    // Start muted for autoplay compatibility
+    video.muted = true;
+    setIsMuted(true);
+    observer.observe(video);
 
     return () => {
-        if (video) {
-            observer.unobserve(video);
-        }
+        observer.unobserve(video);
     };
   }, [src]);
 
   useEffect(() => {
     const handleFullScreenChange = () => {
-      const isFs = document.fullscreenElement === containerRef.current;
-      setIsFullScreen(isFs);
+      setIsFullScreen(!!document.fullscreenElement);
     };
 
     document.addEventListener('fullscreenchange', handleFullScreenChange);
@@ -105,7 +103,7 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
     const video = videoRef.current;
     if (video) {
       if (video.paused) {
-        if(video.muted) { // Unmute on first manual play
+        if(video.muted) {
             video.muted = false;
             setIsMuted(false);
         }
@@ -155,7 +153,7 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
   };
 
   const formatTime = (time: number) => {
-    if (isNaN(time)) return '00:00';
+    if (isNaN(time) || time === Infinity) return '00:00';
     const minutes = Math.floor(time / 60).toString().padStart(2, '0');
     const seconds = Math.floor(time % 60).toString().padStart(2, '0');
     return `${minutes}:${seconds}`;
@@ -168,13 +166,13 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
       ref={containerRef}
       className={cn(
         "group w-full relative overflow-hidden p-0",
-        isFullScreen && "fixed inset-0 z-[100] !rounded-none"
+        isFullScreen ? "fixed inset-0 z-[100] !rounded-none" : "rounded-3xl"
       )}
       style={{ aspectRatio }}
     >
       <video
         ref={videoRef}
-        className="w-full h-full object-contain rounded-3xl"
+        className="w-full h-full object-contain"
         poster={poster}
         onClick={togglePlay}
         onDoubleClick={toggleFullScreen}
@@ -185,7 +183,7 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
         Votre navigateur ne supporte pas la balise vidéo.
       </video>
 
-      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none rounded-3xl">
+      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
         {!isPlaying && (
           <Button
             size="icon"
@@ -198,7 +196,7 @@ export function VideoPlayer({ src, poster }: VideoPlayerProps) {
         )}
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-b-3xl">
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <span className="text-white text-xs font-mono">{formatTime(videoRef.current?.currentTime || 0)}</span>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ export type Project = {
 };
 
 export default function ProjectDetailsPage() {
+  const router = useRouter();
   const params = useParams();
   const id = params.id as string;
   const { firestore } = useFirebase();
@@ -56,12 +57,10 @@ export default function ProjectDetailsPage() {
         <p className="text-muted-foreground mt-2">
           Le projet que vous cherchez n'existe pas ou a été déplacé.
         </p>
-         <Link href="/" passHref>
-            <Button variant="outline" className="mt-8">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Retour à l'accueil
-            </Button>
-        </Link>
+         <Button onClick={() => router.back()} variant="outline" className="mt-8">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour
+        </Button>
       </div>
     );
   }
@@ -70,10 +69,8 @@ export default function ProjectDetailsPage() {
     <div className="container mx-auto px-0 sm:px-4 py-8 sm:py-16">
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
-          <Button asChild variant="ghost" size="icon" className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark z-10">
-              <Link href="/internet">
-                  <ArrowLeft className="h-4 w-4" />
-              </Link>
+          <Button onClick={() => router.back()} variant="ghost" size="icon" className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark z-10">
+              <ArrowLeft className="h-4 w-4" />
           </Button>
         </div>
         <NeumorphicCard className="p-0 sm:p-4 md:p-6">

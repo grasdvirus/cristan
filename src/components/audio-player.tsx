@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -54,17 +53,15 @@ export function AudioPlayer() {
     audio.addEventListener('error', handleError);
 
     return () => {
-      // Store a reference to the audio element for cleanup
-      const audioForCleanup = audio;
+      const audioForCleanup = audioRef.current;
       if (audioForCleanup) {
-        // Remove event listeners immediately
         audioForCleanup.removeEventListener('canplaythrough', handleCanPlay);
         audioForCleanup.removeEventListener('ended', handleEnded);
         audioForCleanup.removeEventListener('error', handleError);
         
-        // Then pause and reset the source
         audioForCleanup.pause();
         audioForCleanup.src = '';
+        audioRef.current = null;
       }
     };
   }, []);

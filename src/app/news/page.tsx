@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { convertToEmbedUrl } from '@/lib/utils';
 
 type NewsItem = {
@@ -43,6 +44,7 @@ function NewsSkeleton() {
 
 
 export default function NewsPage() {
+    const router = useRouter();
     const { firestore } = useFirebase();
     const newsQuery = useMemoFirebase(
         () => firestore ? query(collection(firestore, 'news'), orderBy('createdAt', 'desc')) : null,
@@ -68,15 +70,13 @@ export default function NewsPage() {
             <div className="max-w-3xl mx-auto">
                  <div className="mb-8">
                     <Button 
-                        asChild
+                        onClick={() => router.back()}
                         variant="ghost" 
                         size="icon" 
                         className="rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
                         aria-label="Retour"
                     >
-                        <Link href="/">
-                            <ArrowLeft className="h-5 w-5" />
-                        </Link>
+                        <ArrowLeft className="h-5 w-5" />
                     </Button>
                 </div>
                 <div className="text-center mb-12">

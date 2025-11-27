@@ -1,24 +1,24 @@
+'use client';
 
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Building, FileText, Globe, Mail, Phone, UserCircle } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function LegalPage() {
+  const router = useRouter();
   return (
     <div className="container mx-auto px-0 sm:px-4 py-16 sm:py-24">
       <NeumorphicCard className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 relative">
         <Button 
-            asChild
+            onClick={() => router.back()}
             variant="ghost" 
             size="icon"
             className="absolute left-4 top-4 sm:left-6 sm:top-6 rounded-full btn-neumorphic-light dark:btn-neumorphic-dark"
             aria-label="Retour"
         >
-            <Link href="/">
-                <ArrowLeft className="h-5 w-5" />
-            </Link>
+            <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="text-center mb-12 pt-12 sm:pt-0">
           <h1 className="text-3xl sm:text-4xl font-bold font-headline">Mentions Légales</h1>

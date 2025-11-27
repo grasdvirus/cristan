@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 import { Loader2, Play, Pause } from 'lucide-react';
 import {
   Tooltip,
@@ -54,10 +54,14 @@ export function AudioPlayer() {
     });
 
     return () => {
-        audio.removeEventListener('canplaythrough', handleCanPlay);
-        audio.removeEventListener('ended', handleEnded);
-        audio.pause();
-        audio.src = '';
+        const audioForCleanup = audioRef.current;
+        if (audioForCleanup) {
+          audioForCleanup.removeEventListener('canplaythrough', handleCanPlay);
+          audioForCleanup.removeEventListener('ended', handleEnded);
+          audioForCleanup.pause();
+          audioForCleanup.src = '';
+          audioRef.current = null;
+        }
     };
   }, []);
 
