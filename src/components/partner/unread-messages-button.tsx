@@ -48,7 +48,7 @@ export function UnreadMessagesButton() {
       variant="secondary" 
       className={cn(
         "flex-1 btn-neumorphic-light dark:btn-neumorphic-dark",
-        unreadCount > 0 && "animate-blink-green"
+        unreadCount > 0 && "animate-pulse-green"
       )} 
       onClick={handlePress}
     >
