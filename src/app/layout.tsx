@@ -35,6 +35,8 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=PT+Sans:wght@400;700&family=Bagel+Fat+One&display=swap"
           rel="stylesheet"
         />
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4253824534882783"
+     crossOrigin="anonymous"></script>
       </head>
       <body>
         <AppContent>{children}</AppContent>
