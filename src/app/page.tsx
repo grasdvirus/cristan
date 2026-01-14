@@ -12,7 +12,7 @@ import GamesGrid from '@/components/sections/games-grid';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { NeumorphicCard } from '@/components/neumorphic-card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Handshake, Plus } from 'lucide-react';
+import { ArrowRight, Handshake, Plus, Smile } from 'lucide-react';
 import Link from 'next/link';
 import { CustomProjectButton } from '@/components/custom-project-button';
 import { useToast } from '@/components/ui/use-toast';
@@ -82,9 +82,7 @@ export default function Home() {
                 <h2 className="relative z-10 text-3xl sm:text-4xl font-bold font-headline text-center">
                     À découvrir
                 </h2>
-                <span className="absolute -top-2 -right-6 text-4xl animate-wave-hand z-0" style={{ transformOrigin: '70% 70%' }}>
-                    👋
-                </span>
+                 <Smile className="absolute -top-2 -right-8 h-10 w-10 text-amber-500/80 drop-shadow-lg z-0" strokeWidth={2.5}/>
               </div>
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-4xl">
                   <TabsList className="bg-transparent p-0 flex-wrap justify-center h-auto">
