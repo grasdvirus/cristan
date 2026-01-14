@@ -103,7 +103,8 @@ service cloud.firestore {
                                                                 }
                                                                 
                                                                 match /presentationAudioScripts/{scriptId} {
-                                                                    allow read, write: if isAdmin();
+                                                                    allow get, list: if true;
+                                                                    allow create, update, delete: if isAdmin();
                                                                 }
       }
 }
