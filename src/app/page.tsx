@@ -82,7 +82,7 @@ export default function Home() {
                 <h2 className="relative z-10 text-3xl sm:text-4xl font-bold font-headline text-center">
                     À découvrir
                 </h2>
-                 <Smile className="absolute -top-2 -right-8 h-10 w-10 text-amber-500/80 drop-shadow-lg z-0 animate-wave-hand" strokeWidth={2.5}/>
+                 <Smile className="absolute -top-2 -right-8 h-10 w-10 text-amber-500/80 drop-shadow-lg z-0" strokeWidth={2.5}/>
               </div>
               <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full max-w-4xl">
                   <TabsList className="bg-transparent p-0 flex-wrap justify-center h-auto">
