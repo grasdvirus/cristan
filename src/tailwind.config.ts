@@ -121,8 +121,8 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        marquee: 'marquee 60s linear infinite',
-        marquee2: 'marquee2 60s linear infinite',
+        marquee: 'marquee 120s linear infinite',
+        marquee2: 'marquee2 120s linear infinite',
         'text-scroll': 'text-scroll 12s linear infinite',
         'blink-green': 'blink-green 2s ease-in-out infinite',
         'sparkle-animation': 'sparkle-animation 5s linear infinite',
@@ -131,5 +131,3 @@ export default {
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
-
-    
