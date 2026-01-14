@@ -468,3 +468,8 @@
 .animate-pulse-green {
   animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+@keyframes sparkle-animation {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-200px); }
+}
