@@ -31,7 +31,7 @@ export default function HeroSection() {
         Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: false })
     );
     const fadePlugin = React.useRef(Fade({
-      transitionDuration: 1000
+      transitionDuration: 400
     }));
 
     if (isLoading) {
